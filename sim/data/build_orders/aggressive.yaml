@@ -1,0 +1,45 @@
+name: "Aggressive Opening"
+description: "Rush-oriented opening. Delays eco for early army pressure."
+
+map:
+  avg_wind: 12
+  wind_variance: 3
+  mex_value: 2.0
+  mex_spots: 6
+  has_geo: false
+
+commander_queue:
+  - mex
+  - mex
+  - wind
+  - wind
+  - bot_lab
+  - radar
+  - llt
+  - wind
+  - wind
+  - mex
+  - wind
+  - wind
+  - nano
+
+factory_0_queue:
+  - tick
+  - grunt
+  - grunt
+  - grunt
+  - grunt
+  - con_bot
+  - grunt
+  - grunt
+  - grunt
+  - grunt
+  - grunt
+  - grunt
+
+con_1_queue:
+  - mex
+  - mex
+  - wind
+  - wind
+  - llt

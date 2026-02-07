@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAR Build Order Simulator</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15/Sortable.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>BAR Build Order Simulator</h1>
+        <div class="header-controls">
+            <select id="faction-select">
+                <option value="armada" selected>Armada</option>
+                <option value="cortex">Cortex</option>
+            </select>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab active" data-tab="simulate">Simulate</button>
+        <button class="tab" data-tab="editor">Editor</button>
+        <button class="tab" data-tab="compare">Compare</button>
+        <button class="tab" data-tab="optimize">Optimize</button>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- SIMULATE TAB -->
+    <!-- ============================================================ -->
+    <section id="tab-simulate" class="tab-content active">
+        <div class="sim-controls">
+            <select id="sim-bo-select">
+                <option value="">-- Select Build Order --</option>
+            </select>
+            <label>Duration: <input type="number" id="sim-duration" value="600" min="60" max="3600" step="60">s</label>
+            <button id="sim-run-btn" class="btn-primary">Simulate</button>
+        </div>
+
+        <div id="sim-results" class="hidden">
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <h3>Economy Timeline</h3>
+                    <canvas id="chart-economy"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Stored Resources</h3>
+                    <canvas id="chart-stored"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Build Power & Army Value</h3>
+                    <canvas id="chart-bp-army"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Stall Factor</h3>
+                    <canvas id="chart-stall"></canvas>
+                </div>
+            </div>
+
+            <div class="info-panels">
+                <div class="panel">
+                    <h3>Milestones</h3>
+                    <table id="sim-milestones"><thead><tr><th>Event</th><th>Time</th><th>M/s</th><th>E/s</th></tr></thead><tbody></tbody></table>
+                </div>
+                <div class="panel">
+                    <h3>Stall Events</h3>
+                    <table id="sim-stalls"><thead><tr><th>Period</th><th>Resource</th><th>Duration</th><th>Severity</th></tr></thead><tbody></tbody></table>
+                </div>
+                <div class="panel">
+                    <h3>Summary</h3>
+                    <div id="sim-summary"></div>
+                </div>
+                <div class="panel">
+                    <h3>Construction Log</h3>
+                    <div id="sim-log" class="log-scroll"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- EDITOR TAB -->
+    <!-- ============================================================ -->
+    <section id="tab-editor" class="tab-content">
+        <div class="editor-layout">
+            <div class="editor-sidebar">
+                <h3>Map Config</h3>
+                <div class="form-grid">
+                    <label>Wind: <input type="number" id="ed-wind" value="12" step="0.5" min="0" max="25"></label>
+                    <label>Mex Value: <input type="number" id="ed-mex-value" value="2.0" step="0.1" min="0.5" max="5"></label>
+                    <label>Mex Spots: <input type="number" id="ed-mex-spots" value="6" min="1" max="20"></label>
+                    <label><input type="checkbox" id="ed-has-geo"> Has Geo</label>
+                </div>
+                <div class="editor-actions">
+                    <input type="text" id="ed-name" value="Untitled" placeholder="Build order name">
+                    <select id="ed-load-select"><option value="">-- Load --</option></select>
+                    <button id="ed-load-btn" class="btn-sm">Load</button>
+                    <button id="ed-sim-btn" class="btn-primary">Simulate</button>
+                    <button id="ed-save-btn" class="btn-sm">Save</button>
+                    <button id="ed-clear-btn" class="btn-sm btn-danger">Clear</button>
+                </div>
+
+                <h3>Unit Picker</h3>
+                <div id="ed-pool-tabs" class="pool-tabs">
+                    <button class="pool-tab active" data-pool="commander">Commander</button>
+                    <button class="pool-tab" data-pool="factory">Factory</button>
+                    <button class="pool-tab" data-pool="constructor">Constructor</button>
+                </div>
+                <div id="ed-unit-list" class="unit-list"></div>
+            </div>
+
+            <div class="editor-queues">
+                <div class="queue-panel">
+                    <h3>Commander Queue</h3>
+                    <div id="queue-commander" class="queue-sortable" data-queue="commander"></div>
+                </div>
+                <div class="queue-panel">
+                    <h3>Factory Queue (factory_0)</h3>
+                    <div id="queue-factory_0" class="queue-sortable" data-queue="factory_0"></div>
+                </div>
+                <div class="queue-panel">
+                    <h3>Constructor Queue (con_1)</h3>
+                    <div id="queue-con_1" class="queue-sortable" data-queue="con_1"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- COMPARE TAB -->
+    <!-- ============================================================ -->
+    <section id="tab-compare" class="tab-content">
+        <div class="compare-controls">
+            <div class="compare-selector">
+                <label>Build A: <select id="cmp-a-select"><option value="">--</option></select></label>
+                <label>Build B: <select id="cmp-b-select"><option value="">--</option></select></label>
+                <label>Duration: <input type="number" id="cmp-duration" value="600" min="60" max="3600" step="60">s</label>
+                <button id="cmp-run-btn" class="btn-primary">Compare</button>
+            </div>
+        </div>
+
+        <div id="cmp-results" class="hidden">
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <h3>Metal Income</h3>
+                    <canvas id="chart-cmp-metal"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Energy Income</h3>
+                    <canvas id="chart-cmp-energy"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Army Value</h3>
+                    <canvas id="chart-cmp-army"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Build Power</h3>
+                    <canvas id="chart-cmp-bp"></canvas>
+                </div>
+            </div>
+
+            <div class="info-panels">
+                <div class="panel wide">
+                    <h3>Milestone Comparison</h3>
+                    <table id="cmp-milestones"><thead><tr><th>Event</th><th class="color-a">Build A</th><th class="color-b">Build B</th><th>Winner</th></tr></thead><tbody></tbody></table>
+                </div>
+                <div class="panel wide">
+                    <h3>Economy Comparison</h3>
+                    <table id="cmp-economy"><thead><tr><th>Metric</th><th class="color-a">Build A</th><th class="color-b">Build B</th></tr></thead><tbody></tbody></table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- OPTIMIZE TAB -->
+    <!-- ============================================================ -->
+    <section id="tab-optimize" class="tab-content">
+        <div class="opt-layout">
+            <div class="opt-config">
+                <h3>GA Configuration</h3>
+                <div class="form-grid">
+                    <label>Goal:
+                        <select id="opt-goal">
+                            <option value="max_metal">Max Metal Income</option>
+                            <option value="max_energy">Max Energy Income</option>
+                            <option value="fastest_factory">Fastest Factory</option>
+                            <option value="fastest_t2">Fastest T2</option>
+                            <option value="max_army">Max Army Value</option>
+                            <option value="min_stall">Minimize Stalling</option>
+                            <option value="balanced" selected>Balanced</option>
+                        </select>
+                    </label>
+                    <label>Target Time: <input type="number" id="opt-target-time" value="300" step="30">s</label>
+                    <label>Duration: <input type="number" id="opt-duration" value="600" step="60">s</label>
+                    <label>Generations: <input type="number" id="opt-generations" value="100" min="10" max="500"></label>
+                    <label>Pop Size: <input type="number" id="opt-pop-size" value="60" min="10" max="200"></label>
+                    <label>Wind: <input type="number" id="opt-wind" value="12" step="0.5"></label>
+                    <label>Mex Value: <input type="number" id="opt-mex-value" value="2.0" step="0.1"></label>
+                    <label>Mex Spots: <input type="number" id="opt-mex-spots" value="6" min="1" max="20"></label>
+                    <label>Start From: <select id="opt-start-from"><option value="">-- None --</option></select></label>
+                </div>
+                <button id="opt-run-btn" class="btn-primary">Optimize</button>
+                <button id="opt-cancel-btn" class="btn-sm btn-danger hidden">Cancel</button>
+            </div>
+
+            <div class="opt-progress hidden" id="opt-progress">
+                <div class="progress-bar-container">
+                    <div id="opt-progress-bar" class="progress-bar"></div>
+                </div>
+                <div id="opt-progress-text"></div>
+                <div class="chart-box">
+                    <h3>Fitness History</h3>
+                    <canvas id="chart-opt-fitness"></canvas>
+                </div>
+            </div>
+
+            <div class="opt-result hidden" id="opt-result">
+                <h3>Optimized Build Order</h3>
+                <div id="opt-bo-display"></div>
+                <div class="opt-actions">
+                    <button id="opt-load-editor" class="btn-sm">Load into Editor</button>
+                    <button id="opt-save-btn" class="btn-sm">Save as YAML</button>
+                    <button id="opt-sim-btn" class="btn-primary">View Full Results</button>
+                </div>
+                <div id="opt-sim-results" class="hidden">
+                    <div class="chart-grid">
+                        <div class="chart-box">
+                            <h3>Economy Timeline</h3>
+                            <canvas id="chart-opt-economy"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Stored Resources</h3>
+                            <canvas id="chart-opt-stored"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+name: "Wind Opening (Standard)"
+description: "Standard 1v1 opening for wind maps (avg wind >= 7). 85 seconds to factory."
+
+map:
+  avg_wind: 12
+  wind_variance: 3
+  mex_value: 2.0
+  mex_spots: 6
+  has_geo: false
+
+commander_queue:
+  - mex
+  - mex
+  - wind
+  - wind
+  - wind
+  - bot_lab
+  - mex
+  - wind
+  - wind
+  - radar
+  - wind
+  - wind
+  - nano
+  - wind
+  - wind
+
+factory_0_queue:
+  - tick
+  - tick
+  - grunt
+  - grunt
+  - con_bot
+  - grunt
+  - grunt
+  - grunt
+  - grunt
+  - con_bot
+  - grunt
+  - grunt
+
+con_1_queue:
+  - mex
+  - mex
+  - wind
+  - wind
+  - llt
+  - mex

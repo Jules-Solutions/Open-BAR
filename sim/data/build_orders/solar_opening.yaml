@@ -1,0 +1,46 @@
+name: "Solar Opening (Low Wind)"
+description: "Opening for low wind maps (avg wind < 7). Slower but stable energy."
+
+map:
+  avg_wind: 4
+  wind_variance: 2
+  mex_value: 2.0
+  mex_spots: 6
+  has_geo: false
+
+commander_queue:
+  - mex
+  - mex
+  - solar
+  - solar
+  - bot_lab
+  - mex
+  - solar
+  - radar
+  - solar
+  - solar
+  - nano
+  - solar
+  - solar
+
+factory_0_queue:
+  - tick
+  - tick
+  - grunt
+  - grunt
+  - con_bot
+  - grunt
+  - grunt
+  - grunt
+  - grunt
+  - con_bot
+  - grunt
+  - grunt
+
+con_1_queue:
+  - mex
+  - mex
+  - solar
+  - solar
+  - llt
+  - mex

@@ -1,0 +1,378 @@
+id;faction;techlevel;name;tooltip;description;radaricon;height;metalcost;energycost;buildtime;metalmake;energymake;buildpower;speed;health;amphib;sub;air;hover;ship;tank;bot;building;dps;weaponrange;jammerrange;sonarrange;radarrange;sightrange;airsightrange;specials;weapons;buildoptions;buildable;file;
+armaak;ARMADA;2;Archangel;Advanced Amphibious Anti-Air Bot;;bot_amph_t2_aa;30;520;5600;10000;0;0;0;47;2200;1;;;;;;;;243;1200;;;;400;1200;;2x MissileLauncher;;1;ArmBots/T2/armaak.lua
+armaap;ARMADA;2;Advanced Aircraft Plant;Produces Tech 2 Aircraft;;factory_air_t2;85;2900;29000;32000;0;0;600;0;3750;;;;;;;;1;0;0;;;1000;312;468;radar;;armaca, armbrawl, armpnix, armlance, armhawk, armawac, armdfly, armblade, armstil, armliche;1;ArmBuildings/LandFactories/armaap.lua
+armaas;ARMADA;2;Dragonslayer;Anti-Air Ship;;ship_t2_aa_flak;30;1000;12000;21000;0;0;0;63;3900;;;;;1;;;;430;840;;;;475;900;;Cannon, MissileLauncher;;1;ArmShips/T2/armaas.lua
+armaca;ARMADA;2;Advanced Construction Aircraft;Tech 2 Constructor;;air_t2_worker;11;340;12000;22000;0;10;120;192;200;;;1;;;;;;0;0;;;50;430;645;;;armfus, armafus, armckfus, armageo, armuwageo, armgmm, armmoho, armmmkr, armuwadves, armuwadvms, armarad, armveil, armfort, armtarg, armsd, armgate, armamb, armpb, armanni, armflak, armmercury, armemp, armamd, armsilo, armbrtha, armvulc, armdf, armap, armaap, armplat, armshltx;1;ArmAircraft/T2/armaca.lua
+armack;ARMADA;2;Advanced Construction Bot;Tech 2 Constructor;;bot_t2_worker;34;430;6900;12500;0;14;210;33;930;;;;;;;;;0;0;;;50;324;486;;;armfus, armafus, armckfus, armshltx, armageo, armgmm, armmoho, armmmkr, armuwadves, armuwadvms, armarad, armveil, armfort, armtarg, armsd, armgate, armamb, armpb, armanni, armflak, armmercury, armemp, armamd, armsilo, armbrtha, armvulc, armdf, armlab, armalab;1;ArmBots/T2/armack.lua
+armacsub;ARMADA;2;Advanced Construction Sub;Tech 2 Constructor;;sub_t2_worker;26;700;9000;23000;0;30;350;72;1110;;1;;;;;;;0;0;;;50;156;234;;;armuwfus, armuwmmm, armuwmme, armuwadves, armuwadvms, armshltxuw, armasy, armsy, armason, armfatf, armatl, armfflak, armkraken, armuwageo;1;ArmShips/T2/armacsub.lua
+armacv;ARMADA;2;Advanced Construction Vehicle;Tech 2 Constructor;;vehicle_t2_worker;32;550;6800;16000;0;20;290;53;2050;;;;;;;;;0;0;;;50;290;435;;;armfus, armckfus, armafus, armageo, armgmm, armmoho, armmmkr, armuwadves, armuwadvms, armarad, armveil, armfort, armtarg, armsd, armgate, armamb, armpb, armanni, armflak, armmercury, armemp, armamd, armsilo, armbrtha, armvulc, armdf, armvp, armavp, armshltx;1;ArmVehicles/T2/armacv.lua
+armadvsol;ARMADA;1;Advanced Solar Collector;Produces 80 Energy;;energy2_1.18;32;350;5000;7950;0;80;0;0;1130;;;;;;;;1;0;0;;;;260;390;;;;1;ArmBuildings/LandEconomy/armadvsol.lua
+armafus;ARMADA;2;Advanced Fusion Reactor;Produces 3000 Energy (Hazardous);;energy5_1.85;85;9700;69000;312500;0;3000;0;0;7900;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armafus.lua
+armageo;ARMADA;2;Advanced Geothermal Powerplant;Produces 1250 Energy (Hazardous);;hazardous;56;1600;27000;50000;0;1250;0;0;3600;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armageo.lua
+armah;ARMADA;1;Sweeper;Anti-Air Hovercraft;;hover_aa;24;230;4500;3560;0;0;0;89;1070;;;;1;;;;;85;700;;350;;509;800;;MissileLauncher;;1;ArmHovercraft/armah.lua
+armalab;ARMADA;2;Advanced Bot Lab;Produces Tech 2 Bots;;factory_bot_t2;65;2600;15000;25000;0;0;600;0;4250;;;;;;;;1;0;0;;;;286;429;;;armack, armfark, armfast, armamph, armzeus, armmav, armsptk, armfido, armsnipe, armfboy, armspid, armaak, armvader, armdecom, armscab, armaser, armspy, armmark;1;ArmBuildings/LandFactories/armalab.lua
+armamb;ARMADA;2;Rattlesnake;Cloakable Pop-up Plasma Artillery;;def_t2_arty;24;2500;17000;27000;0;0;0;0;4000;;;;;;;;1;389;1380;;;;442;663;cloak;3x Cannon;;1;ArmBuildings/LandDefenceOffence/armamb.lua
+armamd;ARMADA;2;Citadel;Anti-Nuke System;;antinuke;68;1500;38000;60000;0;0;0;0;3300;;;;;;;;1;750;72000;;;50;201;302;;StarburstLauncher;;1;ArmBuildings/LandDefenceOffence/armamd.lua
+armamex;ARMADA;1;Twilight;Stealthy Cloakable Metal Extractor;;mex_t1_emp;35;200;1500;1800;0;0;0;0;1610;;;;;;;;1;0;0;;;;286;429;cloak, stealth;;;1;ArmBuildings/LandEconomy/armamex.lua
+armamph;ARMADA;2;Platypus;Amphibious Bot;;amph_t2_aa;33;260;2700;7000;0;0;0;90;1170;;;;1;;;;;152;600;;;;377;566;;BeamLaser, MissileLauncher;;1;ArmBots/T2/armamph.lua
+armamsub;ARMADA;1;Amphibious Complex;Produces Amphibious / Underwater Units;;factory_amph;64;1200;5500;11100;0;0;300;0;2650;;1;;;;;;1;0;0;;;;234;351;;;armbeaver, armpincer, armcroc, armjeth, armaak, armdecom;1;ArmBuildings/SeaFactories/armamsub.lua
+armanac;ARMADA;1;Crocodile;Hovertank;;hover_gun;24;270;2400;3000;0;0;0;70;1530;;;;1;;;;;70;370;;;;509;764;;Cannon;;1;ArmHovercraft/armanac.lua
+armanni;ARMADA;2;Pulsar;Tachyon Accelerator;;armanni;88;3500;74000;52000;0;0;0;0;6100;;;;;;;;1;1091;1400;;;1500;780;1170;radar;BeamLaser;;1;ArmBuildings/LandDefenceOffence/armanni.lua
+armantiship;ARMADA;2;Haven;Mobile Anti-Nuke, Generator, and Radar/Sonar;;ship_t2_carrier;33;1400;12000;27000;0;300;1000;63;5000;;;;;1;;;;750;72000;;760;2950;1000;1500;radar;StarburstLauncher;;1;ArmShips/T2/armantiship.lua
+armap;ARMADA;1;Aircraft Plant;Produces Tech 1 Aircraft;;factory_air;50;650;1100;5450;0;0;150;0;2050;;;;;;;;1;0;0;;;510;292;438;;;armca, armpeep, armfig, armthund, armatlas, armkam, armhvytrans;1;ArmBuildings/LandFactories/armap.lua
+armarad;ARMADA;2;Advanced Radar Tower;Long-Range Radar;;radar_t2;21;400;14000;8000;0;0;0;0;355;;;;;;;;1;0;0;;;3500;820;1230;radar;;;1;ArmBuildings/LandUtil/armarad.lua
+armart;ARMADA;1;Shellshocker;Light Artillery Vehicle;;vehicle_arty;31;135;2200;3000;0;0;0;54;620;;;;;;;;;42;710;;;;364;546;;Cannon;;1;ArmVehicles/armart.lua
+armaser;ARMADA;2;Smuggler;Radar Jammer Bot;;bot_t2_jammer;34;78;1400;6000;0;0;0;48;340;;;;;;;;;0;0;450;;;260;390;jammer;;;1;ArmBots/T2/armaser.lua
+armason;ARMADA;2;Advanced Sonar Station;Extended Sonar;;radar_t2;53;170;2600;6150;0;0;0;0;2350;;1;;;;;;1;0;0;;1600;;215;323;;;;1;ArmBuildings/SeaUtil/armason.lua
+armasy;ARMADA;2;Advanced Shipyard;Produces Tech 2 Ships;;factory_ship_t2;37;2900;9700;24000;0;0;600;0;6000;;;;;;;;1;0;0;;;;299;449;;;armacsub, armmls, armcrus, armsubk, armserp, armaas, armsjam, armantiship, armbats, armmship, armepoch, armlship;1;ArmBuildings/SeaFactories/armasy.lua
+armatl;ARMADA;2;Moray;Advanced Torpedo Launcher;;defence_2_naval;15;1000;8500;9260;0;0;0;0;2800;;;;;;;;1;360;915;;400;;585;878;;TorpedoLauncher;;1;ArmBuildings/SeaDefence/armatl.lua
+armatlas;ARMADA;1;Stork;Light Air Transport;;air_trans;23;68;1300;3850;0;0;0;207;265;;;1;;;;;;0;0;;;;430;645;transport;;;1;ArmAircraft/armatlas.lua
+armavp;ARMADA;2;Advanced Vehicle Plant;Produces Tech 2 Vehicles;;factory_vehicle_t2;91;2600;14000;27000;0;0;600;0;4750;;;;;;;;1;0;0;;;;283;425;;;armacv, armconsul, armcroc, armlatnk, armbull, armgremlin, armmart, armmerl, armmanni, armyork, armseer, armjam;1;ArmBuildings/LandFactories/armavp.lua
+armawac;ARMADA;2;Oracle;Radar / Sonar Plane;;air_t2_radar;10;175;8600;16000;0;0;0;317;890;;;1;;;;;;0;0;;1200;2500;1275;1913;radar;;;1;ArmAircraft/T2/armawac.lua
+armbanth;ARMADA;3;Titan;Assault Mech;;bantha;100;13500;286000;360000;0;150;0;46;69000;1;;;;;;;;1452;860;;;;617;1100;;StarburstLauncher, LaserCannon, BeamLaser, Cannon;;1;ArmGantry/armbanth.lua
+armbats;ARMADA;2;Dreadnought;Battleship;;ship_t2_battleship;40;3300;22000;50000;0;0;0;58;9800;;;;;1;;;;600;880;;;;600;900;;2x Cannon;;1;ArmShips/T2/armbats.lua
+armbeamer;ARMADA;1;Beamer;Beam Laser Turret;;def_beamer;86;190;1500;4800;0;0;0;0;1430;;;;;;;;1;266;490;;;;475;713;;BeamLaser;;1;ArmBuildings/LandDefenceOffence/armbeamer.lua
+armbeaver;ARMADA;1;Beaver;Amphibious Construction Vehicle;;amphib_worker;22;150;3100;6700;0;8;80;42;1030;1;;;;;;;;0;0;;;;266;399;;;armsolar, armadvsol, armwin, armgeo, armmstor, armestor, armmex, armamex, armmakr, armlab, armvp, armap, armhp, armavp, armnanotc, armnanotcplat, armeyes, armrad, armdrag, armclaw, armllt, armbeamer, armhlt, armguard, armrl, armferret, armcir, armjuno, armdl, armjamt, armfhp, armsy, armtide, armfmkr, armuwms, armuwes, armamsub, armplat, armfdrag, armfrad, armfhlt, armfrt, armtl, armuwgeo;1;ArmVehicles/armbeaver.lua
+armblade;ARMADA;2;Hornet;Rapid Assault Gunship;;air_t2_hover_missile;8;1250;22000;32000;0;0;0;204;3000;;;1;;;;;;168;420;;;;624;936;;MissileLauncher;;1;ArmAircraft/T2/armblade.lua
+armbrawl;ARMADA;2;Roughneck;Gunship;;air_t2_hover;13;310;6200;17000;0;0;0;161;1780;;;1;;;;;;107;380;;;;550;825;;Cannon;;1;ArmAircraft/T2/armbrawl.lua
+armbrtha;ARMADA;2;Basilica;Long Range Plasma Cannon;;armbrtha;88;4500;64000;85000;0;0;0;0;4450;;;;;;;;1;123;4650;;;;273;410;;Cannon;;1;ArmBuildings/LandDefenceOffence/armbrtha.lua
+armbull;ARMADA;2;Bull;Heavy Assault Tank;;vehicle_t2_tank;28;950;13000;23000;0;0;0;62;4650;;;;;;;;;245;460;;;;494;741;;Cannon;;1;ArmVehicles/T2/armbull.lua
+armca;ARMADA;1;Construction Aircraft;Tech 1 Constructor;;air_worker;8;110;3000;7960;0;5;60;208;156;;;1;;;;;;0;0;;;;430;645;;;armsolar, armadvsol, armwin, armgeo, armmstor, armestor, armmex, armamex, armmakr, armaap, armlab, armvp, armap, armhp, armnanotc, armeyes, armrad, armdrag, armclaw, armllt, armbeamer, armhlt, armguard, armrl, armferret, armcir, armdl, armjamt, armjuno, armsy, armuwgeo;1;ArmAircraft/armca.lua
+armch;ARMADA;1;Construction Hovercraft;Tech 1 Constructor;;hover_worker;12;200;2700;4470;0;11;110;67;1440;;;;1;;;;;0;0;;;50;351;527;;;armsolar, armadvsol, armwin, armgeo, armmstor, armestor, armmex, armamex, armmakr, armlab, armvp, armap, armhp, armnanotc, armnanotcplat, armeyes, armrad, armdrag, armclaw, armllt, armbeamer, armhlt, armguard, armrl, armferret, armcir, armdl, armjamt, armjuno, armfhp, armsy, armamsub, armplat, armtide, armfmkr, armuwms, armuwes, armfdrag, armfrad, armfhlt, armfrt, armtl, armavp, armasy, armuwgeo;1;ArmHovercraft/armch.lua
+armcir;ARMADA;1;Chainsaw;Medium-Range Anti-Air Missile Battery;;aa_t1_long;65;750;7300;12000;0;0;0;0;4450;;;;;;;;1;625;1125;;;;380;1060;;MissileLauncher;;1;ArmBuildings/LandDefenceOffence/armcir.lua
+armck;ARMADA;1;Construction Bot;Tech 1 Constructor;;bot_worker;26;110;1600;3450;0;7;80;36;690;;;;;;;;;0;0;;;;305;458;;;armsolar, armadvsol, armwin, armgeo, armmstor, armestor, armmex, armamex, armmakr, armalab, armlab, armvp, armap, armhp, armnanotc, armeyes, armrad, armdrag, armclaw, armllt, armbeamer, armhlt, armguard, armrl, armferret, armcir, armdl, armjamt, armjuno, armsy;1;ArmBots/armck.lua
+armckfus;ARMADA;2;Cloakable Fusion Reactor;Produces 750 Energy;;fusion;61;3650;22000;65000;0;750;0;0;3800;;;;;;;;1;0;0;;;;273;410;cloak;;;1;ArmBuildings/LandEconomy/armckfus.lua
+armclaw;ARMADA;1;Dragon's Claw;Pop-up Lightning Turret;;wall_0.4;18;340;1600;4650;0;0;0;0;1330;;;;;;;;1;159;430;8;;;440;660;stealth, jammer;LightningCannon;;1;ArmBuildings/LandDefenceOffence/armclaw.lua
+armcom;ARMADA;1;Armada Commander;Commander;;armcom;64;2700;26000;75000;2;30;300;38;3700;1;;;;;;;;111498;300;;450;700;450;675;cloak, capturer;2x BeamLaser, DGun;armsolar, armwin, armmstor, armestor, armmex, armmakr, armlab, armvp, armap, armeyes, armrad, armdrag, armllt, armrl, armdl, armtide, armuwms, armuwes, armfmkr, armsy, armfdrag, armtl, armfrt, armfrad, armhp, armfhp;0;/armcom.lua
+armconsul;ARMADA;2;Consul;Combat Engineer;;armconsul_1.35;33;250;4300;8500;0;15;150;78;1080;;;;;;;;;0;0;;;;500;750;;;armsolar, armmex, armvp, armnanotc, armeyes, armveil, armfort, armarad, armmine2, armdl, armbeamer, armamb, armferret, armflak, armcv, armpw, armjeth, armspid, armfast, armmav, armcs, armroy, armamph;1;ArmVehicles/T2/armconsul.lua
+armcroc;ARMADA;2;Turtle;Heavy Amphibious Tank;;armcroc;25;750;15000;21000;0;0;0;54;5000;1;;;;;;;;176;765;;279;;500;750;;Cannon, MissileLauncher;;1;ArmVehicles/T2/armcroc.lua
+armcrus;ARMADA;2;Paladin;Cruiser;;ship_t2_cruiser_plasma;35;1000;12000;23000;0;0;0;60;5600;;;;;1;;;;482;500;;375;;600;900;;TorpedoLauncher, BeamLaser, Cannon;;1;ArmShips/T2/armcrus.lua
+armcs;ARMADA;1;Construction Ship;Tech 1 Constructor;;ship_worker;33;200;2000;3460;0;7;125;65;1040;;;;;1;;;;0;0;;;;400;600;;;armmex, armvp, armap, armlab, armeyes, armdl, armdrag, armclaw, armguard, armtide, armgeo, armuwgeo, armfmkr, armuwms, armuwes, armsy, armasy, armnanotcplat, armfhp, armamsub, armplat, armfrad, armfdrag, armtl, armfrt, armfhlt;1;ArmShips/armcs.lua
+armcsa;ARMADA;1;Construction Seaplane;Tech 1 Constructor;;air_worker_sea;17;150;7800;14500;0;20;75;192;405;1;;1;;;;;;0;0;;;;430;645;;;armsolar, armadvsol, armwin, armgeo, armmstor, armestor, armmex, armamex, armmakr, armlab, armvp, armap, armhp, armnanotc, armnanotcplat, armeyes, armrad, armdrag, armclaw, armllt, armbeamer, armhlt, armguard, armrl, armferret, armcir, armdl, armjamt, armjuno, armfhp, armsy, armamsub, armplat, armaap, armtide, armfmkr, armuwms, armuwes, armfdrag, armfrad, armfhlt, armfrt, armtl, armuwgeo;1;ArmSeaplanes/armcsa.lua
+armcv;ARMADA;1;Construction Vehicle;Tech 1 Constructor;;vehicle_worker;28;135;1950;4050;0;10;90;54;1380;;;;;;;;;0;0;;;50;253;380;;;armsolar, armadvsol, armwin, armgeo, armmstor, armestor, armmex, armamex, armmakr, armavp, armlab, armvp, armap, armhp, armnanotc, armeyes, armrad, armdrag, armclaw, armllt, armbeamer, armhlt, armguard, armrl, armferret, armcir, armdl, armjamt, armjuno, armsy;1;ArmVehicles/armcv.lua
+armdecade;ARMADA;1;Dolphin;Fast Assault Corvette;;ship_raid;14;175;1500;2450;0;0;0;105;970;;;;;1;;;;135;280;;;;375;563;;2x Cannon;;1;ArmShips/armdecade.lua
+armdecom;ARMADA;2;Commander;Decoy Commander;;armcom;64;770;12000;30000;0;15;300;38;3700;1;;;;;;;;294;300;;450;700;450;675;cloak, capturer;2x BeamLaser, DGun;armmine1, armmine2, armmine3, armsolar, armwin, armmstor, armestor, armmex, armmakr, armrad, armllt, armrl, armtide, armuwms, armuwes, armfmkr;1;ArmBots/T2/armdecom.lua
+armdf;ARMADA;2;Decoy Fusion Reactor;Does not produce Energy, used to confuse the enemy;;fusion;64;270;100;7500;0;0;0;0;3800;;;;;;;;1;0;0;;;;210;315;;;;1;ArmBuildings/LandUtil/armdf.lua
+armdfly;ARMADA;2;Abductor;Stealthy Armed Heavy Transport;;air_trans;26;320;6600;19000;0;0;0;225;1170;;;1;;;;;;0;520;;;;430;645;stealth, transport;EMP-BeamLaser;;1;ArmAircraft/T2/armdfly.lua
+armdl;ARMADA;1;Anemone;Coastal Torpedo Launcher;;defence_1_naval;60;240;2200;6000;0;0;0;0;2200;;;;;;;;1;150;600;;600;;617;926;;TorpedoLauncher;;1;ArmBuildings/SeaDefence/armdl.lua
+armdrag;ARMADA;1;Dragon's Teeth;Fortification;;wall_0.4;18;8;0;255;0;0;0;0;2800;;;;;;;;1;0;0;;;;1;2;;;;1;ArmBuildings/LandUtil/armdrag.lua
+armemp;ARMADA;2;Paralyzer;EMP Missile Launcher;;emp;27;1600;29000;79300;0;0;0;0;3350;;;;;;;;1;0;3650;;;;455;683;;EMP-StarburstLauncher;;1;ArmBuildings/LandDefenceOffence/armemp.lua
+armepoch;ARMADA;2;Epoch;Flagship;;ship_t2_flagship;50;20000;190000;290000;0;0;0;54;50000;;;;;1;;;;1599;2450;;;1530;689;1034;radar;5x Cannon, 2x MissileLauncher;;1;ArmShips/T2/armepoch.lua
+armestor;ARMADA;1;Energy Storage;Increases Energy Storage (6000);;energystorage;44;170;1700;4110;0;0;0;0;1890;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armestor.lua
+armeyes;ARMADA;1;Beholder;Perimeter Camera;;eye;35;32;850;750;0;0;0;0;280;;;;;;;;1;0;0;;;;560;840;cloak, stealth;;;1;ArmBuildings/LandUtil/armeyes.lua
+armfark;ARMADA;2;Butler;Fast Assist / Repair Bot;;engineer_small;24;210;3000;6000;0;12;140;75;335;;;;;;;;;0;0;;;50;377;566;;;armsolar, armwin, armmex, armmakr, armeyes, armmark, armaser;1;ArmBots/T2/armfark.lua
+armfast;ARMADA;2;Sprinter;Fast Raider Bot;;bot_t2_raid;37;160;3800;5000;0;0;0;111;690;;;;;;;;;120;220;;;;351;527;;Cannon;;1;ArmBots/T2/armfast.lua
+armfatf;ARMADA;2;Naval Pinpointer;Enhanced Radar Targeting;;targetting;70;800;7300;9880;0;0;0;0;1610;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/SeaUtil/armfatf.lua
+armfav;ARMADA;1;Rover;Light Scout Vehicle;;vehicle;15;31;370;950;0;0;0;168;105;;;;;;;;;35;180;;;;635;953;;BeamLaser;;1;ArmVehicles/armfav.lua
+armfboy;ARMADA;2;Fatboy;Heavy Plasma Bot;;bot_t2_plasma_aoe;47;1400;15000;28000;0;0;0;30;7800;;;;;;;;;114;700;;;;510;765;;Cannon;;1;ArmBots/T2/armfboy.lua
+armfdrag;ARMADA;1;Shark's Teeth;Naval Fortification;;wall_0.4;13;15;0;370;0;0;0;0;4450;;;;;;;;1;0;0;;;;1;2;;;;1;ArmBuildings/SeaUtil/armfdrag.lua
+armferret;ARMADA;1;Ferret;Pop-Up Anti-Air Missile Battery;;aa_t15;21;360;5700;5800;0;0;0;0;1330;;;;;;;;1;176;840;;;;375;850;cloak;MissileLauncher;;1;ArmBuildings/LandDefenceOffence/armferret.lua
+armfflak;ARMADA;2;Naval Arbalest;Anti-Air Flak Gun - Naval Series;;aa_flak_t2;41;850;23000;21900;0;0;0;0;1920;;;;;;;;1;469;775;;;;550;1000;;Cannon;;1;ArmBuildings/SeaDefence/armfflak.lua
+armfhlt;ARMADA;1;Manta;Floating Heavy Laser Tower;;defence_1_laser;64;470;6200;9670;0;0;0;0;4250;;;;;;;;1;233;630;;;;630;945;;BeamLaser;;1;ArmBuildings/SeaDefence/armfhlt.lua
+armfhp;ARMADA;1;Naval Hovercraft Platform;Builds Hovercraft;;factory_hover;28;670;2000;8700;0;0;150;0;3350;;;;;;;;1;0;0;;;;286;429;;;armch, armsh, armanac, armah, armmh;1;ArmBuildings/SeaFactories/armfhp.lua
+armfido;ARMADA;2;Hound;Mortar / Skirmish Bot;;bot_arty_t2;29;285;6300;6230;0;0;0;69;1280;;;;;;;;;81;650;;;;400;600;;Cannon;;1;ArmBots/T2/armfido.lua
+armfig;ARMADA;1;Falcon;Fighter;;air;8;73;2900;3500;0;0;0;289;167;;;1;;;;;;139;680;;;;430;950;;MissileLauncher;;1;ArmAircraft/armfig.lua
+armflak;ARMADA;2;Arbalest;Anti-Air Flak Gun;;aa_flak_t2;54;820;13000;19000;0;0;0;0;1750;;;;;;;;1;469;775;;;;525;1000;;Cannon;;1;ArmBuildings/LandDefenceOffence/armflak.lua
+armflash;ARMADA;1;Blitz;Fast Assault Tank;;vehicle_t1_raid;16;110;900;1960;0;0;0;101;750;;;;;;;;;90;180;;;;350;525;;Cannon;;1;ArmVehicles/armflash.lua
+armflea;ARMADA;1;Tick;Fast Scout Bot;;bot_t1_flea;10;21;300;800;0;0;0;132;60;;;;;;;;;40;140;;;;600;900;;BeamLaser;;1;ArmBots/armflea.lua
+armfmine3;ARMADA;1;Heavy Mine;Heavy Mine, Naval Series;;mine;12;32;1600;400;0;0;0;0;11;;;;;;;;1;1940;0;;;;78;117;cloak, stealth, sonar-stealth;;;1;ArmBuildings/SeaUtil/armfmine3.lua
+armfmkr;ARMADA;1;Naval Energy Converter;Converts 70 energy into 1 metal per sec;;metalmaker_t1;23;1;1150;2600;0;0;0;0;167;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/SeaEconomy/armfmkr.lua
+armfort;ARMADA;2;Fortification Wall;Advanced Fortification;;wall_0.4;47;40;500;900;0;0;0;0;8900;;;;;;;;1;0;0;;;;1;2;;;;1;ArmBuildings/LandUtil/armfort.lua
+armfrad;ARMADA;1;Naval Radar / Sonar Tower;Early Warning System;;radar_t1;59;130;1000;1800;0;0;0;0;110;;;;;;;;1;0;0;;900;2100;760;1140;radar;;;1;ArmBuildings/SeaUtil/armfrad.lua
+armfrt;ARMADA;1;Naval Nettle;Floating Anti-air Tower;;aa;60;90;1000;2200;0;0;0;0;380;;;;;;;;1;96;765;;;;468;750;;MissileLauncher;;1;ArmBuildings/SeaDefence/armfrt.lua
+armfus;ARMADA;2;Fusion Reactor;Produces 750 Energy;;fusion;64;3350;18000;54000;0;750;0;0;3800;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armfus.lua
+armgate;ARMADA;2;Keeper;Plasma Shield;;shield;35;3000;54000;55000;0;0;0;0;3550;;;;;;;;1;1;10;;;;273;410;shield;Shield;;1;ArmBuildings/LandUtil/armgate.lua
+armgeo;ARMADA;1;Geothermal Powerplant;Produces 300 Energy;;energy6_1.3;51;560;13000;13100;0;300;0;0;1940;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armgeo.lua
+armgmm;ARMADA;2;Prude;Safe Geothermal Powerplant, produces 750 Energy;;energy_geo_safe;39;1150;25000;41500;0;750;0;0;13900;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armgmm.lua
+armgremlin;ARMADA;2;Gremlin;Stealth Tank;;armst_1.25;18;230;3700;8500;0;0;0;71;1060;;;;;;;;;88;220;;;;494;741;cloak, stealth;Cannon;;1;ArmVehicles/T2/armgremlin.lua
+armguard;ARMADA;1;Gauntlet;Area Control Plasma Artillery;;def_t1_arty;36;1250;12500;19300;0;0;0;0;3050;;;;;;;;1;212;1220;;;;455;683;;3x Cannon;;1;ArmBuildings/LandDefenceOffence/armguard.lua
+armham;ARMADA;1;Mace;Light Plasma Bot;;bot_plasma_t1;29;130;1300;2200;0;0;0;46;1000;;;;;;;;;60;380;;;;380;570;;Cannon;;1;ArmBots/armham.lua
+armhawk;ARMADA;2;Highwind;Stealth Fighter;;air_t2;9;140;5700;10500;0;0;0;359;370;;;1;;;;;;536;740;;;;430;1100;stealth;MissileLauncher;;1;ArmAircraft/T2/armhawk.lua
+armhlt;ARMADA;1;Overwatch;Area Control Laser Tower;;defence_1.5_laser;96;440;4700;11300;0;0;0;0;2600;;;;;;;;1;215;620;;;;494;741;;BeamLaser;;1;ArmBuildings/LandDefenceOffence/armhlt.lua
+armhp;ARMADA;1;Hovercraft Platform;Builds Hovercraft;;factory_hover;32;670;2000;8700;0;0;150;0;3350;;;;;;;;1;0;0;;;;286;429;;;armch, armsh, armanac, armah, armmh;1;ArmBuildings/LandFactories/armhp.lua
+armhvytrans;ARMADA;1;Osprey;Heavy Transport;;air_trans;26;190;4000;8500;0;0;0;110;630;;;1;;;;;;0;0;;;;430;645;transport;;;1;ArmAircraft/armhvytrans.lua
+armjam;ARMADA;2;Umbra;Radar Jammer Vehicle;;vehicle_t2_jammer;17;105;1700;7000;0;0;0;33;510;;;;;;;;;0;0;450;;;300;450;jammer;;;1;ArmVehicles/T2/armjam.lua
+armjamt;ARMADA;1;Sneaky Pete;Jammer Tower;;jammer;77;240;8500;9950;0;0;0;0;790;;;;;;;;1;0;0;500;;;195;293;jammer;;;1;ArmBuildings/LandUtil/armjamt.lua
+armjanus;ARMADA;1;Janus;Twin Medium Rocket Launcher;;armjanus_1.2;19;240;2600;3550;0;0;0;54;1030;;;;;;;;;88;380;;;;325;488;;2x MissileLauncher;;1;ArmVehicles/armjanus.lua
+armjeth;ARMADA;1;Crossbow;Amphibious Anti-air Bot;;bot_amph_aa;28;125;1100;1830;0;0;0;56;630;1;;;;;;;;55;760;;;;377;800;;MissileLauncher;;1;ArmBots/armjeth.lua
+armjuno;ARMADA;1;Juno;Anti Radar / Jammer / Minefield / ScoutSpam Weapon;;juno;77;640;17000;21800;0;0;0;0;2350;;;;;;;;1;1;32000;;;;494;741;stealth;StarburstLauncher;;1;ArmBuildings/LandDefenceOffence/armjuno.lua
+armkam;ARMADA;1;Banshee;Light Gunship;;air_hover;15;135;2300;5050;0;0;0;185;560;;;1;;;;;;39;350;;;;520;780;;Cannon;;1;ArmAircraft/armkam.lua
+armkraken;ARMADA;2;Gorgon;Floating Rapid-fire Plasma Tower;;def_t2_cannon;64;1000;13000;20000;0;0;0;0;4450;;;;;;;;1;540;800;;;;700;1050;;Cannon;;1;ArmBuildings/SeaDefence/armkraken.lua
+armlab;ARMADA;1;Bot Lab;Produces Tech 1 Bots;;factory_bot;28;500;950;5000;0;0;150;0;2900;;;;;;;;1;0;0;;;;290;435;;;armck, armpw, armrectr, armrock, armham, armjeth, armwar, armflea;1;ArmBuildings/LandFactories/armlab.lua
+armlance;ARMADA;2;Cormorant;Torpedo Bomber;;air_t2_torpbomber;12;400;8000;19000;0;0;0;285;1920;;;1;;;;;;188;400;;800;800;500;750;;TorpedoLauncher;;1;ArmAircraft/T2/armlance.lua
+armlatnk;ARMADA;2;Jaguar;Lightning Tank;;armlatnk_1.3;23;330;6400;8000;0;0;0;90;1060;;;;;;;;;190;600;;;;390;585;;MissileLauncher, LightningCannon;;1;ArmVehicles/T2/armlatnk.lua
+armliche;ARMADA;2;Liche;Atomic Bomber;;air_liche;22;2200;46000;73000;0;0;0;295;2300;;;1;;;;;;625;250;;;;455;683;;MissileLauncher;;1;ArmAircraft/T2/armliche.lua
+armllt;ARMADA;1;Sentry;Light Laser Tower;;defence_0_laser;78;85;680;2400;0;0;0;0;620;;;;;;;;1;161;430;;;;494;741;;BeamLaser;;1;ArmBuildings/LandDefenceOffence/armllt.lua
+armlship;ARMADA;2;Maelstrom;Fast Raider/Skirmisher;;ship_t2_lightning;24;570;11400;15000;0;0;0;99;2200;;;;;1;;;;319;710;;;750;500;750;;MissileLauncher, LightningCannon;;1;ArmShips/T2/armlship.lua
+armlun;ARMADA;3;Lunkhead;Heavy Hovertank;;armlun_1.8;24;1150;23000;40000;0;0;0;50;5300;;;;1;;;;;318;575;;550;;620;930;;Cannon, TorpedoLauncher;;1;ArmGantry/armlun.lua
+armmakr;ARMADA;1;Energy Converter;Converts 70 energy into 1 metal per sec;;metalmaker_t1;23;1;1150;2600;0;0;0;0;167;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armmakr.lua
+armmanni;ARMADA;2;Starlight;Mobile Tachyon Weapon;;armmanni_1.55;56;1200;18500;33000;0;0;0;42;2800;;;;;;;;;532;950;;;;650;975;;BeamLaser;;1;ArmVehicles/T2/armmanni.lua
+armmar;ARMADA;3;Marauder;Amphibious Assault Mech;;armmar_t3;56;970;21000;33000;0;0;0;95;4900;1;;;;;;;;379;600;;;;455;683;;Cannon, MissileLauncher;;1;ArmGantry/armmar.lua
+armmark;ARMADA;2;Compass;Radar Bot;;bot_t2_radar;27;100;1250;5000;0;0;0;41;355;;;;;;;;;0;0;;;2200;900;1350;radar;;;1;ArmBots/T2/armmark.lua
+armmart;ARMADA;2;Mauser;Mobile Artillery;;vehicle_arty_t2;30;320;4900;8500;0;0;0;60;1070;;;;;;;;;86;820;;;;286;429;;Cannon;;1;ArmVehicles/T2/armmart.lua
+armmav;ARMADA;2;Gunslinger;Skirmish Bot. Auto-Repair. Range increases with experience;;bot_t2_impulse2x;52;650;11000;17000;0;0;0;50;1560;;;;;;;;;265;365;;;;550;825;;Cannon;;1;ArmBots/T2/armmav.lua
+armmercury;ARMADA;2;Mercury;Long Range Anti-Air Tower;;aa_longrange_t2;81;1600;33000;28000;0;0;0;0;1670;;;;;;;;1;417;2400;;;;600;2400;;MissileLauncher;;1;ArmBuildings/LandDefenceOffence/armmercury.lua
+armmerl;ARMADA;2;Ambassador;Stealthy Rocket Launcher - good vs. static defense;;vehicle_t2_vroc;28;920;6500;21000;0;0;0;33;1220;;;;;;;;;106;1300;;;;247;371;stealth;StarburstLauncher;;1;ArmVehicles/T2/armmerl.lua
+armmex;ARMADA;1;Metal Extractor;Extracts Metal from Metalspots;;mex_t1;41;50;500;1800;0;0;0;0;270;1;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armmex.lua
+armmh;ARMADA;1;Possum;Hovercraft Rocket Launcher;;hover_t1_missile;25;175;3000;3300;0;0;0;64;530;;;;1;;;;;50;710;;;;509;764;;StarburstLauncher;;1;ArmHovercraft/armmh.lua
+armmine1;ARMADA;1;Light Mine;Light Mine;;mine;7;7;270;100;0;0;0;0;11;;;;;;;;1;445;0;;;;83;125;cloak, stealth;;;1;ArmBuildings/LandUtil/armmine1.lua
+armmine2;ARMADA;1;Medium Mine;Medium Mine;;mine;8;25;1050;300;0;0;0;0;11;;;;;;;;1;1110;0;;;;83;125;cloak, stealth;;;1;ArmBuildings/LandUtil/armmine2.lua
+armmine3;ARMADA;1;Heavy Mine;Heavy Mine;;mine;12;50;2800;700;0;0;0;0;11;;;;;;;;1;3000;0;;;;83;125;cloak, stealth;;;1;ArmBuildings/LandUtil/armmine3.lua
+armmls;ARMADA;2;Voyager;Naval Engineer;;shipengineer;13;190;3200;6000;0;0;200;66;1460;;;;;1;;;;0;0;;;;300;450;;;armtide, armmex, armfrad, armarad, armnanotcplat, armsy, armcs, armtl, armfhlt, armfflak, armpt, armdecade, armroy, armamph, armfmine3, armamb, armkraken, armfdrag;1;ArmShips/T2/armmls.lua
+armmlv;ARMADA;1;Groundhog;Stealthy Minelayer / Minesweeper;;armmlv_1.0;18;57;1100;3520;0;0;40;75;335;;;;;;;;;0;0;64;;;450;675;stealth, jammer;;armmine1, armmine2, armmine3, armdrag, armeyes;1;ArmVehicles/armmlv.lua
+armmmkr;ARMADA;2;Advanced Energy Converter;Converts 600 energy into 10.3 metal per sec;;metalmaker_t2;28;380;21000;35000;0;0;0;0;445;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armmmkr.lua
+armmoho;ARMADA;2;Advanced Metal Extractor;Advanced Metal Extractor / Storage;;mex_t2;71;620;7700;14900;0;0;0;0;2800;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armmoho.lua
+armmship;ARMADA;2;Longbow;Missile Cruiser;;ship_t2_missile;50;2000;10000;24000;0;0;0;63;3350;;;;;1;;;;177;1550;;;1000;319;478;radar;Cannon, MissileLauncher;;1;ArmShips/T2/armmship.lua
+armmstor;ARMADA;1;Metal Storage;Increases Metal Storage (3000);;metalstorage;49;330;570;2920;0;0;0;0;2100;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armmstor.lua
+armnanotc;ARMADA;1;Construction Turret;Assist & Repair in large radius;;nanot1;35;230;3200;5300;0;0;200;0;560;;;;;;;;1;0;0;;;;380;570;;;;1;ArmBuildings/LandUtil/armnanotc.lua
+armnanotcplat;ARMADA;1;Naval Construction Turret;Assist & Repair in large radius;;nanot1;30;230;3200;5300;0;0;200;0;560;;;;;;;;1;0;0;;;;380;570;;;;1;ArmBuildings/SeaUtil/armnanotcplat.lua
+armpb;ARMADA;2;Pit Bull;Pop-up Gauss Cannon;;def_t2_impulse;48;680;14000;15000;0;0;0;0;2800;;;;;;;;1;422;730;;;;598;897;cloak;Cannon;;1;ArmBuildings/LandDefenceOffence/armpb.lua
+armpeep;ARMADA;1;Blink;Scout;;air_los;10;52;1550;2800;0;0;0;375;89;;;1;;;;;;0;0;;;1140;865;1298;radar;;;1;ArmAircraft/armpeep.lua
+armpincer;ARMADA;1;Pincer;Light Amphibious Tank;;amphib_tank;22;200;2000;2610;0;0;0;63;1340;1;;;;;;;;77;305;;180;;500;750;;Cannon;;1;ArmVehicles/armpincer.lua
+armplat;ARMADA;1;Seaplane Platform;Builds Seaplanes;;factory_air_sea;32;1450;5000;12000;0;0;300;0;2000;;1;;;;;;1;0;0;;600;750;169;254;;;armcsa, armsaber, armsb, armseap, armsfig, armsehak;1;ArmBuildings/SeaFactories/armplat.lua
+armpnix;ARMADA;2;Blizzard;Strategic Bomber;;air_t2_bomber;13;230;12500;25000;0;0;0;258;1130;;;1;;;;;;190;1280;;;;430;645;;AircraftBomb;;1;ArmAircraft/T2/armpnix.lua
+armpship;ARMADA;1;Ellysaw;Assault Frigate;;ship_pship;22;380;2550;4250;0;0;0;81;2150;;;;;1;;;;117;470;;;;500;750;;2x Cannon;;1;ArmShips/armpship.lua
+armpt;ARMADA;1;Skater;Stealthy Patrol Boat / Light Anti Air / Sonar;;ship;10;150;1000;2700;0;0;0;93;780;;;;;1;;;;123;760;;400;1000;750;800;stealth, radar;BeamLaser, MissileLauncher;;1;ArmShips/armpt.lua
+armpw;ARMADA;1;Pawn;Fast Infantry Bot;;bot_t1_raid_0.7;26;54;900;1650;0;0;0;87;370;;;;;;;;;90;180;;;;429;644;;Cannon;;1;ArmBots/armpw.lua
+armrad;ARMADA;1;Radar Tower;Early Warning System;;radar_t1;80;60;630;1140;0;0;0;0;90;;;;;;;;1;0;0;;;2100;680;1020;radar;;;1;ArmBuildings/LandUtil/armrad.lua
+armraz;ARMADA;3;Razorback;Battle Mech;;armraz_1.75;73;3800;68000;120000;0;0;0;69;13300;;;;;;;;;1099;475;;;;450;675;;BeamLaser;;1;ArmGantry/armraz.lua
+armrecl;ARMADA;1;Grim Reaper;Resurrection Sub;;sub_rez;14;210;3000;6200;0;0;150;66;420;;1;;;;;;;0;0;;150;;300;450;resurrector;;;1;ArmShips/armrecl.lua
+armrectr;ARMADA;1;Lazarus;Stealthy Rez / Repair / Reclaim Bot;;bot_t1_rez;31;130;1400;2800;0;0;200;78;220;;;;;;;;;0;0;;;50;430;645;stealth, resurrector;;;1;ArmBots/armrectr.lua
+armrl;ARMADA;1;Nettle;Light Anti-air Tower;;aa;64;80;900;1800;0;0;0;0;330;;;;;;;;1;68;765;;;;455;700;;MissileLauncher;;1;ArmBuildings/LandDefenceOffence/armrl.lua
+armrock;ARMADA;1;Rocketeer;Rocket Bot - good vs. static defenses;;bot_rocket;28;120;1000;2010;0;0;0;51;720;;;;;;;;;41;475;;;;338;507;;MissileLauncher;;1;ArmBots/armrock.lua
+armroy;ARMADA;1;Corsair;Destroyer;;ship_destroyer;28;880;6600;10200;0;0;0;67;3700;;;;;1;;;;259;700;;375;;500;750;;Cannon, TorpedoLauncher;;1;ArmShips/armroy.lua
+armsaber;ARMADA;1;Sabre;Seaplane Gunship;;air_t1_hover_sea;13;210;6400;11000;0;0;0;157;1010;1;;1;;;;;;67;425;;;;595;893;;LaserCannon;;1;ArmSeaplanes/armsaber.lua
+armsam;ARMADA;1;Whistler;Missile Truck;;vehicle_t1_missile;18;150;2100;3420;0;0;0;55;820;;;;;;;;;74;700;;;;620;900;;2x MissileLauncher;;1;ArmVehicles/armsam.lua
+armsb;ARMADA;1;Tsunami;Seaplane Bomber;;air_bomber_sea;20;240;7500;10000;0;0;0;267;1170;1;;1;;;;;;143;1280;;;;455;683;;AircraftBomb;;1;ArmSeaplanes/armsb.lua
+armscab;ARMADA;2;Umbrella;Mobile All-Terrain Anti-Nuke;;antinukemobile;39;1150;30000;49000;0;0;0;51;870;;;;;;;;;250;72000;;;50;450;675;;StarburstLauncher;;1;ArmBots/T2/armscab.lua
+armsd;ARMADA;2;Tracer;Intrusion Countermeasure System - tracks down stealthy units;;seismic;50;710;7100;11900;0;0;0;0;2650;;;;;;;;1;0;2000;;;;240;360;stealth-detector;;;1;ArmBuildings/LandUtil/armsd.lua
+armseap;ARMADA;1;Puffin;Torpedo Gunship;;air_torp_sea;19;290;6500;18000;0;0;0;271;1380;1;;1;;;;;;114;600;;535;;535;803;;TorpedoLauncher;;1;ArmSeaplanes/armseap.lua
+armseer;ARMADA;2;Prophet;Radar Vehicle;;vehicle_t2_radar;32;125;2000;7500;0;0;0;57;980;;;;;;;;;0;0;;;2300;900;1350;radar;;;1;ArmVehicles/T2/armseer.lua
+armsehak;ARMADA;1;Horizon;Advanced Radar / Sonar Plane;;air_los_sea;29;125;7000;11000;0;0;0;338;580;1;;1;;;;;;0;0;;900;2250;1100;1650;radar;;;1;ArmSeaplanes/armsehak.lua
+armserp;ARMADA;2;Serpent;Long-Range Battle Submarine;;battlesub_t2;22;1800;27000;32000;0;0;0;45;3550;;1;;;;;;;206;800;;400;;550;825;stealth;2x TorpedoLauncher;;1;ArmShips/T2/armserp.lua
+armsfig;ARMADA;1;Cyclone;Seaplane Swarmer;;air_sea;12;90;4500;7000;0;0;0;311;220;1;;1;;;;;;252;710;;;;430;950;;MissileLauncher;;1;ArmSeaplanes/armsfig.lua
+armsh;ARMADA;1;Seeker;Fast Attack Hovercraft;;hover_raid;18;85;1250;1700;0;0;0;114;290;;;;1;;;;;60;230;;;;550;825;;BeamLaser;;1;ArmHovercraft/armsh.lua
+armshltx;ARMADA;3;Experimental Gantry;Produces Experimental Units;;factory_gantry;108;7900;58000;62000;0;0;1800;0;16000;;;;;;;;1;0;0;;;;273;410;;;armbanth, armraz, armmar, armvang, armlun, armthor;1;ArmBuildings/LandFactories/armshltx.lua
+armshltxuw;ARMADA;3;Experimental Gantry;Produces Large Amphibious Units;;factory_gantry_uw;108;7900;58000;62000;0;0;1800;0;16000;;1;;;;;;1;0;0;;;;273;410;;;armbanth, armmar, armcroc, armlun;1;ArmBuildings/SeaFactories/armshltxuw.lua
+armsilo;ARMADA;2;Armageddon;Nuclear ICBM Launcher;;nuke;72;8100;90000;178500;0;0;0;0;5900;;;;;;;;1;317;72000;;;50;455;683;;StarburstLauncher, Cannon;;1;ArmBuildings/LandDefenceOffence/armsilo.lua
+armsjam;ARMADA;2;Bermuda;Radar Jammer Ship;;ship_t2_jammer;27;310;5000;20000;0;0;0;45;1350;;;;;1;;;;0;0;980;;;390;585;jammer;;;1;ArmShips/T2/armsjam.lua
+armsnipe;ARMADA;2;Sharpshooter;Sniper Bot;;armsnipe_1.3;42;680;20000;24000;0;0;0;33;580;;;;;;;;;250;900;;;;455;683;cloak;Cannon;;1;ArmBots/T2/armsnipe.lua
+armsolar;ARMADA;1;Solar Collector;Produces 20 Energy;;energy1_1.0;43;155;0;2600;0;0;0;0;340;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armsolar.lua
+armspid;ARMADA;2;Webber;All-Terrain EMP and Reclaiming Spider;;allterrain_emp;13;250;5000;7000;0;0;150;72;1110;;;;;;;;;0;280;;;;550;825;stealth;EMP-BeamLaser;;1;ArmBots/T2/armspid.lua
+armsptk;ARMADA;2;Recluse;All-Terrain Rocket Spider;;armsptk_1.44;22;400;4500;11500;0;0;0;47;1390;;;;;;;;;161;575;;;;440;660;;MissileLauncher;;1;ArmBots/T2/armsptk.lua
+armspy;ARMADA;2;Ghost;Radar-Invisible Spy Bot;;spy;33;135;8800;12000;0;0;50;65;300;;;;;;;;;0;100;;;;550;825;cloak, stealth, sonar-stealth;Melee;;1;ArmBots/T2/armspy.lua
+armstil;ARMADA;2;Stiletto;EMP Bomber;;armstil_1.66;23;460;38000;39000;0;0;0;300;1880;;;1;;;;;;0;1280;;;;430;645;stealth;EMP-AircraftBomb;;1;ArmAircraft/T2/armstil.lua
+armstump;ARMADA;1;Stout;Medium Assault Tank;;vehicle_t1_tank;23;225;2000;2900;0;0;0;76;1780;;;;;;;;;83;350;;;;325;488;;Cannon;;1;ArmVehicles/armstump.lua
+armsub;ARMADA;1;Eel;Submarine;;sub;16;440;3100;5800;0;0;0;66;840;;1;;;;;;;86;500;;400;;400;600;;TorpedoLauncher;;1;ArmShips/armsub.lua
+armsubk;ARMADA;2;Barracuda;Fast Assault Submarine;;sub_t2;19;950;17000;28000;0;0;0;81;2350;;1;;;;;;;175;400;;525;;390;585;;TorpedoLauncher;;1;ArmShips/T2/armsubk.lua
+armsy;ARMADA;1;Shipyard;Produces Tech 1 Ships;;factory_ship;52;450;950;5160;0;0;150;0;4100;;;;;;;;1;0;0;;;;340;510;;;armcs, armrecl, armdecade, armpt, armpship, armroy, armsub;1;ArmBuildings/SeaFactories/armsy.lua
+armtarg;ARMADA;2;Pinpointer;Enhanced Radar Targeting, more facilities enhance accuracy;;targetting;147;810;7200;8700;0;0;0;0;2100;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandUtil/armtarg.lua
+armthor;ARMADA;3;Thor;Experimental Terminator Tank;;armthor;41;9000;240000;320000;0;0;0;54;56000;;;;;;;;;968;1050;;;;600;900;;LightningCannon, EMP-StarburstLauncher, 2x EMP-BeamLaser;;1;ArmGantry/armthor.lua
+armthund;ARMADA;1;Stormbringer;Bomber;;air_bomber;16;145;4200;4780;0;0;0;250;670;;;1;;;;;;88;1280;;;;430;645;;AircraftBomb;;1;ArmAircraft/armthund.lua
+armtide;ARMADA;1;Tidal Generator;Produces Energy (depends on map);;energy1_1.0;15;90;200;2190;0;0;0;0;400;;;;;;;;1;0;0;;;;130;195;;;;1;ArmBuildings/SeaEconomy/armtide.lua
+armtl;ARMADA;1;Harpoon;Offshore Torpedo Launcher;;defence_1_naval;7;170;1500;3700;0;0;0;0;1300;;;;;;;;1;187;500;;400;;494;741;;TorpedoLauncher;;1;ArmBuildings/SeaDefence/armtl.lua
+armuwadves;ARMADA;2;Hardened Energy Storage;Increases Energy Storage (40000);;energystorage_t2;41;830;10000;20300;0;0;0;0;11700;1;;;;;;;1;0;0;;;;169;254;;;;1;ArmBuildings/SeaEconomy/armuwadves.lua
+armuwadvms;ARMADA;2;Hardened Metal Storage;Increases Metal Storage (10000);;metalstorage_t2;28;750;11500;20400;0;0;0;0;10300;1;;;;;;;1;0;0;;;;195;293;;;;1;ArmBuildings/SeaEconomy/armuwadvms.lua
+armuwageo;ARMADA;2;Advanced Geothermal Powerplant;Produces 1250 Energy (Hazardous);;hazardous;57;1600;27000;50000;0;1250;0;0;3600;;1;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/SeaEconomy/armuwageo.lua
+armuwes;ARMADA;1;Naval Energy Storage;Increases Energy Storage (6000);;energystorage;50;170;1700;4110;0;0;0;0;1890;;1;;;;;;1;0;0;;;;182;273;;;;1;ArmBuildings/SeaEconomy/armuwes.lua
+armuwfus;ARMADA;2;Naval Fusion Reactor;Produces 1200 Energy;;fusion;50;5200;33500;99900;0;1200;0;0;5600;;1;;;;;;1;0;0;;;;143;215;;;;1;ArmBuildings/SeaEconomy/armuwfus.lua
+armuwgeo;ARMADA;1;Offshore Geothermal Powerplant;Produces 300 Energy;;energy6_1.3;50;560;13000;13100;0;300;0;0;1940;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/SeaEconomy/armuwgeo.lua
+armuwmme;ARMADA;2;Naval Advanced Metal Extractor;Advanced Metal Extractor / Storage;;mex_t2;68;620;7700;14900;0;0;0;0;2800;;1;;;;;;1;0;0;;;;182;273;;;;1;ArmBuildings/SeaEconomy/armuwmme.lua
+armuwmmm;ARMADA;2;Naval Advanced Energy Converter;Converts 600 energy into 10.3 metal per sec;;metalmaker_t2;33;380;21000;35000;0;0;0;0;445;;;;;;;;1;0;0;;;;156;234;;;;1;ArmBuildings/SeaEconomy/armuwmmm.lua
+armuwms;ARMADA;1;Naval Metal Storage;Increases Metal Storage (3000);;metalstorage;25;330;570;2920;0;0;0;0;3600;;1;;;;;;1;0;0;;;;182;273;;;;1;ArmBuildings/SeaEconomy/armuwms.lua
+armvader;ARMADA;2;Tumbleweed;Amphibious Rolling Bomb;;armvader_0.9;14;65;5800;7900;0;0;0;84;445;1;;;;;;;;2000;42;;;;273;410;;Melee, Cannon;;1;ArmBots/T2/armvader.lua
+armvang;ARMADA;3;Vanguard;All-Terrain Heavy Plasma Cannon;;allterrain_t3_arty;52;3300;71000;120000;0;0;0;33;8500;;;;;;;;;316;1450;;;;625;938;;3x Cannon;;1;ArmGantry/armvang.lua
+armveil;ARMADA;2;Veil;Long-Range Jamming Tower;;jammer_t2;87;125;19000;9100;0;0;0;0;830;;;;;;;;1;0;0;760;;;155;233;jammer;;;1;ArmBuildings/LandUtil/armveil.lua
+armvp;ARMADA;1;Vehicle Plant;Produces Tech 1 Vehicles;;factory_vehicle;46;590;1550;5700;0;0;150;0;3000;;;;;;;;1;0;0;;;;273;410;;;armcv, armbeaver, armmlv, armfav, armflash, armpincer, armstump, armart, armjanus, armsam;1;ArmBuildings/LandFactories/armvp.lua
+armvulc;ARMADA;2;Ragnarok;Rapid-Fire Long-Range Plasma Cannon;;armvulc;148;70000;830000;1400000;0;0;0;0;32000;;;;;;;;1;2708;5750;;;;700;1050;;Cannon;;1;ArmBuildings/LandDefenceOffence/armvulc.lua
+armwar;ARMADA;1;Centurion;Anti-Swarm Bot;;armwar_1.15;34;270;3100;4200;0;0;0;45;1590;;;;;;;;;183;330;;;;350;525;;BeamLaser;;1;ArmBots/armwar.lua
+armwin;ARMADA;1;Wind Turbine;Produces Energy. Depends on wind strength.;;wind;84;40;175;1600;0;0;0;0;196;;;;;;;;1;0;0;;;;273;410;;;;1;ArmBuildings/LandEconomy/armwin.lua
+armyork;ARMADA;2;Shredder;Anti-Air Flak Vehicle;;vehicle_t2_aa_flak;36;450;9100;13000;0;0;0;71;2600;;;;;;;;;273;775;;;;390;900;;Cannon;;1;ArmVehicles/T2/armyork.lua
+armzeus;ARMADA;2;Welder;Assault Bot;;armzeus_1.28;39;350;6100;9500;0;0;0;47;2950;;;;;;;;;129;280;;;;332;497;;LightningCannon;;1;ArmBots/T2/armzeus.lua
+coraak;CORTEX;2;Manticore;Heavy Amphibious Anti-Air Bot;;bot_amph_t2_aa;31;650;6200;11000;0;0;0;35;3200;1;;;;;;;;211;1300;;;;390;1200;;Cannon, MissileLauncher;;1;CorBots/T2/coraak.lua
+coraap;CORTEX;2;Advanced Aircraft Plant;Produces Tech 2 Aircraft;;factory_air_t2;51;2900;28000;32000;0;0;600;0;3900;;;;;;;;1;0;0;;;1000;306;458;radar;;coraca, corape, corhurc, cortitan, corvamp, corawac, corseah, corcrwh;1;CorBuildings/LandFactories/coraap.lua
+coraca;CORTEX;2;Advanced Construction Aircraft;Tech 2 Constructor;;air_t2_worker;18;360;11000;22000;0;10;130;182;205;;;1;;;;;;0;0;;;50;430;645;;;corfus, corafus, corageo, coruwageo, corbhmth, cormoho, cormexp, cormmkr, coruwadves, coruwadvms, corarad, corshroud, corfort, cortarg, corsd, corgate, cortoast, corvipe, cordoom, corflak, corscreamer, cortron, corfmd, corsilo, corint, corbuzz, corap, coraap, corplat, corgant;1;CorAircraft/T2/coraca.lua
+corack;CORTEX;2;Advanced Construction Bot;Tech 2 Constructor;;bot_t2_worker;39;470;6900;12500;0;14;220;33;1000;;;;;;;;;0;0;;;50;319;478;;;corfus, corafus, corgant, corageo, corbhmth, cormoho, cormexp, cormmkr, coruwadves, coruwadvms, corarad, corshroud, corfort, cortarg, corsd, corgate, cortoast, corvipe, cordoom, corflak, corscreamer, cortron, corfmd, corsilo, corint, corbuzz, corlab, coralab;1;CorBots/T2/corack.lua
+coracsub;CORTEX;2;Advanced Construction Sub;Tech 2 Constructor;;sub_t2_worker;19;700;9000;23000;0;30;350;65;1110;;1;;;;;;;0;0;;;50;156;234;;;coruwfus, coruwmmm, coruwmme, coruwadves, coruwadvms, corgantuw, corasy, corsy, corason, corfatf, coratl, corenaa, corfdoom, coruwageo;1;CorShips/T2/coracsub.lua
+coracv;CORTEX;2;Advanced Construction Vehicle;Tech 2 Constructor;;vehicle_t2_worker;37;580;7000;17000;0;20;310;50;2150;;;;;;;;;0;0;;;50;295;443;;;corfus, corafus, corageo, corbhmth, cormoho, cormexp, cormmkr, coruwadves, coruwadvms, corarad, corshroud, corfort, cortarg, corsd, corgate, cortoast, corvipe, cordoom, corflak, corscreamer, cortron, corfmd, corsilo, corint, corbuzz, corvp, coravp, corgant;1;CorVehicles/T2/coracv.lua
+coradvsol;CORTEX;1;Advanced Solar Collector;Produces 80 Energy;;energy2_1.18;12;370;4000;8150;0;80;0;0;1200;;;;;;;;1;0;0;;;;260;390;;;;1;CorBuildings/LandEconomy/coradvsol.lua
+corafus;CORTEX;2;Advanced Fusion Reactor;Produces 3000 Energy (Hazardous);;energy5_1.85;99;9700;48000;329200;0;3000;0;0;9400;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/corafus.lua
+corageo;CORTEX;2;Advanced Geothermal Powerplant;Produces 1250 Energy (Hazardous);;hazardous;74;1500;27000;48000;0;1250;0;0;4150;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/corageo.lua
+corah;CORTEX;1;Birdeater;Anti-Air Hovercraft;;hover_aa;22;250;4700;3650;0;0;0;89;1120;;;;1;;;;;85;700;;350;;509;800;;MissileLauncher;;1;CorHovercraft/corah.lua
+corak;CORTEX;1;Grunt;Fast Infantry Bot;;bot_t1_raid_0.7;26;42;820;1250;0;0;0;81;280;;;;;;;;;74;215;;;;500;750;;BeamLaser;;1;CorBots/corak.lua
+coralab;CORTEX;2;Advanced Bot Lab;Produces Tech 2 Bots;;factory_bot_t2;58;2600;16000;26000;0;0;600;0;4500;;;;;;;;1;0;0;;;;289;433;;;corack, corfast, corpyro, coramph, corcan, corsumo, cortermite, cormort, corhrk, coraak, corroach, corsktl, cordecom, corvoyr, corspy, corspec, cormando;1;CorBuildings/LandFactories/coralab.lua
+coramph;CORTEX;2;Duck;Amphibious Bot;;amph_torp;32;330;9500;12500;0;0;0;56;2350;1;;;;;;;;174;400;;300;300;400;600;;TorpedoLauncher, BeamLaser;;1;CorBots/T2/coramph.lua
+coramsub;CORTEX;1;Amphibious Complex;Produces Amphibious / Underwater Units;;factory_amph;30;1200;5600;11400;0;0;300;0;2800;;1;;;;;;1;0;0;;;;240;360;;;cormuskrat, corgarp, corsala, corparrow, corcrash, coraak, cordecom;1;CorBuildings/SeaFactories/coramsub.lua
+corantiship;CORTEX;2;Oasis;Mobile Anti-Nuke, Generator, and Radar/Sonar;;ship_t2_carrier;29;1400;12000;27000;0;300;1000;63;5000;;;;;1;;;;750;72000;;760;2950;1000;1500;radar;StarburstLauncher;;1;CorShips/T2/corantiship.lua
+corap;CORTEX;1;Aircraft Plant;Produces Tech 1 Aircraft;;factory_air;42;630;1100;5380;0;0;150;0;2150;;;;;;;;1;0;0;;;510;273;410;;;corca, corfink, corveng, corshad, corvalk, corbw, corhvytrans;1;CorBuildings/LandFactories/corap.lua
+corape;CORTEX;2;Wasp;Gunship;;air_t2_hover_missile;23;370;6800;18000;0;0;0;159;1560;;;1;;;;;;111;410;;;;550;825;;MissileLauncher;;1;CorAircraft/T2/corape.lua
+corarad;CORTEX;2;Advanced Radar Tower;Long-Range Radar;;radar_t2;90;400;14000;8000;0;0;0;0;365;;;;;;;;1;0;0;;;3500;780;1170;radar;;;1;CorBuildings/LandUtil/corarad.lua
+corarch;CORTEX;2;Arrow Storm;Anti-Air Ship;;ship_t2_aa_flak;30;1000;12000;21000;0;0;0;60;3900;;;;;1;;;;429;870;;;;465;900;;Cannon, MissileLauncher;;1;CorShips/T2/corarch.lua
+corason;CORTEX;2;Advanced Sonar Station;Extended Sonar;;radar_t2;12;160;2400;6100;0;0;0;0;2400;;1;;;;;;1;0;0;;1600;;210;315;;;;1;CorBuildings/SeaUtil/corason.lua
+corasy;CORTEX;2;Advanced Shipyard;Produces Tech 2 Ships;;factory_ship_t2;52;2800;10000;24000;0;0;600;0;5900;;;;;;;;1;0;0;;;;302;452;;;coracsub, cormls, corcrus, corshark, corssub, corarch, corsjam, corantiship, corbats, cormship, corblackhy, corfship;1;CorBuildings/SeaFactories/corasy.lua
+coratl;CORTEX;2;Lamprey;Advanced Torpedo Launcher;;defence_2_naval;19;1050;8500;10900;0;0;0;0;2800;;;;;;;;1;363;890;;400;;585;878;;TorpedoLauncher;;1;CorBuildings/SeaDefence/coratl.lua
+coravp;CORTEX;2;Advanced Vehicle Plant;Produces Tech 2 Vehicles;;factory_vehicle_t2;42;2600;16000;28000;0;0;600;0;5100;;;;;;;;1;0;0;;;;286;429;;;coracv, corsala, correap, corparrow, corgol, corban, cormart, corvroc, cortrem, corsent, cormabm, coreter, corvrad;1;CorBuildings/LandFactories/coravp.lua
+corawac;CORTEX;2;Condor;Radar / Sonar Plane;;air_t2_radar;9;180;8300;16000;0;0;0;321;990;;;1;;;;;;0;0;;1200;2400;1250;1875;radar;;;1;CorAircraft/T2/corawac.lua
+corban;CORTEX;2;Banisher;Heavy Missile Tank;;corban_1.6;26;1000;23000;30000;0;0;0;54;2500;;;;;;;;;133;800;;;;650;975;;MissileLauncher;;1;CorVehicles/T2/corban.lua
+corbats;CORTEX;2;Despot;Battleship;;ship_t2_battleship;53;3400;23000;51000;0;0;0;53;12000;;;;;1;;;;659;950;;;;600;900;;3x Cannon, BeamLaser;;1;CorShips/T2/corbats.lua
+corbhmth;CORTEX;2;Cerberus;Geothermal Plasma Battery;;corbhmth;39;3100;35000;59600;0;450;0;0;8300;;;;;;;;1;324;1650;;;;650;975;;3x Cannon;;1;CorBuildings/LandDefenceOffence/corbhmth.lua
+corblackhy;CORTEX;2;Black Hydra;Flagship;;ship_t2_flagship;65;21000;190000;310000;0;0;0;50;53000;;;;;1;;;;1657;2550;;;1510;650;975;radar;2x MissileLauncher, 3x BeamLaser, Cannon;;1;CorShips/T2/corblackhy.lua
+corbuzz;CORTEX;2;Calamity;Rapid-Fire Long-Range Plasma Cannon;;corbuzz;152;68000;800000;1400000;0;0;0;0;33500;;;;;;;;1;2727;6100;;;;700;1050;;Cannon;;1;CorBuildings/LandDefenceOffence/corbuzz.lua
+corbw;CORTEX;1;Shuriken;Light Paralyzer Drone;;air_bladew;5;58;1300;2070;0;0;0;281;83;;;1;;;;;;0;220;;;;430;645;;EMP-BeamLaser;;1;CorAircraft/corbw.lua
+corca;CORTEX;1;Construction Aircraft;Tech 1 Constructor;;air_worker;8;115;3200;8360;0;5;65;201;161;;;1;;;;;;0;0;;;50;430;645;;;corsolar, coradvsol, corwin, corgeo, cormstor, corestor, cormex, corexp, cormakr, coraap, corlab, corvp, corap, corhp, cornanotc, coreyes, corrad, cordrag, cormaw, corllt, corhllt, corhlt, corpun, corrl, cormadsam, corerad, cordl, corjamt, corjuno, corsy, coruwgeo;1;CorAircraft/corca.lua
+corcan;CORTEX;2;Sumo;Armored Assault Bot;;corcan;37;560;9300;15000;0;0;0;38;5940;;;;;;;;;344;275;;;;350;525;;BeamLaser, Cannon;;1;CorBots/T2/corcan.lua
+corcat;CORTEX;3;Catapult;Heavy Rocket Bot;;corcat_1.9;69;4900;80000;160000;0;0;0;48;6100;;;;;;;;;600;1350;;;;700;1050;;MissileLauncher;;1;CorGantry/corcat.lua
+corch;CORTEX;1;Construction Hovercraft;Tech 1 Constructor;;hover_worker;20;190;3000;4580;0;11;115;61;1490;;;;1;;;;;0;0;;;50;338;507;;;corsolar, coradvsol, corwin, corgeo, cormstor, corestor, cormex, corexp, cormakr, corlab, corvp, corap, corhp, cornanotc, cornanotcplat, coreyes, corrad, cordrag, cormaw, corllt, corhllt, corhlt, corpun, corrl, cormadsam, corerad, cordl, corjamt, corjuno, corfhp, corsy, coramsub, corplat, cortide, corfmkr, coruwms, coruwes, corfdrag, corfrad, corfhlt, corfrt, cortl, coravp, corasy, coruwgeo;1;CorHovercraft/corch.lua
+corck;CORTEX;1;Construction Bot;Tech 1 Constructor;;bot_worker;31;120;1750;3550;0;7;85;35;750;;;;;;;;;0;0;;;;299;449;;;corsolar, coradvsol, corwin, corgeo, cormstor, corestor, cormex, corexp, cormakr, coralab, corlab, corvp, corap, corhp, cornanotc, coreyes, corrad, cordrag, cormaw, corllt, corhllt, corhlt, corpun, corrl, cormadsam, corerad, cordl, corjamt, corjuno, corsy;1;CorBots/corck.lua
+corcom;CORTEX;1;Cortex Commander;Commander;;corcom;64;2700;26000;75000;2;30;300;38;3700;1;;;;;;;;111498;300;;450;700;450;675;cloak, capturer;2x BeamLaser, DGun;corsolar, corwin, cormstor, corestor, cormex, cormakr, corlab, corvp, corap, coreyes, corrad, cordrag, corllt, corrl, cordl, cortide, coruwms, coruwes, corfmkr, corsy, corfdrag, cortl, corfrt, corfrad, corhp, corfhp;0;/corcom.lua
+corcrash;CORTEX;1;Trasher;Amphibious Anti-air Bot;;bot_amph_aa;28;125;1100;1900;0;0;0;53;640;1;;;;;;;;55;760;;;;380;800;;MissileLauncher;;1;CorBots/corcrash.lua
+corcrus;CORTEX;2;Buccaneer;Cruiser;;ship_t2_cruiser;31;1000;12000;23000;0;0;0;54;6200;;;;;1;;;;532;500;;375;;600;900;;2x BeamLaser, TorpedoLauncher;;1;CorShips/T2/corcrus.lua
+corcrwh;CORTEX;2;Dragon;Flying Fortress;;air_krow;21;5100;72000;120000;0;0;0;115;16700;;;1;;;;;;725;840;;;;494;850;;Flame, 4x BeamLaser, MissileLauncher;;1;CorAircraft/T2/corcrwh.lua
+corcs;CORTEX;1;Construction Ship;Tech 1 Constructor;;ship_worker;14;200;2000;3700;0;7;125;60;1080;;;;;1;;;;0;0;;;;400;600;;;cormex, corvp, corap, corlab, coreyes, cordl, cordrag, cormaw, corpun, cortide, corgeo, coruwgeo, corfmkr, coruwms, coruwes, corsy, corasy, cornanotcplat, corfhp, coramsub, corplat, corfrad, corfdrag, cortl, corfrt, corfhlt;1;CorShips/corcs.lua
+corcsa;CORTEX;1;Construction Seaplane;Tech 1 Constructor;;air_worker_sea;16;140;8200;14500;0;20;75;218;435;1;;1;;;;;;0;0;;;;430;645;;;corsolar, coradvsol, corwin, corgeo, cormstor, corestor, cormex, corexp, cormakr, corlab, corvp, corap, corhp, cornanotc, cornanotcplat, coreyes, corrad, cordrag, cormaw, corllt, corhllt, corhlt, corpun, corrl, cormadsam, corerad, cordl, corjamt, corjuno, corfhp, corsy, coramsub, corplat, coraap, cortide, corfmkr, coruwms, coruwes, corfdrag, corfrad, corfhlt, corfrt, cortl, coruwgeo;1;CorSeaplanes/corcsa.lua
+corcut;CORTEX;1;Cutlass;Seaplane Gunship;;air_t1_hover_sea_cannon;14;230;5400;11500;0;0;0;152;1010;1;;1;;;;;;72;430;;;;595;893;;Cannon;;1;CorSeaplanes/corcut.lua
+corcv;CORTEX;1;Construction Vehicle;Tech 1 Constructor;;vehicle_worker;25;145;2100;4160;0;10;95;51;1430;;;;;;;;;0;0;;;50;260;390;;;corsolar, coradvsol, corwin, corgeo, cormstor, corestor, cormex, corexp, cormakr, coravp, corlab, corvp, corap, corhp, cornanotc, coreyes, corrad, cordrag, cormaw, corllt, corhllt, corhlt, corpun, corrl, cormadsam, corerad, cordl, corjamt, corjuno, corsy;1;CorVehicles/corcv.lua
+cordecom;CORTEX;2;Commander;Decoy Commander;;corcom;64;750;13000;33000;0;15;300;38;3700;1;;;;;;;;294;300;;450;700;450;675;cloak, capturer;2x BeamLaser, DGun;cormine1, cormine2, cormine3, corsolar, corwin, cormstor, corestor, cormex, cormakr, corrad, corllt, corrl, cortide, coruwms, coruwes, corfmkr;1;CorBots/T2/cordecom.lua
+cordemon;CORTEX;3;Demon;Flamethrower Mech;;cordemon;121;6000;90000;160000;0;0;0;63;18000;;;;;;;;;1690;700;;;;500;750;;MissileLauncher, Flame;;1;CorGantry/cordemon.lua
+cordl;CORTEX;1;Jellyfish;Coastal Torpedo Launcher;;defence_1_naval;53;250;2200;6200;0;0;0;0;2350;;;;;;;;1;150;600;;600;;611;917;;TorpedoLauncher;;1;CorBuildings/SeaDefence/cordl.lua
+cordoom;CORTEX;2;Bulwark;Energy Weapon;;cordoom;119;3000;37000;55200;0;0;0;0;9400;;;;;;;;1;1513;950;;;1200;780;1170;radar;3x BeamLaser;;1;CorBuildings/LandDefenceOffence/cordoom.lua
+cordrag;CORTEX;1;Dragon's Teeth;Fortification;;wall_0.4;10;8;0;255;0;0;0;0;2800;;;;;;;;1;0;0;;;;1;2;;;;1;CorBuildings/LandUtil/cordrag.lua
+corenaa;CORTEX;2;Naval Birdshot;Anti-Air Flak Gun - Naval Series;;aa_flak_t2;9;890;25000;23100;0;0;0;0;2000;;;;;;;;1;469;775;;;;550;1000;;Cannon;;1;CorBuildings/SeaDefence/corenaa.lua
+corerad;CORTEX;1;Eradicator;Medium-Range Anti-Air Missile Battery;;aa_t1_long;40;800;7900;12000;0;0;0;0;4450;;;;;;;;1;625;1125;;;;380;1060;;MissileLauncher;;1;CorBuildings/LandDefenceOffence/corerad.lua
+corestor;CORTEX;1;Energy Storage;Increases Energy Storage (6000);;energystorage;42;175;1800;4260;0;0;0;0;2000;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/corestor.lua
+coresupp;CORTEX;1;Supporter;Light Gun Boat;;ship_raid;11;100;1000;1400;0;0;0;110;480;;;;;1;;;;91;280;;;;600;900;;2x BeamLaser;;1;CorShips/coresupp.lua
+coreter;CORTEX;2;Obscurer;Radar Jammer Vehicle;;vehicle_t2_jammer;47;105;1900;7500;0;0;0;41;580;;;;;;;;;0;0;450;;;299;449;jammer;;;1;CorVehicles/T2/coreter.lua
+corexp;CORTEX;1;Exploiter;Armed Metal Extractor;;mex_t1_laser;46;240;1900;2900;0;0;0;0;1440;;;;;;;;1;161;435;;;;455;683;;BeamLaser;;1;CorBuildings/LandDefenceOffence/corexp.lua
+coreyes;CORTEX;1;Beholder;Perimeter Camera;;eye;21;32;850;750;0;0;0;0;280;;;;;;;;1;0;0;;;;540;810;cloak, stealth;;;1;CorBuildings/LandUtil/coreyes.lua
+corfast;CORTEX;2;Twitcher;Combat Engineer;;corfast_1.3;41;210;3800;8000;0;15;125;90;830;;;;;;;;;0;0;;;;520;780;;;corsolar, cormex, corlab, cornanotc, coreyes, corshroud, corfort, corarad, cormine2, cordl, corhllt, cortoast, cormadsam, corflak, corck, corak, corcrash, cormando, corpyro, coramph, corcs, corroy, cortermite;1;CorBots/T2/corfast.lua
+corfatf;CORTEX;2;Naval Pinpointer;Enhanced Radar Targeting;;targetting;24;800;7500;10300;0;0;0;0;1530;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/SeaUtil/corfatf.lua
+corfav;CORTEX;1;Rascal;Light Scout Vehicle;;vehicle;16;26;270;1150;0;0;0;153;90;;;;;;;;;32;180;;;;600;900;;BeamLaser;;1;CorVehicles/corfav.lua
+corfdoom;CORTEX;2;Devastator;Floating Multi-Weapon Platform;;cordoom;80;1200;15000;24000;0;0;0;0;6700;;;;;;;;1;731;900;;;;780;1170;;Cannon, 2x BeamLaser;;1;CorBuildings/SeaDefence/corfdoom.lua
+corfdrag;CORTEX;1;Shark's Teeth;Naval Fortification;;wall_0.4;29;15;0;400;0;0;0;0;4450;;;;;;;;1;0;0;;;;1;2;;;;1;CorBuildings/SeaUtil/corfdrag.lua
+corfhlt;CORTEX;1;Coral;Floating Heavy Laser Tower;;defence_1_laser;39;480;6200;11400;0;0;0;0;4350;;;;;;;;1;231;630;;;;630;945;;BeamLaser;;1;CorBuildings/SeaDefence/corfhlt.lua
+corfhp;CORTEX;1;Naval Hovercraft Platform;Builds Hovercraft;;factory_hover;40;670;2000;8700;0;0;150;0;3750;;;;;;;;1;0;0;;;;312;468;;;corch, corsh, corsnap, corah, cormh, corhal;1;CorBuildings/SeaFactories/corfhp.lua
+corfink;CORTEX;1;Finch;Scout;;air_los;9;51;1450;2400;0;0;0;360;100;;;1;;;;;;0;0;;;1120;835;1253;radar;;;1;CorAircraft/corfink.lua
+corflak;CORTEX;2;Birdshot;Anti-Air Flak Gun;;aa_flak_t2;10;850;14000;20100;0;0;0;0;1840;;;;;;;;1;469;775;;;;525;1000;;Cannon;;1;CorBuildings/LandDefenceOffence/corflak.lua
+corfmd;CORTEX;2;Prevailer;Anti-Nuke System;;antinuke;38;1500;40000;60000;0;0;0;0;3300;;;;;;;;1;750;72000;;;50;195;293;;StarburstLauncher;;1;CorBuildings/LandDefenceOffence/corfmd.lua
+corfmine3;CORTEX;1;Heavy Mine;Heavy Mine, Naval Series;;mine;12;32;1600;400;0;0;0;0;11;;;;;;;;1;1940;0;;;;72;107;cloak, stealth, sonar-stealth;;;1;CorBuildings/SeaUtil/corfmine3.lua
+corfmkr;CORTEX;1;Naval Energy Converter;Converts 70 energy into 1 metal per sec;;metalmaker_t1;32;1;1250;2680;0;0;0;0;167;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/SeaEconomy/corfmkr.lua
+corfort;CORTEX;2;Fortification Wall;Advanced Fortification;;wall_0.4;55;40;500;900;0;0;0;0;8900;;;;;;;;1;0;0;;;;1;2;;;;1;CorBuildings/LandUtil/corfort.lua
+corfrad;CORTEX;1;Naval Radar / Sonar Tower;Early Warning System;;radar_t1;84;130;1000;1800;0;0;0;0;114;;;;;;;;1;0;0;;900;2100;740;1110;radar;;;1;CorBuildings/SeaUtil/corfrad.lua
+corfrt;CORTEX;1;Slingshot;Floating Anti-air Tower;;aa;50;90;1000;2200;0;0;0;0;395;;;;;;;;1;96;765;;;;468;750;;MissileLauncher;;1;CorBuildings/SeaDefence/corfrt.lua
+corfship;CORTEX;2;Brimstone;Anti-Swarm Ship;;ship_t2_flame;15;630;9400;13000;0;0;0;93;2700;;;;;1;;;;444;710;;;750;500;750;;MissileLauncher, Flame;;1;CorShips/T2/corfship.lua
+corfus;CORTEX;2;Fusion Reactor;Produces 850 Energy;;fusion;70;3600;22000;59000;0;850;0;0;4300;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/corfus.lua
+corgant;CORTEX;3;Experimental Gantry;Produces Experimental Units;;factory_gantry;160;8400;62000;68000;0;0;1800;0;17800;;;;;;;;1;0;0;;;;273;410;;;corkorg, corkarg, corjugg, corshiva, corcat, corsok, cordemon;1;CorBuildings/LandFactories/corgant.lua
+corgantuw;CORTEX;3;Experimental Gantry;Produces Large Amphibious Units;;factory_gantry_uw;160;8350;62500;68000;0;0;1800;0;17800;;1;;;;;;1;0;0;;;;273;410;;;corkorg, corshiva, corsala, corparrow, corsok;1;CorBuildings/SeaFactories/corgantuw.lua
+corgarp;CORTEX;1;Garpike;Light Amphibious Tank;;amphib_tank;19;220;2600;3100;0;0;0;59;1420;1;;;;;;;;77;305;;175;;500;750;;Cannon;;1;CorVehicles/corgarp.lua
+corgate;CORTEX;2;Overseer;Plasma Shield;;shield;52;3200;55000;55000;0;0;0;0;3550;;;;;;;;1;1;10;;;;273;410;shield;Shield;;1;CorBuildings/LandUtil/corgate.lua
+corgator;CORTEX;1;Incisor;Light Tank;;vehicle_t1_raid;16;120;1100;2300;0;0;0;85;820;;;;;;;;;94;230;;;;330;495;;BeamLaser;;1;CorVehicles/corgator.lua
+corgeo;CORTEX;1;Geothermal Powerplant;Produces 300 Energy;;energy6_1.3;60;540;13000;12900;0;300;0;0;2050;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/corgeo.lua
+corgol;CORTEX;2;Tzar;Very Heavy Assault Tank;;vehicle_t2_plasma_aoe;35;1650;28000;40000;0;0;0;39;7800;;;;;;;;;257;650;;;;395;593;;Cannon;;1;CorVehicles/T2/corgol.lua
+corhal;CORTEX;1;Halberd;Assault Hovertank;;corhal;23;640;13000;12900;0;0;0;45;4350;;;;1;;;;;344;300;;;;450;675;;BeamLaser;;1;CorHovercraft/corhal.lua
+corhllt;CORTEX;1;Twin Guard;Anti-Swarm Double Guard;;defence_hllt;95;195;1750;4900;0;0;0;0;1670;;;;;;;;1;321;490;;;;475;713;;2x BeamLaser;;1;CorBuildings/LandDefenceOffence/corhllt.lua
+corhlt;CORTEX;1;Warden;Area Control Laser Tower;;defence_1.5_laser;93;480;4700;11400;0;0;0;0;2750;;;;;;;;1;218;620;;;;455;683;;BeamLaser;;1;CorBuildings/LandDefenceOffence/corhlt.lua
+corhp;CORTEX;1;Hovercraft Platform;Builds Hovercraft;;factory_hover;29;670;2000;8700;0;0;150;0;3750;;;;;;;;1;0;0;;;;312;468;;;corch, corsh, corsnap, corah, cormh, corhal;1;CorBuildings/LandFactories/corhp.lua
+corhrk;CORTEX;2;Arbiter;Heavy Rocket Bot;;bot_t2_vroc;34;600;5800;9500;0;0;0;54;610;;;;;;;;;100;1210;;;;371;556;;StarburstLauncher;;1;CorBots/T2/corhrk.lua
+corhunt;CORTEX;1;Watcher;Advanced Radar / Sonar Plane;;air_los_sea;18;130;6900;11500;0;0;0;324;730;1;;1;;;;;;0;0;;900;2200;1130;1695;radar;;;1;CorSeaplanes/corhunt.lua
+corhurc;CORTEX;2;Hailstorm;Heavy Strategic Bomber;;air_t2_bomber;17;310;18500;36000;0;0;0;248;1520;;;1;;;;;;238;1280;;;;430;645;;AircraftBomb;;1;CorAircraft/T2/corhurc.lua
+corhvytrans;CORTEX;1;Hephaestus;Heavy Transport;;air_trans;23;190;4000;8500;0;0;0;100;800;;;1;;;;;;0;0;;;;430;645;transport;;;1;CorAircraft/corhvytrans.lua
+corint;CORTEX;2;Basilisk;Long Range Plasma Cannon;;corint;88;4600;67000;93300;0;0;0;0;4700;;;;;;;;1;125;4950;;;;273;410;;Cannon;;1;CorBuildings/LandDefenceOffence/corint.lua
+corjamt;CORTEX;1;Castro;Short-Range Jamming Device;;jammer;48;115;5200;4570;0;0;0;0;1070;;;;;;;;1;0;0;360;;;104;156;jammer;;;1;CorBuildings/LandUtil/corjamt.lua
+corjugg;CORTEX;3;Behemoth;(barely) Mobile Heavy Turret;;juggernaut;105;20000;513000;780000;0;0;0;17;335000;;;;;;;;;1121;590;;;;720;1080;;DGun, 3x BeamLaser, Cannon;;1;CorGantry/corjugg.lua
+corjuno;CORTEX;1;Juno;Anti Radar / Jammer / Minefield / ScoutSpam Weapon;;juno;77;660;16000;27700;0;0;0;0;2500;;;;;;;;1;1;32000;;;;494;741;stealth;StarburstLauncher;;1;CorBuildings/LandDefenceOffence/corjuno.lua
+corkarg;CORTEX;3;Karganeth;All-Terrain Assault Mech;;corkarg_2.05;39;2500;57000;94000;0;0;0;45;12500;;;;;;;;;850;700;;;;455;683;;2x MissileLauncher;;1;CorGantry/corkarg.lua
+corkorg;CORTEX;3;Juggernaut;Experimental Assault Bot;;mech;145;29000;615000;730000;0;300;0;37;149000;1;;;;;;;;4187;950;;;;845;1268;;StarburstLauncher, BeamLaser, 6x Cannon;;1;CorGantry/corkorg.lua
+corlab;CORTEX;1;Bot Lab;Produces Tech 1 Bots;;factory_bot;48;470;1050;5000;0;0;150;0;2900;;;;;;;;1;0;0;;;;290;435;;;corck, corak, cornecro, corstorm, corthud, corcrash;1;CorBuildings/LandFactories/corlab.lua
+corlevlr;CORTEX;1;Pounder;Anti-Swarm Tank;;vehicle_t1_impulse;23;220;2600;3000;0;0;0;41;1490;;;;;;;;;106;315;;;;286;429;;Cannon;;1;CorVehicles/corlevlr.lua
+corllt;CORTEX;1;Guard;Light Laser Tower;;defence_0_laser;67;90;700;2500;0;0;0;0;650;;;;;;;;1;161;435;;;;494;741;;BeamLaser;;1;CorBuildings/LandDefenceOffence/corllt.lua
+cormabm;CORTEX;2;Saviour;Mobile Anti-Nuke;;antinukevehicle;44;1250;32000;52000;0;0;0;51;870;;;;;;;;;250;72000;;;50;450;675;;StarburstLauncher;;1;CorVehicles/T2/cormabm.lua
+cormadsam;CORTEX;1;SAM;Hardened Anti-Air Missile Battery;;aa_t15;35;315;6100;5240;0;0;0;0;2800;;;;;;;;1;190;840;;;;375;850;;MissileLauncher;;1;CorBuildings/LandDefenceOffence/cormadsam.lua
+cormakr;CORTEX;1;Energy Converter;Converts 70 energy into 1 metal per sec;;metalmaker_t1;26;1;1250;2680;0;0;0;0;167;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/cormakr.lua
+cormando;CORTEX;2;Commando;Stealthy Paratrooper Bot;;cormando;49;1200;15500;24000;0;10;200;75;1560;1;;;;;;;;200;300;150;;900;600;900;jammer;LaserCannon;corvalk, corfink, cormine2, cormaw, cordrag, coreyes, corjamt;1;CorBots/T2/cormando.lua
+cormart;CORTEX;2;Quaker;Mobile Artillery;;vehicle_arty_t2;28;400;4400;9000;0;0;0;58;1200;;;;;;;;;84;800;;;;299;449;;Cannon;;1;CorVehicles/T2/cormart.lua
+cormaw;CORTEX;1;Dragon's Maw;Pop-up Flamethrower Turret;;wall_0.4;10;290;1550;4420;0;0;0;0;1610;;;;;;;;1;320;410;8;;;422;633;stealth, jammer;Flame;;1;CorBuildings/LandDefenceOffence/cormaw.lua
+cormex;CORTEX;1;Metal Extractor;Extracts Metal from Metalspots;;mex_t1;22;50;500;1870;0;0;0;0;275;1;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/cormex.lua
+cormexp;CORTEX;2;Advanced Exploiter;Armed Advanced Metal Extractor;;mex_t2;33;2400;12000;32500;0;0;0;0;7800;;;;;;;;1;623;650;;;;676;1014;;BeamLaser, MissileLauncher;;1;CorBuildings/LandDefenceOffence/cormexp.lua
+cormh;CORTEX;1;Mangonel;Hovercraft Rocket Launcher;;hover_t1_missile;14;200;3300;3500;0;0;0;64;550;;;;1;;;;;61;700;;;;509;764;;StarburstLauncher;;1;CorHovercraft/cormh.lua
+cormine1;CORTEX;1;Light Mine;Light Mine;;mine;4;7;270;100;0;0;0;0;11;;;;;;;;1;445;0;;;;83;125;cloak, stealth;;;1;CorBuildings/LandUtil/cormine1.lua
+cormine2;CORTEX;1;Medium Mine;Medium Mine;;mine;8;25;1050;300;0;0;0;0;11;;;;;;;;1;1110;0;;;;83;125;cloak, stealth;;;1;CorBuildings/LandUtil/cormine2.lua
+cormine3;CORTEX;1;Heavy Mine;Heavy Mine;;mine;12;50;2800;700;0;0;0;0;11;;;;;;;;1;3000;0;;;;83;125;cloak, stealth;;;1;CorBuildings/LandUtil/cormine3.lua
+cormist;CORTEX;1;Lasher;Missile Truck;;vehicle_t1_missile;25;155;2400;3440;0;0;0;52;860;;;;;;;;;73;700;;;;620;900;;2x MissileLauncher;;1;CorVehicles/cormist.lua
+cormls;CORTEX;2;Pathfinder;Naval Engineer;;shipengineer;16;200;3300;6500;0;0;200;58;1600;;;;;1;;;;0;0;;;;300;450;;;cortide, cormex, corfrad, corarad, cornanotcplat, corsy, corcs, cortl, corfhlt, corenaa, corpt, coresupp, corroy, corfmine3, cortoast, corfdoom, corfdrag;1;CorShips/T2/cormls.lua
+cormlv;CORTEX;1;Trapper;Stealthy Minelayer / Minesweeper;;cormlv_1.0;14;65;1300;3640;0;0;40;69;450;;;;;;;;;0;0;64;;;450;675;stealth, jammer;;cormine1, cormine2, cormine3, cordrag, coreyes;1;CorVehicles/cormlv.lua
+cormmkr;CORTEX;2;Advanced Energy Converter;Converts 600 energy into 10.3 metal per sec;;metalmaker_t2;24;370;21000;31300;0;0;0;0;560;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/cormmkr.lua
+cormoho;CORTEX;2;Advanced Metal Extractor;Advanced Metal Extractor / Storage;;mex_t2;34;640;8100;14100;0;0;0;0;3900;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/cormoho.lua
+cormort;CORTEX;2;Sheldon;Mobile Mortar Bot;;bot_arty_t2;32;400;2800;7000;0;0;0;50;940;;;;;;;;;66;850;;;;300;450;;Cannon;;1;CorBots/T2/cormort.lua
+cormship;CORTEX;2;Messenger;Cruise Missile Ship;;ship_t2_missile;24;2000;10000;24000;0;0;0;61;3350;;;;;1;;;;207;1550;;;1000;319;478;radar;Cannon, MissileLauncher;;1;CorShips/T2/cormship.lua
+cormstor;CORTEX;1;Metal Storage;Increases Metal Storage (3000);;metalstorage;56;340;590;2920;0;0;0;0;2100;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/cormstor.lua
+cormuskrat;CORTEX;1;Muskrat;Amphibious Construction Vehicle;;amphib_worker;21;170;3500;6860;0;8;85;41;1110;1;;;;;;;;0;0;;;;260;390;;;corsolar, coradvsol, corwin, corgeo, cormstor, corestor, cormex, corexp, cormakr, corlab, corvp, corap, corhp, coravp, cornanotc, cornanotcplat, coreyes, corrad, cordrag, cormaw, corllt, corhllt, corhlt, corpun, corrl, cormadsam, corerad, corjuno, cordl, corjamt, corfhp, coramsub, corplat, corsy, cortide, corfmkr, coruwms, coruwes, corfdrag, corfrad, corfhlt, corfrt, cortl, coruwgeo;1;CorVehicles/cormuskrat.lua
+cornanotc;CORTEX;1;Construction Turret;Assist & Repair in large radius;;nanot1;32;230;3200;5300;0;0;200;0;560;;;;;;;;1;0;0;;;;380;570;;;;1;CorBuildings/LandUtil/cornanotc.lua
+cornanotcplat;CORTEX;1;Naval Construction Turret;Assist & Repair in large radius;;nanot1;39;230;3200;5300;0;0;200;0;560;;;;;;;;1;0;0;;;;380;570;;;;1;CorBuildings/SeaUtil/cornanotcplat.lua
+cornecro;CORTEX;1;Graverobber;Stealthy Rez / Reclaim / Repair Bot;;bot_t1_rez;25;130;1400;2800;0;0;200;78;220;;;;;;;;;0;0;;;50;430;645;stealth, resurrector;;;1;CorBots/cornecro.lua
+corparrow;CORTEX;2;Poison Arrow;Very Heavy Amphibious Tank;;corparrow;24;1050;21000;26000;0;0;0;51;6300;1;;;;;;;;206;575;;289;;500;750;;Cannon;;1;CorVehicles/T2/corparrow.lua
+corplat;CORTEX;1;Seaplane Platform;Builds Seaplanes;;factory_air_sea;44;1400;5500;11800;0;0;300;0;2200;;1;;;;;;1;0;0;;800;;169;254;;;corcsa, corcut, corsb, corseap, corsfig, corhunt;1;CorBuildings/SeaFactories/corplat.lua
+corpship;CORTEX;1;Riptide;Assault Frigate;;ship_pship;26;420;2800;4550;0;0;0;83;2350;;;;;1;;;;120;480;;;;500;750;;Cannon;;1;CorShips/corpship.lua
+corpt;CORTEX;1;Herring;Missile Corvette / Light Anti Air / Sonar;;ship;13;210;1400;2500;0;0;0;69;890;;;;;1;;;;84;750;;400;1000;670;800;radar;2x MissileLauncher;;1;CorShips/corpt.lua
+corpun;CORTEX;1;Agitator;Area Control Plasma Artillery;;def_t1_arty;32;1300;13500;17400;0;0;0;0;3250;;;;;;;;1;221;1245;;;;455;683;;3x Cannon;;1;CorBuildings/LandDefenceOffence/corpun.lua
+corpyro;CORTEX;2;Fiend;Fast Assault Bot;;corpyro_1.15;31;200;3000;6500;0;0;0;83;1060;;;;;;;;;240;230;;;;318;477;;Flame;;1;CorBots/T2/corpyro.lua
+corrad;CORTEX;1;Radar Tower;Early Warning System;;radar_t1;78;60;630;1140;0;0;0;0;90;;;;;;;;1;0;0;;;2100;680;1020;radar;;;1;CorBuildings/LandUtil/corrad.lua
+corraid;CORTEX;1;Brute;Medium Assault Tank;;vehicle_t1_tank;20;235;2400;3310;0;0;0;73;1970;;;;;;;;;83;350;;;;325;488;;Cannon;;1;CorVehicles/corraid.lua
+correap;CORTEX;2;Tiger;Heavy Assault Tank;;vehicle_t2_tank;24;665;10000;16000;0;0;0;71;5300;;;;;;;;;156;410;;;;462;693;;Cannon;;1;CorVehicles/T2/correap.lua
+correcl;CORTEX;1;Death Cavalry;Resurrection Sub;;sub_rez;22;200;3200;5960;0;0;150;67;420;;1;;;;;;;0;0;;150;;300;450;resurrector;;;1;CorShips/correcl.lua
+corrl;CORTEX;1;Thistle;Light Anti-air Tower;;aa;51;80;850;1750;0;0;0;0;335;;;;;;;;1;68;765;;;;455;700;;MissileLauncher;;1;CorBuildings/LandDefenceOffence/corrl.lua
+corroach;CORTEX;2;Bedbug;Amphibious Crawling Bomb;;corroach_0.9;3;69;5800;7900;0;0;0;76;620;1;;;;;;;;2000;42;;;;260;390;;Melee, Cannon;;1;CorBots/T2/corroach.lua
+corroy;CORTEX;1;Oppressor;Destroyer;;ship_destroyer;23;960;7200;10600;0;0;0;62;3950;;;;;1;;;;272;710;;400;;500;750;;Cannon, TorpedoLauncher;;1;CorShips/corroy.lua
+corsala;CORTEX;2;Salamander;Medium Heat Ray Amphibious Tank;;corseal;19;350;7000;10500;0;0;0;72;2100;1;;;;;;;;164;340;;299;;385;578;;BeamLaser;;1;CorVehicles/T2/corsala.lua
+corsb;CORTEX;1;Dam Buster;Seaplane Bomber;;air_bomber_sea;14;200;8200;9000;0;0;0;240;940;1;;1;;;;;;150;1280;;;;455;683;;AircraftBomb;;1;CorSeaplanes/corsb.lua
+corscreamer;CORTEX;2;Screamer;Long Range Anti-Air Tower;;aa_longrange_t2;61;1650;32000;28000;0;0;0;0;1670;;;;;;;;1;417;2400;;;;600;2400;;MissileLauncher;;1;CorBuildings/LandDefenceOffence/corscreamer.lua
+corsd;CORTEX;2;Nemesis;Intrusion Countermeasure System;;seismic;16;750;6700;12000;0;0;0;0;2800;;;;;;;;1;0;2000;;;;225;338;stealth-detector;;;1;CorBuildings/LandUtil/corsd.lua
+corseah;CORTEX;2;Skyhook;Heavy Assault Transport;;air_trans;32;370;6400;12500;0;0;0;200;2200;;;1;;;;;;0;0;;;;500;750;transport;;;1;CorAircraft/T2/corseah.lua
+corseap;CORTEX;1;Monsoon;Torpedo Gunship;;air_torp_sea;16;230;5500;13000;0;0;0;266;1070;1;;1;;;;;;68;600;;535;;535;803;;TorpedoLauncher;;1;CorSeaplanes/corseap.lua
+corsent;CORTEX;2;Fury;Anti-Air Flak Vehicle;;vehicle_t2_aa_flak;37;470;10500;16000;0;0;0;69;2700;;;;;;;;;273;775;;;;338;900;;Cannon;;1;CorVehicles/T2/corsent.lua
+corsfig;CORTEX;1;Bat;Seaplane Swarmer;;air_sea;8;90;4600;6500;0;0;0;316;220;1;;1;;;;;;240;710;;;;430;950;;MissileLauncher;;1;CorSeaplanes/corsfig.lua
+corsh;CORTEX;1;Goon;Fast Attack Hovercraft;;hover_raid;12;75;1500;1500;0;0;0;110;255;;;;1;;;;;60;230;;;;550;825;;BeamLaser;;1;CorHovercraft/corsh.lua
+corshad;CORTEX;1;Whirlwind;Bomber;;air_bomber;15;150;4600;5050;0;0;0;234;680;;;1;;;;;;93;1280;;;;430;645;;AircraftBomb;;1;CorAircraft/corshad.lua
+corshark;CORTEX;2;Predator;Fast Assault Submarine;;sub_t2;17;730;14000;23000;0;0;0;84;1610;;1;;;;;;;159;400;;525;;390;585;;TorpedoLauncher;;1;CorShips/T2/corshark.lua
+corshiva;CORTEX;3;Shiva;Amphibious Siege Mech;;corshiva_2.1;60;1550;23000;40000;0;0;0;48;9400;1;;;;;;;;407;800;;;;520;780;;Cannon, StarburstLauncher;;1;CorGantry/corshiva.lua
+corshroud;CORTEX;2;Shroud;Long-Range Jamming Tower;;jammer_t2;88;130;20000;9400;0;0;0;0;890;;;;;;;;1;0;0;700;;;155;233;jammer;;;1;CorBuildings/LandUtil/corshroud.lua
+corsilo;CORTEX;2;Apocalypse;Nuclear ICBM Launcher;;nuke;30;7700;82000;181000;0;0;0;0;6200;;;;;;;;1;383;72000;;;50;455;683;;StarburstLauncher, Cannon;;1;CorBuildings/LandDefenceOffence/corsilo.lua
+corsjam;CORTEX;2;Phantasm;Radar Jammer Ship;;ship_t2_jammer;22;280;4200;17000;0;0;0;40;1450;;;;;1;;;;0;0;900;;;403;605;jammer;;;1;CorShips/T2/corsjam.lua
+corsktl;CORTEX;2;Skuttle;Advanced Amphibious Crawling Bomb;;corsktl;12;755;27000;23000;0;0;0;84;355;1;;;;;;;;2700;42;;;;260;390;cloak;Melee, Cannon;;1;CorBots/T2/corsktl.lua
+corsnap;CORTEX;1;Cayman;Hovertank;;hover_gun;11;300;3100;3500;0;0;0;67;1720;;;;1;;;;;70;370;;;;491;737;;Cannon;;1;CorHovercraft/corsnap.lua
+corsok;CORTEX;3;Cataphract;Heavy Laser Hovertank;;corsok_1.8;40;950;19000;34000;0;0;0;45;4200;;;;1;;;;;279;725;;550;;650;975;;TorpedoLauncher, LaserCannon;;1;CorGantry/corsok.lua
+corsolar;CORTEX;1;Solar Collector;Produces 20 Energy;;energy1_1.0;34;150;0;2800;0;0;0;0;355;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/corsolar.lua
+corspec;CORTEX;2;Deceiver;Radar Jammer Bot;;bot_t2_jammer;38;75;1550;6500;0;0;0;39;345;;;;;;;;;0;0;450;;;250;375;jammer;;;1;CorBots/T2/corspec.lua
+corspy;CORTEX;2;Spectre;Radar-Invisible Spy Bot;;spy;27;165;12500;12000;0;0;50;62;380;;;;;;;;;0;100;;;;550;825;cloak, stealth, sonar-stealth;Melee;;1;CorBots/T2/corspy.lua
+corssub;CORTEX;2;Kraken;Long-Range Battle Submarine;;battlesub_t2;25;1900;29000;35000;0;0;0;39;3900;;1;;;;;;;206;850;;400;;570;855;stealth;TorpedoLauncher;;1;CorShips/T2/corssub.lua
+corstorm;CORTEX;1;Aggravator;Rocket Bot - good vs. static defenses;;bot_rocket;29;110;1150;1950;0;0;0;48;740;;;;;;;;;41;475;;;;345;517;;MissileLauncher;;1;CorBots/corstorm.lua
+corsub;CORTEX;1;Orca;Submarine;;sub;18;580;4000;7200;0;0;0;57;1060;;1;;;;;;;137;500;;400;;400;600;;TorpedoLauncher;;1;CorShips/corsub.lua
+corsumo;CORTEX;2;Mammoth;Heavily Armored Assault Bot;;corsumo;36;2200;35000;65000;0;0;0;23;15600;;;;;;;;;503;650;;;;510;765;;BeamLaser, Cannon;;1;CorBots/T2/corsumo.lua
+corsy;CORTEX;1;Shipyard;Produces Tech 1 Ships;;factory_ship;32;450;950;5100;0;0;150;0;4300;;;;;;;;1;0;0;;;;340;510;;;corcs, correcl, coresupp, corpt, corpship, corroy, corsub;1;CorBuildings/SeaFactories/corsy.lua
+cortarg;CORTEX;2;Pinpointer;Enhanced Radar Targeting, more facilities enhance accuracy;;targetting;18;800;7500;10900;0;0;0;0;2000;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandUtil/cortarg.lua
+cortermite;CORTEX;2;Termite;Heavy All-terrain Assault Spider;;cortermite_1.5;7;540;8100;17000;0;0;0;50;3100;;;;;;;;;331;340;;;;380;570;;BeamLaser;;1;CorBots/T2/cortermite.lua
+corthud;CORTEX;1;Thug;Light Plasma Bot;;bot_plasma_t1;33;140;1150;2100;0;0;0;45;1100;;;;;;;;;60;380;;;;380;570;;Cannon;;1;CorBots/corthud.lua
+cortide;CORTEX;1;Tidal Generator;Produces Energy (depends on map);;energy1_1.0;24;85;250;2100;0;0;0;0;395;;;;;;;;1;0;0;;;;130;195;;;;1;CorBuildings/SeaEconomy/cortide.lua
+cortitan;CORTEX;2;Angler;Torpedo Bomber;;air_t2_torpbomber;14;410;8200;18000;0;0;0;279;1960;;;1;;;;;;150;400;;800;800;500;750;;TorpedoLauncher;;1;CorAircraft/T2/cortitan.lua
+cortl;CORTEX;1;Urchin;Offshore Torpedo Launcher;;defence_1_naval;15;170;1800;3750;0;0;0;0;1440;;;;;;;;1;187;500;;400;;495;743;;TorpedoLauncher;;1;CorBuildings/SeaDefence/cortl.lua
+cortoast;CORTEX;2;Persecutor;Pop-up Plasma Artillery;;def_t2_arty;30;2500;17000;25700;0;0;0;0;4250;;;;;;;;1;400;1390;;;;416;624;;3x Cannon;;1;CorBuildings/LandDefenceOffence/cortoast.lua
+cortrem;CORTEX;2;Tremor;Heavy Artillery Vehicle;;cortrem_t2;56;1850;49000;43000;0;0;0;41;3000;;;;;;;;;400;1470;;;;351;527;;Cannon;;1;CorVehicles/T2/cortrem.lua
+cortron;CORTEX;2;Catalyst;Tactical Missile Launcher;;tacnuke;41;1200;14000;59000;0;0;0;0;3550;;;;;;;;1;2000;2250;;;;455;683;;StarburstLauncher;;1;CorBuildings/LandDefenceOffence/cortron.lua
+coruwadves;CORTEX;2;Hardened Energy Storage;Increases Energy Storage (40000);;energystorage_t2;43;840;11000;20400;0;0;0;0;12700;1;;;;;;;1;0;0;;;;192;288;;;;1;CorBuildings/SeaEconomy/coruwadves.lua
+coruwadvms;CORTEX;2;Hardened Metal Storage;Increases Metal Storage (10000);;metalstorage_t2;45;760;11000;20500;0;0;0;0;11200;1;;;;;;;1;0;0;;;;182;273;;;;1;CorBuildings/SeaEconomy/coruwadvms.lua
+coruwageo;CORTEX;2;Advanced Geothermal Powerplant;Produces 1250 Energy (Hazardous);;hazardous;3;1500;27000;48000;0;1250;0;0;4150;;1;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/SeaEconomy/coruwageo.lua
+coruwes;CORTEX;1;Naval Energy Storage;Increases Energy Storage (6000);;energystorage;31;175;1800;4260;0;0;0;0;2000;;1;;;;;;1;0;0;;;;169;254;;;;1;CorBuildings/SeaEconomy/coruwes.lua
+coruwfus;CORTEX;2;Naval Fusion Reactor;Produces 1220 Energy;;fusion;32;5400;34000;105000;0;1220;0;0;5900;;1;;;;;;1;0;0;;;;143;215;;;;1;CorBuildings/SeaEconomy/coruwfus.lua
+coruwgeo;CORTEX;1;Offshore Geothermal Powerplant;Produces 300 Energy;;energy6_1.3;48;540;13000;12900;0;300;0;0;2050;;1;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/SeaEconomy/coruwgeo.lua
+coruwmme;CORTEX;2;Naval Advanced Metal Extractor;Advanced Metal Extractor / Storage;;mex_t2;28;640;8100;14100;0;0;0;0;3900;;1;;;;;;1;0;0;;;;169;254;;;;1;CorBuildings/SeaEconomy/coruwmme.lua
+coruwmmm;CORTEX;2;Naval Advanced Energy Converter;Converts 600 energy into 10.3 metal per sec;;metalmaker_t2;32;370;21000;31300;0;0;0;0;560;;;;;;;;1;0;0;;;;143;215;;;;1;CorBuildings/SeaEconomy/coruwmmm.lua
+coruwms;CORTEX;1;Naval Metal Storage;Increases Metal Storage (3000);;metalstorage;32;340;590;2920;0;0;0;0;2100;;1;;;;;;1;0;0;;;;169;254;;;;1;CorBuildings/SeaEconomy/coruwms.lua
+corvalk;CORTEX;1;Hercules;Light Air Transport;;air_trans;22;74;1450;4120;0;0;0;198;280;;;1;;;;;;0;0;;;;430;645;transport;;;1;CorAircraft/corvalk.lua
+corvamp;CORTEX;2;Nighthawk;Stealth Fighter;;air_t2;7;135;4750;10000;0;0;0;380;290;;;1;;;;;;500;740;;;;430;1100;stealth;MissileLauncher;;1;CorAircraft/T2/corvamp.lua
+corveng;CORTEX;1;Valiant;Fighter;;air;14;73;2800;3330;0;0;0;298;156;;;1;;;;;;139;680;;;;430;950;;MissileLauncher;;1;CorAircraft/corveng.lua
+corvipe;CORTEX;2;Scorpion;Pop-up Sabot Battery;;def_t2_missile;50;730;14000;15000;0;0;0;0;3000;;;;;;;;1;413;730;;;;546;819;;MissileLauncher;;1;CorBuildings/LandDefenceOffence/corvipe.lua
+corvoyr;CORTEX;2;Augur;Radar Bot;;bot_t2_radar;31;99;1350;5000;0;0;0;45;390;;;;;;;;;0;0;;;2200;925;1388;radar;;;1;CorBots/T2/corvoyr.lua
+corvp;CORTEX;1;Vehicle Plant;Produces Tech 1 Vehicles;;factory_vehicle;38;570;1550;5650;0;0;150;0;3000;;;;;;;;1;0;0;;;;279;419;;;corcv, cormuskrat, cormlv, corfav, corgator, corgarp, corraid, corlevlr, corwolv, cormist;1;CorBuildings/LandFactories/corvp.lua
+corvrad;CORTEX;2;Omen;Radar Vehicle;;vehicle_t2_radar;30;92;1300;5000;0;0;0;48;570;;;;;;;;;0;0;;;2200;900;1350;radar;;;1;CorVehicles/T2/corvrad.lua
+corvroc;CORTEX;2;Negotiator;Stealthy Rocket Launcher - good vs. static defense;;vehicle_t2_vroc;31;880;6700;20000;0;0;0;33;1390;;;;;;;;;106;1310;;;;221;332;stealth;StarburstLauncher;;1;CorVehicles/T2/corvroc.lua
+corwin;CORTEX;1;Wind Turbine;Produces Energy. Depends on wind strength.;;wind;67;43;175;1680;0;0;0;0;220;;;;;;;;1;0;0;;;;273;410;;;;1;CorBuildings/LandEconomy/corwin.lua
+corwolv;CORTEX;1;Wolverine;Light Mobile Artillery;;vehicle_arty;36;170;2500;3550;0;0;0;48;750;;;;;;;;;42;710;;;;299;449;;Cannon;;1;CorVehicles/corwolv.lua

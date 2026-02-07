@@ -1,0 +1,13 @@
+[project]
+name = "bar-build-simulator"
+version = "0.1.0"
+description = "Build order simulator for Beyond All Reason"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml",
+    "fastapi",
+    "uvicorn[standard]",
+]
+
+[project.scripts]
+bar-sim = "cli:main"
