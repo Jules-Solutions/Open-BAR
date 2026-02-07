@@ -257,23 +257,29 @@ end
 
 function widget:GameFrame(frame)
     if not TL then return end
+    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
     if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if frame % CFG.updateFrequency ~= 0 then return end
 
-    RefreshManagedUnits()
+    local ok, err = pcall(function()
+        RefreshManagedUnits()
 
-    for uid, data in pairs(managedUnits) do
-        -- Verify unit still exists
-        local health = spGetUnitHealth(uid)
-        if health and health > 0 then
-            ProcessUnit(uid, data, frame)
+        for uid, data in pairs(managedUnits) do
+            -- Verify unit still exists
+            local health = spGetUnitHealth(uid)
+            if health and health > 0 then
+                ProcessUnit(uid, data, frame)
+            end
         end
-    end
 
-    -- Cleanup stale cooldowns
-    for uid, cd in pairs(unitCooldowns) do
-        if frame - cd > 300 then  -- 10 seconds
-            unitCooldowns[uid] = nil
+        -- Cleanup stale cooldowns
+        for uid, cd in pairs(unitCooldowns) do
+            if frame - cd > 300 then  -- 10 seconds
+                unitCooldowns[uid] = nil
+            end
         end
+    end)
+    if not ok then
+        Spring.Echo("[TotallyLegal Skirmish] GameFrame error: " .. tostring(err))
     end
 end

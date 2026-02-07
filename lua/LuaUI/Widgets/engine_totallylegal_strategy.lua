@@ -595,17 +595,24 @@ function widget:Initialize()
     end
 
     WG.TotallyLegal.StrategyExec = strategyExec
+    strategyExec._ready = true
 
     spEcho("[TotallyLegal Strategy] Strategy executor ready.")
 end
 
 function widget:GameFrame(frame)
     if not TL then return end
+    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
     if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if frame % CFG.updateFrequency ~= 0 then return end
     if frame < 60 then return end
 
-    UpdateStrategy(frame)
+    local ok, err = pcall(function()
+        UpdateStrategy(frame)
+    end)
+    if not ok then
+        spEcho("[TotallyLegal Strategy] GameFrame error: " .. tostring(err))
+    end
 end
 
 function widget:Shutdown()
@@ -620,7 +627,7 @@ function widget:Shutdown()
         end
     end
 
-    if WG.TotallyLegal then
-        WG.TotallyLegal.StrategyExec = nil
+    if WG.TotallyLegal and WG.TotallyLegal.StrategyExec then
+        WG.TotallyLegal.StrategyExec._ready = false
     end
 end

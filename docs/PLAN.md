@@ -42,17 +42,17 @@ The end goal: an AI player that can play BAR autonomously. But first, everything
 - [x] Level >= 1 gate in all 9 execution widgets
 - [x] gui_* and engine_mapzones ungated (always run at all levels)
 
-### Phase 2: Stabilize Perception (core library as single source of truth)
+### Phase 2: Stabilize Perception (core library as single source of truth) -- COMPLETED
 Fix lib_totallylegal_core.lua so every other system has reliable data.
 
-- [ ] Fix faction detection (add fallback scan + retry + manual override)
-- [ ] Remove duplicate BuildKeyTable() from engine_goals (core is the ONLY source)
-- [ ] Remove duplicate role classification from engine_goals (use prod's roleMappings)
-- [ ] Make ALL cross-system reads nil-safe (no crashes from load order)
-- [ ] Add _ready flags to each system's state section
-- [ ] Add pcall wrappers in all GameFrame functions (graceful degradation)
-- [ ] Fix FindBuildPosition() to respect build area for mex placement
-- [ ] Fix shutdown ordering (systems nil their own state, core never nils root table)
+- [x] Fix faction detection (add fallback scan + retry + manual override)
+- [x] Remove duplicate BuildKeyTable() from engine_goals (core is the ONLY source)
+- [x] Remove duplicate role classification from engine_goals (use prod's roleMappings)
+- [x] Make ALL cross-system reads nil-safe (no crashes from load order)
+- [x] Add _ready flags to each system's state section
+- [x] Add pcall wrappers in all GameFrame functions (graceful degradation)
+- [x] Fix FindBuildPosition() to respect build area for mex placement
+- [x] Fix shutdown ordering (systems nil their own state, core never nils root table)
 
 **Acceptance:** ONE BuildKeyTable, faction detected within 5s, disabling any widget doesn't crash others, clean shutdown.
 

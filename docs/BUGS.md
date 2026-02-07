@@ -2,16 +2,16 @@
 
 Tracked bugs from the codebase audit, mapped to the phase that fixes them.
 
-## Perception Bugs (Phase 2)
+## Perception Bugs (Phase 2) -- ALL FIXED
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 1 | Duplicate BuildKeyTable in goals vs core | engine_goals.lua:146-227 | Remove from goals, use TL.ResolveKey() |
-| 2 | Duplicate role classification in goals | engine_goals.lua:238-296, 428-479 | Use prod's roleMappings via WG.TotallyLegal.Production |
-| 3 | Faction detection silently fails if no commander found | lib_core.lua:105-124 | Add fallback scan + retry + manual override |
-| 4 | Mex placement ignores build area constraint | lib_core.lua:482-485 | FindBuildPosition for mex should also respect buildArea |
-| 5 | Circular dependency econ<->goals (load order) | engine_econ.lua reads Goals, engine_goals.lua reads Economy | All cross-widget reads must be nil-safe with pcall |
-| 6 | Config shutdown nils Strategy while others still read it | engine_config.lua:611-615 | Config should NOT nil Strategy on shutdown; core owns root table lifetime |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 1 | Duplicate BuildKeyTable in goals vs core | engine_goals.lua | Removed from goals, all calls use TL.ResolveKey() | FIXED |
+| 2 | Duplicate role classification in goals | engine_goals.lua | Replaced with prod.roleMappings lookups | FIXED |
+| 3 | Faction detection silently fails if no commander found | lib_core.lua | Added fallback name-prefix scan + retry every 1s for 5s | FIXED |
+| 4 | Mex placement ignores build area constraint | lib_core.lua | FindNearestMexSpot now accepts and respects buildArea | FIXED |
+| 5 | Circular dependency econ<->goals (load order) | Multiple | All cross-widget reads nil-safe, pcall in all GameFrames, _ready flags | FIXED |
+| 6 | Config shutdown nils Strategy while others still read it | engine_config.lua | Shutdown sets Strategy._ready = false instead of niling | FIXED |
 
 ## Execution Bugs (Phase 3)
 

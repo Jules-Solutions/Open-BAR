@@ -569,23 +569,29 @@ end
 
 function widget:GameFrame(frame)
     if not TL then return end
+    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
 
-    -- Auto-expire emergency modes
-    if strategy.emergencyMode ~= "none" and strategy.emergencyExpiry > 0 then
-        if frame >= strategy.emergencyExpiry then
-            spEcho("[TotallyLegal Config] Emergency mode expired.")
-            strategy.emergencyMode = "none"
-            strategy.emergencyExpiry = 0
+    local ok, err = pcall(function()
+        -- Auto-expire emergency modes
+        if strategy.emergencyMode ~= "none" and strategy.emergencyExpiry > 0 then
+            if frame >= strategy.emergencyExpiry then
+                spEcho("[TotallyLegal Config] Emergency mode expired.")
+                strategy.emergencyMode = "none"
+                strategy.emergencyExpiry = 0
+            end
         end
-    end
 
-    -- Auto-detect faction if not yet known (poll every 2s)
-    if strategy.faction == "unknown" and frame % 60 == 0 and frame > 30 then
-        local faction = TL.GetFaction()
-        if faction ~= "unknown" then
-            strategy.faction = faction
-            spEcho("[TotallyLegal Config] Faction detected: " .. faction)
+        -- Auto-detect faction if not yet known (poll every 2s)
+        if strategy.faction == "unknown" and frame % 60 == 0 and frame > 30 then
+            local faction = TL.GetFaction()
+            if faction ~= "unknown" then
+                strategy.faction = faction
+                spEcho("[TotallyLegal Config] Faction detected: " .. faction)
+            end
         end
+    end)
+    if not ok then
+        spEcho("[TotallyLegal Config] GameFrame error: " .. tostring(err))
     end
 end
 
@@ -612,6 +618,7 @@ function widget:Initialize()
 
     -- Expose strategy to other engine widgets
     WG.TotallyLegal.Strategy = strategy
+    strategy._ready = true
 
     windowX = 20
     windowY = vsy / 2
@@ -626,8 +633,8 @@ function widget:ViewResize(newX, newY)
 end
 
 function widget:Shutdown()
-    if WG.TotallyLegal then
-        WG.TotallyLegal.Strategy = nil
+    if WG.TotallyLegal and WG.TotallyLegal.Strategy then
+        WG.TotallyLegal.Strategy._ready = false
     end
 end
 

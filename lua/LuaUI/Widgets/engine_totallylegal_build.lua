@@ -340,25 +340,31 @@ end
 
 function widget:GameFrame(frame)
     if not TL then return end
+    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
     if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if phase == "done" then return end
     if frame % CFG.updateFrequency ~= 0 then return end
 
-    if phase == "waiting" then
-        if frame > 30 then
-            FindCommander()
-            if commanderID and #buildQueue == 0 then
-                GenerateDefaultQueue()
+    local ok, err = pcall(function()
+        if phase == "waiting" then
+            if frame > 30 then
+                FindCommander()
+                if commanderID and #buildQueue == 0 then
+                    GenerateDefaultQueue()
+                end
+            end
+        elseif phase == "building" then
+            ExecuteNextBuild()
+        elseif phase == "handoff" then
+            spEcho("[TotallyLegal Build] Opening complete. Handing off to economy manager.")
+            phase = "done"
+            if WG.TotallyLegal then
+                WG.TotallyLegal.BuildPhase = "done"
             end
         end
-    elseif phase == "building" then
-        ExecuteNextBuild()
-    elseif phase == "handoff" then
-        spEcho("[TotallyLegal Build] Opening complete. Handing off to economy manager.")
-        phase = "done"
-        if WG.TotallyLegal then
-            WG.TotallyLegal.BuildPhase = "done"
-        end
+    end)
+    if not ok then
+        spEcho("[TotallyLegal Build] GameFrame error: " .. tostring(err))
     end
 end
 

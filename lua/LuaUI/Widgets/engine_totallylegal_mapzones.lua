@@ -589,6 +589,7 @@ function widget:Initialize()
 
     -- Expose state and API
     WG.TotallyLegal.MapZones = mapZones
+    mapZones._ready = true
     WG.TotallyLegal.MapZonesAPI = {
         StartDrawBuildingArea  = StartDrawBuildingArea,
         StartDrawPrimaryLine   = StartDrawPrimaryLine,
@@ -611,8 +612,12 @@ end
 
 function widget:Shutdown()
     if WG.TotallyLegal then
-        WG.TotallyLegal.MapZones = nil
-        WG.TotallyLegal.MapZonesAPI = nil
+        if WG.TotallyLegal.MapZones then
+            WG.TotallyLegal.MapZones._ready = false
+        end
+        if WG.TotallyLegal.MapZonesAPI then
+            WG.TotallyLegal.MapZonesAPI._ready = false
+        end
     end
 end
 

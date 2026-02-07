@@ -395,6 +395,7 @@ function widget:Initialize()
     end
 
     WG.TotallyLegal.Zones = zoneState
+    zoneState._ready = true
 
     spEcho("[TotallyLegal Zones] Zone manager ready.")
 end
@@ -405,6 +406,7 @@ end
 
 function widget:GameFrame(frame)
     if not TL then return end
+    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
     if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if frame % CFG.updateFrequency ~= 0 then return end
     if not zones.base.set then
@@ -412,13 +414,18 @@ function widget:GameFrame(frame)
         if not zones.base.set then return end
     end
 
-    AssignNewUnits()
-    CheckRallyGroup()
-    ManageFrontLine()
+    local ok, err = pcall(function()
+        AssignNewUnits()
+        CheckRallyGroup()
+        ManageFrontLine()
+    end)
+    if not ok then
+        spEcho("[TotallyLegal Zones] GameFrame error: " .. tostring(err))
+    end
 end
 
 function widget:Shutdown()
-    if WG.TotallyLegal then
-        WG.TotallyLegal.Zones = nil
+    if WG.TotallyLegal and WG.TotallyLegal.Zones then
+        WG.TotallyLegal.Zones._ready = false
     end
 end

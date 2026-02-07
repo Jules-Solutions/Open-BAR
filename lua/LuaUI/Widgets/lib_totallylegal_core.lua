@@ -64,6 +64,8 @@ local RESOURCE_UPDATE_INTERVAL = 0.5
 local automationAllowed = nil   -- cached, set on Initialize/GameStart
 local automationLevel = 0         -- 0=overlay, 1=execute, 2=advise, 3=autonomous
 local detectedFaction = "unknown"  -- "armada" | "cortex" | "unknown"
+local factionRetryActive = true
+local FACTION_RETRY_TIMEOUT = 150
 
 --------------------------------------------------------------------------------
 -- Mode detection
@@ -120,6 +122,8 @@ local function DetectFaction()
     local myTeamID = spGetMyTeamID()
     local units = spGetTeamUnits(myTeamID)
     if not units then return end
+
+    -- Method 1: Look for commander unit
     for _, uid in ipairs(units) do
         local defID = spGetUnitDefID(uid)
         if defID and UnitDefs[defID] then
@@ -133,6 +137,27 @@ local function DetectFaction()
                 end
                 return
             end
+        end
+    end
+
+    -- Method 2: Scan all units by name prefix, majority wins
+    local armCount, corCount = 0, 0
+    for _, uid in ipairs(units) do
+        local defID = spGetUnitDefID(uid)
+        if defID and UnitDefs[defID] then
+            local name = (UnitDefs[defID].name or ""):lower()
+            if name:find("^arm") then
+                armCount = armCount + 1
+            elseif name:find("^cor") then
+                corCount = corCount + 1
+            end
+        end
+    end
+    if armCount > 0 or corCount > 0 then
+        if armCount >= corCount then
+            detectedFaction = "armada"
+        else
+            detectedFaction = "cortex"
         end
     end
 end
@@ -458,7 +483,8 @@ local function InvalidateMexSpots()
 end
 
 -- Find the nearest unoccupied mex spot to (x, z).
-local function FindNearestMexSpot(x, z)
+-- Optional buildArea: {center={x,z}, radius=N, defined=bool} to constrain search.
+local function FindNearestMexSpot(x, z, buildArea)
     local spots = LoadMexSpots()
     if not spots or #spots == 0 then return nil, nil end
 
@@ -469,18 +495,31 @@ local function FindNearestMexSpot(x, z)
     local bestDist = math.huge
 
     for _, spot in ipairs(spots) do
-        local dx = spot.x - x
-        local dz = spot.z - z
-        local dist = mathSqrt(dx * dx + dz * dz)
-        if dist < bestDist and dist < BUILD_CFG.mexSearchRadius then
-            local gy = spGetGroundHeight(spot.x, spot.z) or 0
-            local result = spTestBuildOrder(mexDefID, spot.x, gy, spot.z, 0)
-            if result and result > 0 then
-                bestDist = dist
-                bestX = spot.x
-                bestZ = spot.z
+        -- Filter by buildArea if provided
+        if buildArea and buildArea.defined then
+            local baDx = spot.x - buildArea.center.x
+            local baDz = spot.z - buildArea.center.z
+            if (baDx * baDx + baDz * baDz) > (buildArea.radius * buildArea.radius) then
+                goto continue
             end
         end
+
+        do
+            local dx = spot.x - x
+            local dz = spot.z - z
+            local dist = mathSqrt(dx * dx + dz * dz)
+            if dist < bestDist and dist < BUILD_CFG.mexSearchRadius then
+                local gy = spGetGroundHeight(spot.x, spot.z) or 0
+                local result = spTestBuildOrder(mexDefID, spot.x, gy, spot.z, 0)
+                if result and result > 0 then
+                    bestDist = dist
+                    bestX = spot.x
+                    bestZ = spot.z
+                end
+            end
+        end
+
+        ::continue::
     end
 
     return bestX, bestZ
@@ -493,9 +532,10 @@ local function FindBuildPosition(builderID, defID, baseX, baseZ, options)
     local def = UnitDefs[defID]
     if not def then return nil, nil end
 
-    -- Metal extractors: find nearest real mex spot
+    -- Metal extractors: find nearest real mex spot (respecting buildArea)
     if def.extractsMetal and def.extractsMetal > 0 then
-        return FindNearestMexSpot(baseX, baseZ)
+        local buildArea = options and options.buildArea
+        return FindNearestMexSpot(baseX, baseZ, buildArea)
     end
 
     -- Constrain to building area if provided
@@ -831,6 +871,10 @@ function widget:Initialize()
 
     -- Expose everything via WG table
     WG.TotallyLegal = {
+        -- System readiness
+        _ready              = false,
+        _coreGameStarted    = false,
+
         -- Meta
         automationLevel     = automationLevel,
         GetAutomationLevel  = GetAutomationLevel,
@@ -881,6 +925,7 @@ function widget:Initialize()
         DrawHLine      = DrawHLine,
     }
 
+    WG.TotallyLegal._ready = true
     spEcho("[TotallyLegal Core] Initialized. Automation allowed: " .. tostring(IsAutomationAllowed()))
 end
 
@@ -890,12 +935,33 @@ function widget:GameStart()
     DetectFaction()
     BuildKeyTable(detectedFaction)
     LoadMexSpots()
+    if WG.TotallyLegal then
+        WG.TotallyLegal._coreGameStarted = true
+    end
     spEcho("[TotallyLegal Core] GameStart complete | faction=" .. detectedFaction ..
            " | mexSpots=" .. (mexSpots and #mexSpots or 0) .. " (" .. mexSpotsMethod .. ")")
 end
 
 function widget:Update(dt)
     UpdateTeamResources()
+
+    -- Faction detection retry: poll every 30 frames while faction is unknown
+    if factionRetryActive and detectedFaction == "unknown" then
+        local frame = spGetGameFrame()
+        if frame > 0 and frame % 30 == 0 then
+            DetectFaction()
+            if detectedFaction ~= "unknown" then
+                spEcho("[TotallyLegal Core] Faction resolved via retry at frame " .. frame .. ": " .. detectedFaction)
+                BuildKeyTable(detectedFaction)
+                InvalidateMexSpots()
+                LoadMexSpots()
+                factionRetryActive = false
+            elseif frame >= FACTION_RETRY_TIMEOUT then
+                spEcho("[TotallyLegal Core] Faction retry timed out at frame " .. frame .. ", staying unknown")
+                factionRetryActive = false
+            end
+        end
+    end
 end
 
 -- Unit tracking callins
@@ -926,5 +992,18 @@ function widget:UnitTaken(unitID, unitDefID, oldTeam, newTeam)
 end
 
 function widget:Shutdown()
-    WG.TotallyLegal = nil
+    if WG.TotallyLegal then
+        WG.TotallyLegal._ready = false
+        WG.TotallyLegal._coreGameStarted = false
+        -- Clear function references
+        local keysToNil = {}
+        for k, v in pairs(WG.TotallyLegal) do
+            if type(v) == "function" then
+                keysToNil[#keysToNil + 1] = k
+            end
+        end
+        for _, k in ipairs(keysToNil) do
+            WG.TotallyLegal[k] = nil
+        end
+    end
 end

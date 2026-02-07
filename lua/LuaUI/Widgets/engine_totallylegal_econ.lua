@@ -290,21 +290,28 @@ function widget:Initialize()
 
     -- Expose economy state
     WG.TotallyLegal.Economy = econState
+    econState._ready = true
 
     spEcho("[TotallyLegal Econ] Ready (uses core library for keys + mex spots)")
 end
 
 function widget:GameFrame(frame)
     if not TL then return end
+    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
     if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if frame % CFG.updateFrequency ~= 0 then return end
 
-    AnalyzeEconomy()
-    AssignIdleConstructors()
+    local ok, err = pcall(function()
+        AnalyzeEconomy()
+        AssignIdleConstructors()
+    end)
+    if not ok then
+        spEcho("[TotallyLegal Econ] GameFrame error: " .. tostring(err))
+    end
 end
 
 function widget:Shutdown()
-    if WG.TotallyLegal then
-        WG.TotallyLegal.Economy = nil
+    if WG.TotallyLegal and WG.TotallyLegal.Economy then
+        WG.TotallyLegal.Economy._ready = false
     end
 end

@@ -144,6 +144,10 @@ local function BuildRoleMappings()
             end
         end
     end
+
+    if productionState then
+        productionState.roleMappings = roleMappings
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -356,21 +360,29 @@ function widget:Initialize()
     BuildRoleMappings()
 
     WG.TotallyLegal.Production = productionState
+    productionState.roleMappings = roleMappings
+    productionState._ready = true
 
     spEcho("[TotallyLegal Prod] Production manager ready.")
 end
 
 function widget:GameFrame(frame)
     if not TL then return end
+    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
     if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if frame % CFG.updateFrequency ~= 0 then return end
     if frame < 60 then return end  -- skip first 2 seconds
 
-    QueueProduction()
+    local ok, err = pcall(function()
+        QueueProduction()
+    end)
+    if not ok then
+        spEcho("[TotallyLegal Prod] GameFrame error: " .. tostring(err))
+    end
 end
 
 function widget:Shutdown()
-    if WG.TotallyLegal then
-        WG.TotallyLegal.Production = nil
+    if WG.TotallyLegal and WG.TotallyLegal.Production then
+        WG.TotallyLegal.Production._ready = false
     end
 end
