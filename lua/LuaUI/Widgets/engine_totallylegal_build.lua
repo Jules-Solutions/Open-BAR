@@ -63,6 +63,7 @@ local phase = "waiting"         -- "waiting", "building", "handoff", "done"
 -- Build tracking: don't advance queue until current build is DONE
 local currentBuildDefID = nil   -- defID of what we're currently building
 local currentBuildFrame = 0     -- frame when we issued the order
+local currentBuildPos = nil     -- { x, z } for mex claim release
 local retryCount = 0            -- retries for current item
 local retryWaitUntil = 0        -- frame to wait until before retrying
 
@@ -201,6 +202,10 @@ local function ExecuteNextBuild()
             if frame - currentBuildFrame > CFG.buildTimeout then
                 spEcho("[TotallyLegal Build] Build timeout for item " .. currentQueueIndex .. ", cancelling")
                 spGiveOrderToUnit(commanderID, CMD_STOP, {}, {})
+                if currentBuildPos and TL.ReleaseMexClaim then
+                    TL.ReleaseMexClaim(currentBuildPos.x, currentBuildPos.z)
+                    currentBuildPos = nil
+                end
                 currentBuildDefID = nil
                 retryCount = retryCount + 1
                 if retryCount > CFG.maxRetries then
@@ -220,6 +225,10 @@ local function ExecuteNextBuild()
             -- Completed in < 0.33s = order was silently rejected by the engine
             spEcho("[TotallyLegal Build] REJECTED (instant): " .. item.key ..
                    " (" .. currentQueueIndex .. "/" .. #buildQueue .. ") after " .. elapsed .. " frames")
+            if currentBuildPos and TL.ReleaseMexClaim then
+                TL.ReleaseMexClaim(currentBuildPos.x, currentBuildPos.z)
+                currentBuildPos = nil
+            end
             currentBuildDefID = nil
             retryCount = retryCount + 1
             if retryCount > CFG.maxRetries then
@@ -235,6 +244,11 @@ local function ExecuteNextBuild()
         spEcho("[TotallyLegal Build] Completed: " .. item.key ..
                " (" .. currentQueueIndex .. "/" .. #buildQueue .. ") in " ..
                string.format("%.1fs", elapsed / 30))
+        -- Release mex claim on completion
+        if currentBuildPos and TL.ReleaseMexClaim then
+            TL.ReleaseMexClaim(currentBuildPos.x, currentBuildPos.z)
+            currentBuildPos = nil
+        end
         currentBuildDefID = nil
         retryCount = 0
         currentQueueIndex = currentQueueIndex + 1
@@ -275,7 +289,11 @@ local function ExecuteNextBuild()
     if not cx then return end
 
     -- Find build position via core library (handles mex spots + spiral placement)
-    local bx, bz = TL.FindBuildPosition(commanderID, defID, cx, cz)
+    local opts = nil
+    if item.key == "mex" then
+        opts = { useTieredPriority = true }
+    end
+    local bx, bz = TL.FindBuildPosition(commanderID, defID, cx, cz, opts)
     if not bx then
         retryCount = retryCount + 1
         if retryCount > CFG.maxRetries then
@@ -290,6 +308,14 @@ local function ExecuteNextBuild()
 
     local by = spGetGroundHeight(bx, bz) or 0
     spGiveOrderToUnit(commanderID, -defID, {bx, by, bz}, {})
+
+    -- Claim mex spot to prevent constructor collision
+    if item.key == "mex" and TL.ClaimMexSpot then
+        TL.ClaimMexSpot(bx, bz, commanderID)
+        currentBuildPos = { x = bx, z = bz }
+    else
+        currentBuildPos = nil
+    end
 
     -- Track this build
     currentBuildDefID = defID

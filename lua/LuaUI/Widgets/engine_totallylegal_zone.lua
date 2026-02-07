@@ -154,6 +154,11 @@ local function SetupZones()
         zones.front.x = (sl.p1.x + sl.p2.x) / 2
         zones.front.z = (sl.p1.z + sl.p2.z) / 2
     end
+
+    -- Invalidate mex ranking when zone positions change
+    if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
+        WG.TotallyLegal.InvalidateRankedMexSpots()
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -280,6 +285,10 @@ local function ManageFrontLine()
         if frontDist < lineDist then
             zones.front.x = midX
             zones.front.z = midZ
+            -- Front snapped to defense line: re-rank mex spots
+            if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
+                WG.TotallyLegal.InvalidateRankedMexSpots()
+            end
         end
     end
 

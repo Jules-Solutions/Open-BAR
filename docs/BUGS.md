@@ -22,9 +22,9 @@ Tracked bugs from the codebase audit, mapped to the phase that fixes them.
 | 8 | No strategy validation | engine_config.lua | Warn on invalid combos (e.g., "bots" + "vehicle_plant") |
 
 ### 3b: Economy Manager
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 9 | Constructor collision (multiple cons build same position) | engine_econ.lua:181-270 | Track pending build positions, skip occupied spots |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 9 | Constructor collision (multiple cons build same position) | engine_econ.lua:181-270 | Mex claim system in core: ClaimMexSpot/ReleaseMexClaim prevents double-targeting | FIXED |
 | 10 | Stale goal reserves never clear | engine_econ.lua:103-117 | Clear reserves when no active goal (goals.overrides check) |
 
 ### 3c: Production Manager

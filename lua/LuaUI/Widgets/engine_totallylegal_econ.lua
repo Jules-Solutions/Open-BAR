@@ -249,7 +249,8 @@ local function AssignIdleConstructors()
     -- Get build area from map zones if defined
     local mapZones = WG.TotallyLegal and WG.TotallyLegal.MapZones
     local buildArea = mapZones and mapZones.buildingArea
-    local buildOptions = buildArea and { buildArea = buildArea } or nil
+    local buildOptions = { buildArea = buildArea or nil }
+    local mexBuildOptions = { buildArea = buildArea or nil, useTieredPriority = true }
 
     -- For each idle constructor, try candidates in priority order
     for _, conUID in ipairs(normalCons) do
@@ -257,10 +258,15 @@ local function AssignIdleConstructors()
         if cx then
             for _, cand in ipairs(candidates) do
                 if CanAfford(cand.defID) then
-                    local bx, bz = TL.FindBuildPosition(conUID, cand.defID, cx, cz, buildOptions)
+                    local opts = (cand.key == "mex") and mexBuildOptions or buildOptions
+                    local bx, bz = TL.FindBuildPosition(conUID, cand.defID, cx, cz, opts)
                     if bx then
                         local by = spGetGroundHeight(bx, bz) or 0
                         spGiveOrderToUnit(conUID, -cand.defID, {bx, by, bz}, {})
+                        -- Claim mex spots to prevent constructor collision
+                        if cand.key == "mex" and TL.ClaimMexSpot then
+                            TL.ClaimMexSpot(bx, bz, conUID)
+                        end
                         break  -- assigned, move to next constructor
                     end
                 end
@@ -307,6 +313,18 @@ function widget:GameFrame(frame)
     end)
     if not ok then
         spEcho("[TotallyLegal Econ] GameFrame error: " .. tostring(err))
+    end
+end
+
+function widget:UnitFinished(unitID, unitDefID, unitTeam)
+    if unitTeam ~= spGetMyTeamID() then return end
+    if not TL then return end
+    local def = UnitDefs[unitDefID]
+    if def and def.extractsMetal and def.extractsMetal > 0 then
+        local ux, _, uz = spGetUnitPosition(unitID)
+        if ux and TL.ReleaseMexClaim then
+            TL.ReleaseMexClaim(ux, uz)
+        end
     end
 end
 

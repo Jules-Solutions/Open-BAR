@@ -182,6 +182,21 @@ local BUILD_CFG = {
     mexSearchRadius = 1500,
 }
 
+-- Mex priority ranking: 3-tier expansion system
+local MEX_TIERS = { COMMANDER = 1, BUILD_AREA = 2, NO_MANS_LAND = 3 }
+local rankedMexList = nil           -- sorted array of { x, z, tier, dist }
+local rankedMexVersion = 0          -- bumped on re-rank
+local claimedMexSpots = {}          -- "x_z" -> { uid = builderUID, frame = N }
+local commanderStartPos = nil       -- { x, z } captured at GameStart
+local mexRankDeferred = false       -- wait for zones before final rank
+
+local MEX_RANK_CFG = {
+    tier1RadiusFactor = 0.5,        -- tier1 = baseRadius * 0.5
+    tier2RadiusFactor = 1.2,        -- fallback tier2 = baseRadius * 1.2
+    claimTimeout      = 900,        -- 30s at 30fps
+    defaultFrontLimit = 3000,       -- when front zone not set
+}
+
 -- Build the short_key -> defID mapping for the given faction.
 -- Called once at GameStart when faction is known. Filters wrong-faction units.
 local function BuildKeyTable(faction)
@@ -482,47 +497,222 @@ local function InvalidateMexSpots()
     mexSpotsMethod = "none"
 end
 
+--------------------------------------------------------------------------------
+-- Mex priority ranking: 3-tier expansion system
+--------------------------------------------------------------------------------
+
+-- Rank all mex spots into tiers based on spatial zones.
+-- Tier 1 = commander proximity, Tier 2 = build area, Tier 3 = no-man's land.
+-- Spots beyond the front line are excluded.
+local function RankMexSpots()
+    local spots = LoadMexSpots()
+    if not spots or #spots == 0 then
+        rankedMexList = {}
+        rankedMexVersion = rankedMexVersion + 1
+        return rankedMexList
+    end
+
+    -- Read spatial references (nil-safe)
+    local zones = WG.TotallyLegal and WG.TotallyLegal.Zones
+    local mapZones = WG.TotallyLegal and WG.TotallyLegal.MapZones
+    local buildArea = mapZones and mapZones.buildingArea
+    local baseZone = zones and zones.base
+
+    local startX = commanderStartPos and commanderStartPos.x or (baseZone and baseZone.x) or 0
+    local startZ = commanderStartPos and commanderStartPos.z or (baseZone and baseZone.z) or 0
+    local baseRadius = (baseZone and baseZone.radius) or 800
+
+    local tier1Radius = baseRadius * MEX_RANK_CFG.tier1RadiusFactor
+
+    -- Tier 2 boundary: player-drawn buildArea, or fallback from base radius
+    local tier2CX, tier2CZ, tier2Radius
+    if buildArea and buildArea.defined then
+        tier2CX = buildArea.center.x
+        tier2CZ = buildArea.center.z
+        tier2Radius = buildArea.radius
+    else
+        tier2CX = startX
+        tier2CZ = startZ
+        tier2Radius = baseRadius * MEX_RANK_CFG.tier2RadiusFactor
+    end
+
+    -- Front limit: distance from start beyond which we exclude spots
+    local frontLimit = MEX_RANK_CFG.defaultFrontLimit
+    local frontZone = zones and zones.front
+    if frontZone and frontZone.set then
+        frontLimit = Dist2D(startX, startZ, frontZone.x, frontZone.z) + (frontZone.radius or 400)
+    end
+
+    local ranked = {}
+    local t1, t2, t3, excluded = 0, 0, 0, 0
+
+    for _, spot in ipairs(spots) do
+        local distFromStart = Dist2D(spot.x, spot.z, startX, startZ)
+        local tier, sortDist
+
+        if distFromStart <= tier1Radius then
+            tier = MEX_TIERS.COMMANDER
+            sortDist = distFromStart
+            t1 = t1 + 1
+        elseif PointInCircle(spot.x, spot.z, tier2CX, tier2CZ, tier2Radius) then
+            tier = MEX_TIERS.BUILD_AREA
+            sortDist = Dist2D(spot.x, spot.z, tier2CX, tier2CZ)
+            t2 = t2 + 1
+        elseif distFromStart <= frontLimit then
+            tier = MEX_TIERS.NO_MANS_LAND
+            sortDist = distFromStart
+            t3 = t3 + 1
+        else
+            excluded = excluded + 1
+        end
+
+        if tier then
+            ranked[#ranked + 1] = { x = spot.x, z = spot.z, tier = tier, dist = sortDist }
+        end
+    end
+
+    table.sort(ranked, function(a, b)
+        if a.tier ~= b.tier then return a.tier < b.tier end
+        return a.dist < b.dist
+    end)
+
+    rankedMexList = ranked
+    rankedMexVersion = rankedMexVersion + 1
+    spEcho("[TotallyLegal Core] Mex spots ranked: T1=" .. t1 .. ", T2=" .. t2 ..
+           ", T3=" .. t3 .. ", excluded=" .. excluded)
+    return rankedMexList
+end
+
+local function GetRankedMexSpots()
+    if not rankedMexList then RankMexSpots() end
+    return rankedMexList, rankedMexVersion
+end
+
+local function InvalidateRankedMexSpots()
+    rankedMexList = nil
+end
+
+-- Mex claim system: prevents multiple constructors targeting the same spot.
+local function ClaimMexSpot(x, z, builderUID)
+    local key = mathFloor(x) .. "_" .. mathFloor(z)
+    claimedMexSpots[key] = { uid = builderUID, frame = spGetGameFrame() }
+end
+
+local function ReleaseMexClaim(x, z)
+    local key = mathFloor(x) .. "_" .. mathFloor(z)
+    claimedMexSpots[key] = nil
+end
+
+local function IsMexSpotClaimed(x, z)
+    local key = mathFloor(x) .. "_" .. mathFloor(z)
+    local claim = claimedMexSpots[key]
+    if not claim then return false end
+    -- Check timeout
+    local frame = spGetGameFrame()
+    if frame - claim.frame > MEX_RANK_CFG.claimTimeout then
+        claimedMexSpots[key] = nil
+        return false
+    end
+    -- Check if builder still alive
+    local health = Spring.GetUnitHealth(claim.uid)
+    if not health or health <= 0 then
+        claimedMexSpots[key] = nil
+        return false
+    end
+    return true
+end
+
+local function CleanStaleMexClaims(frame)
+    local toRemove = {}
+    for key, claim in pairs(claimedMexSpots) do
+        local remove = false
+        if frame - claim.frame > MEX_RANK_CFG.claimTimeout then
+            remove = true
+        else
+            local health = Spring.GetUnitHealth(claim.uid)
+            if not health or health <= 0 then
+                remove = true
+            end
+        end
+        if remove then toRemove[#toRemove + 1] = key end
+    end
+    for _, key in ipairs(toRemove) do
+        claimedMexSpots[key] = nil
+    end
+end
+
 -- Find the nearest unoccupied mex spot to (x, z).
 -- Optional buildArea: {center={x,z}, radius=N, defined=bool} to constrain search.
-local function FindNearestMexSpot(x, z, buildArea)
-    local spots = LoadMexSpots()
-    if not spots or #spots == 0 then return nil, nil end
-
+-- Optional options: { useTieredPriority = bool } to use 3-tier ranking system.
+local function FindNearestMexSpot(x, z, buildArea, options)
     local mexDefID = ResolveKey("mex")
     if not mexDefID then return nil, nil end
 
-    local bestX, bestZ = nil, nil
-    local bestDist = math.huge
+    local useTiered = options and options.useTieredPriority
 
-    for _, spot in ipairs(spots) do
-        -- Filter by buildArea if provided
-        if buildArea and buildArea.defined then
-            local baDx = spot.x - buildArea.center.x
-            local baDz = spot.z - buildArea.center.z
-            if (baDx * baDx + baDz * baDz) > (buildArea.radius * buildArea.radius) then
-                goto continue
-            end
-        end
+    if useTiered then
+        -- 3-tier priority: walk ranked list tier-by-tier
+        local ranked = rankedMexList
+        if not ranked then ranked = RankMexSpots() end
+        if not ranked or #ranked == 0 then return nil, nil end
 
-        do
-            local dx = spot.x - x
-            local dz = spot.z - z
-            local dist = mathSqrt(dx * dx + dz * dz)
-            if dist < bestDist and dist < BUILD_CFG.mexSearchRadius then
-                local gy = spGetGroundHeight(spot.x, spot.z) or 0
-                local result = spTestBuildOrder(mexDefID, spot.x, gy, spot.z, 0)
-                if result and result > 0 then
-                    bestDist = dist
-                    bestX = spot.x
-                    bestZ = spot.z
+        -- For each tier, find closest unclaimed+buildable spot to the constructor
+        for tier = 1, 3 do
+            local bestX, bestZ, bestDist = nil, nil, math.huge
+            for _, entry in ipairs(ranked) do
+                if entry.tier == tier then
+                    if not IsMexSpotClaimed(entry.x, entry.z) then
+                        local gy = spGetGroundHeight(entry.x, entry.z) or 0
+                        local result = spTestBuildOrder(mexDefID, entry.x, gy, entry.z, 0)
+                        if result and result > 0 then
+                            local d = Dist2D(x, z, entry.x, entry.z)
+                            if d < bestDist then
+                                bestDist = d
+                                bestX = entry.x
+                                bestZ = entry.z
+                            end
+                        end
+                    end
                 end
             end
+            if bestX then return bestX, bestZ end
+        end
+        return nil, nil
+    else
+        -- Legacy behavior: nearest unclaimed unoccupied within buildArea
+        local spots = LoadMexSpots()
+        if not spots or #spots == 0 then return nil, nil end
+
+        local bestX, bestZ = nil, nil
+        local bestDist = math.huge
+
+        for _, spot in ipairs(spots) do
+            if buildArea and buildArea.defined then
+                if not PointInCircle(spot.x, spot.z, buildArea.center.x, buildArea.center.z, buildArea.radius) then
+                    goto continue
+                end
+            end
+
+            if not IsMexSpotClaimed(spot.x, spot.z) then
+                local dx = spot.x - x
+                local dz = spot.z - z
+                local dist = mathSqrt(dx * dx + dz * dz)
+                if dist < bestDist and dist < BUILD_CFG.mexSearchRadius then
+                    local gy = spGetGroundHeight(spot.x, spot.z) or 0
+                    local result = spTestBuildOrder(mexDefID, spot.x, gy, spot.z, 0)
+                    if result and result > 0 then
+                        bestDist = dist
+                        bestX = spot.x
+                        bestZ = spot.z
+                    end
+                end
+            end
+
+            ::continue::
         end
 
-        ::continue::
+        return bestX, bestZ
     end
-
-    return bestX, bestZ
 end
 
 -- Find a build position for any structure.
@@ -532,10 +722,10 @@ local function FindBuildPosition(builderID, defID, baseX, baseZ, options)
     local def = UnitDefs[defID]
     if not def then return nil, nil end
 
-    -- Metal extractors: find nearest real mex spot (respecting buildArea)
+    -- Metal extractors: find nearest real mex spot (respecting buildArea + tiered priority)
     if def.extractsMetal and def.extractsMetal > 0 then
         local buildArea = options and options.buildArea
-        return FindNearestMexSpot(baseX, baseZ, buildArea)
+        return FindNearestMexSpot(baseX, baseZ, buildArea, options)
     end
 
     -- Constrain to building area if provided
@@ -909,6 +1099,15 @@ function widget:Initialize()
         FindBuildPosition  = FindBuildPosition,
         FindNearestMexSpot = FindNearestMexSpot,
 
+        -- Mex priority ranking
+        RankMexSpots             = RankMexSpots,
+        GetRankedMexSpots        = GetRankedMexSpots,
+        InvalidateRankedMexSpots = InvalidateRankedMexSpots,
+        ClaimMexSpot             = ClaimMexSpot,
+        ReleaseMexClaim          = ReleaseMexClaim,
+        IsMexSpotClaimed         = IsMexSpotClaimed,
+        MEX_TIERS                = MEX_TIERS,
+
         -- Math helpers
         Dist2D             = Dist2D,
         Dist3D             = Dist3D,
@@ -935,6 +1134,31 @@ function widget:GameStart()
     DetectFaction()
     BuildKeyTable(detectedFaction)
     LoadMexSpots()
+    -- Capture commander start position for mex ranking
+    local myTeamID = spGetMyTeamID()
+    local units = spGetTeamUnits(myTeamID)
+    if units then
+        for _, uid in ipairs(units) do
+            local defID = spGetUnitDefID(uid)
+            if defID and UnitDefs[defID] then
+                local cp = UnitDefs[defID].customParams or {}
+                if cp.iscommander then
+                    local cx, _, cz = spGetUnitPosition(uid)
+                    if cx then
+                        commanderStartPos = { x = cx, z = cz }
+                        spEcho("[TotallyLegal Core] Commander start pos: (" ..
+                               mathFloor(cx) .. ", " .. mathFloor(cz) .. ")")
+                    end
+                    break
+                end
+            end
+        end
+    end
+
+    -- Initial mex ranking (zones may not be ready yet due to load order)
+    RankMexSpots()
+    mexRankDeferred = true
+
     if WG.TotallyLegal then
         WG.TotallyLegal._coreGameStarted = true
     end
@@ -944,6 +1168,27 @@ end
 
 function widget:Update(dt)
     UpdateTeamResources()
+
+    -- Deferred mex ranking: re-rank once zone data is available
+    if mexRankDeferred then
+        local frame = spGetGameFrame()
+        if frame > 0 then
+            local zones = WG.TotallyLegal and WG.TotallyLegal.Zones
+            if zones and zones.base and zones.base.set then
+                RankMexSpots()
+                mexRankDeferred = false
+                spEcho("[TotallyLegal Core] Mex spots re-ranked (deferred, with zones)")
+            end
+        end
+    end
+
+    -- Clean stale mex claims every 300 frames (10s)
+    do
+        local frame = spGetGameFrame()
+        if frame > 0 and frame % 300 == 0 then
+            CleanStaleMexClaims(frame)
+        end
+    end
 
     -- Faction detection retry: poll every 30 frames while faction is unknown
     if factionRetryActive and detectedFaction == "unknown" then

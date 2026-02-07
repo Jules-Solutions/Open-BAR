@@ -137,16 +137,25 @@ end
 
 local function ClearBuildingArea()
     mapZones.buildingArea.defined = false
+    if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
+        WG.TotallyLegal.InvalidateRankedMexSpots()
+    end
     spEcho("[TotallyLegal MapZones] Building area cleared.")
 end
 
 local function ClearPrimaryLine()
     mapZones.primaryLine.defined = false
+    if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
+        WG.TotallyLegal.InvalidateRankedMexSpots()
+    end
     spEcho("[TotallyLegal MapZones] Primary defense line cleared.")
 end
 
 local function ClearSecondaryLine()
     mapZones.secondaryLine.defined = false
+    if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
+        WG.TotallyLegal.InvalidateRankedMexSpots()
+    end
     spEcho("[TotallyLegal MapZones] Secondary defense line cleared.")
 end
 
@@ -527,6 +536,11 @@ function widget:MousePress(x, y, button)
                 mapZones.secondaryLine.p2.z = wz
                 mapZones.secondaryLine.defined = true
                 spEcho("[TotallyLegal MapZones] Secondary defense line defined.")
+            end
+
+            -- Invalidate mex ranking when any zone boundary changes
+            if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
+                WG.TotallyLegal.InvalidateRankedMexSpots()
             end
 
             CancelDraw()
