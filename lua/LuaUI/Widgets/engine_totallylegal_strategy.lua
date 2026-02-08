@@ -76,6 +76,7 @@ local strategyExec = {
     -- Creeping Forward
     creeping = {
         lastAdvanceFrame = 0,
+        initialCount = 0,
     },
 
     -- Piercing Assault
@@ -186,6 +187,29 @@ local function ExecuteCreeping(frame)
     if not zones or not zones.front or not zones.front.set then return end
 
     local creep = strategyExec.creeping
+    local frontUnits = GetFrontUnits()
+
+    -- Track initial count for abort threshold
+    if creep.initialCount == 0 and #frontUnits > 0 then
+        creep.initialCount = #frontUnits
+    end
+
+    -- Bug #20: Abort on heavy losses (60% casualties)
+    if creep.initialCount > 0 and #frontUnits < creep.initialCount * 0.4 then
+        spEcho("[TotallyLegal Strategy] Creeping forward aborted: heavy losses.")
+        local rallyX = zones.rally and zones.rally.x or zones.base.x
+        local rallyZ = zones.rally and zones.rally.z or zones.base.z
+        OrderUnitsToMove(frontUnits, rallyX, rallyZ)
+        -- Bug #21: mark retreating so zone manager doesn't re-send to front
+        if zones.assignments then
+            for _, uid in ipairs(frontUnits) do
+                zones.assignments[uid] = "retreating"
+            end
+        end
+        local strat = WG.TotallyLegal and WG.TotallyLegal.Strategy
+        if strat then strat.attackStrategy = "none" end
+        return
+    end
 
     -- Advance front position periodically
     if frame - creep.lastAdvanceFrame >= CFG.creepingInterval then
@@ -202,7 +226,6 @@ local function ExecuteCreeping(frame)
         zones.front.z = mathMax(64, mathMin(zones.front.z, mapSizeZ - 64))
 
         -- Re-issue fight orders to all front units
-        local frontUnits = GetFrontUnits()
         OrderUnitsToFight(frontUnits, zones.front.x, zones.front.z)
 
         spEcho("[TotallyLegal Strategy] Creeping forward: front advanced to " ..
@@ -245,6 +268,12 @@ local function ExecutePiercing(frame)
         local rallyX = zones.rally and zones.rally.x or zones.base.x
         local rallyZ = zones.rally and zones.rally.z or zones.base.z
         OrderUnitsToMove(frontUnits, rallyX, rallyZ)
+        -- Bug #21: mark retreating so zone manager doesn't re-send to front
+        if zones.assignments then
+            for _, uid in ipairs(frontUnits) do
+                zones.assignments[uid] = "retreating"
+            end
+        end
         -- Reset and deactivate
         local strat = WG.TotallyLegal and WG.TotallyLegal.Strategy
         if strat then strat.attackStrategy = "none" end
@@ -309,6 +338,31 @@ local function ExecuteFakeRetreat(frame)
         spEcho("[TotallyLegal Strategy] Fake retreat: bait engaging, ambush positioning.")
 
     elseif fr.phase == "bait_engage" then
+        -- Bug #20: abort if all bait units die
+        local baitAlive = 0
+        for _, uid in ipairs(fr.baitGroup) do
+            local health = spGetUnitHealth(uid)
+            if health and health > 0 then baitAlive = baitAlive + 1 end
+        end
+        if baitAlive == 0 then
+            spEcho("[TotallyLegal Strategy] Fake retreat aborted: all bait units lost.")
+            for _, uid in ipairs(fr.ambushGroup) do
+                local health = spGetUnitHealth(uid)
+                if health and health > 0 then
+                    spGiveOrderToUnit(uid, CMD_FIRE_STATE, { CFG.fireAtWillState }, {})
+                end
+            end
+            if fr.killZone then
+                local dir = GetEnemyDirection()
+                OrderUnitsToFight(fr.ambushGroup, fr.killZone.x + dir.x * 200, fr.killZone.z + dir.z * 200)
+            end
+            fr.phase = "idle"
+            fr.baitGroup = {}
+            fr.ambushGroup = {}
+            local strat = WG.TotallyLegal and WG.TotallyLegal.Strategy
+            if strat then strat.attackStrategy = "none" end
+            return
+        end
         -- Wait for bait to make contact (5 seconds), then retreat
         if frame - fr.phaseStartFrame >= 150 then
             -- Retreat bait toward kill zone
@@ -321,6 +375,28 @@ local function ExecuteFakeRetreat(frame)
         end
 
     elseif fr.phase == "retreating" then
+        -- Bug #20: abort if all bait units die during retreat
+        local baitAlive = 0
+        for _, uid in ipairs(fr.baitGroup) do
+            local health = spGetUnitHealth(uid)
+            if health and health > 0 then baitAlive = baitAlive + 1 end
+        end
+        if baitAlive == 0 then
+            spEcho("[TotallyLegal Strategy] Fake retreat aborted during retreat: all bait lost, springing early.")
+            for _, uid in ipairs(fr.ambushGroup) do
+                local health = spGetUnitHealth(uid)
+                if health and health > 0 then
+                    spGiveOrderToUnit(uid, CMD_FIRE_STATE, { CFG.fireAtWillState }, {})
+                end
+            end
+            if fr.killZone then
+                local dir = GetEnemyDirection()
+                OrderUnitsToFight(fr.ambushGroup, fr.killZone.x + dir.x * 200, fr.killZone.z + dir.z * 200)
+            end
+            fr.phase = "ambush"
+            fr.phaseStartFrame = frame
+            return
+        end
         -- Wait for bait to reach kill zone area (5 seconds), then spring ambush
         if frame - fr.phaseStartFrame >= 150 then
             -- Ambush group: fire at will and fight
@@ -550,6 +626,7 @@ local function UpdateStrategy(frame)
     if attack ~= strategyExec.activeStrategy then
         -- Reset state for new strategy
         strategyExec.creeping.lastAdvanceFrame = 0
+        strategyExec.creeping.initialCount = 0
         strategyExec.piercing.targetPoint = nil
         strategyExec.piercing.initialCount = 0
         strategyExec.fakeRetreat.phase = "idle"

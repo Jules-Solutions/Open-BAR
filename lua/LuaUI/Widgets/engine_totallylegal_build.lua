@@ -88,11 +88,64 @@ local function IsBuilderIdle(uid)
 end
 
 --------------------------------------------------------------------------------
+-- Build order file import (Bug #16)
+--------------------------------------------------------------------------------
+
+local function LoadBuildOrderFromFile(path)
+    if not path or path == "" then return nil end
+    local content = VFS.LoadFile(path)
+    if not content then
+        spEcho("[TotallyLegal Build] Cannot load build order file: " .. tostring(path))
+        return nil
+    end
+
+    -- Minimal JSON array-of-objects parser for: [{"key":"mex","type":"structure"}, ...]
+    local queue = {}
+    for key, itemType in content:gmatch('{%s*"key"%s*:%s*"([^"]+)"%s*,%s*"type"%s*:%s*"([^"]+)"%s*}') do
+        queue[#queue + 1] = { key = key, type = itemType }
+    end
+    -- Also try reversed field order: {"type":"structure","key":"mex"}
+    if #queue == 0 then
+        for itemType, key in content:gmatch('{%s*"type"%s*:%s*"([^"]+)"%s*,%s*"key"%s*:%s*"([^"]+)"%s*}') do
+            queue[#queue + 1] = { key = key, type = itemType }
+        end
+    end
+
+    if #queue == 0 then
+        spEcho("[TotallyLegal Build] Build order file parsed but empty or invalid format: " .. path)
+        return nil
+    end
+
+    -- Validate all keys resolve
+    for i, item in ipairs(queue) do
+        if not TL.ResolveKey(item.key) then
+            spEcho("[TotallyLegal Build] WARNING: Unknown key '" .. item.key .. "' at position " .. i .. " in build order file")
+        end
+    end
+
+    spEcho("[TotallyLegal Build] Loaded build order from file: " .. path .. " (" .. #queue .. " items)")
+    return queue
+end
+
+--------------------------------------------------------------------------------
 -- Build queue generation
 --------------------------------------------------------------------------------
 
 local function GenerateDefaultQueue()
     local strat = WG.TotallyLegal and WG.TotallyLegal.Strategy
+
+    -- Bug #16: try loading build order from file if configured
+    if strat and strat.buildOrderFile then
+        local fileQueue = LoadBuildOrderFromFile(strat.buildOrderFile)
+        if fileQueue then
+            buildQueue = fileQueue
+            currentQueueIndex = 1
+            phase = "building"
+            return
+        end
+        -- File load failed, fall through to auto-generation
+    end
+
     if not strat then
         -- No strategy config yet; use hardcoded sensible default
         buildQueue = {
@@ -221,7 +274,7 @@ local function ExecuteNextBuild()
         -- Commander idle with no commands = build completed (or order was rejected)
         local elapsed = frame - currentBuildFrame
         local item = buildQueue[currentQueueIndex]
-        if elapsed < 10 then
+        if elapsed < 30 then
             -- Completed in < 0.33s = order was silently rejected by the engine
             spEcho("[TotallyLegal Build] REJECTED (instant): " .. item.key ..
                    " (" .. currentQueueIndex .. "/" .. #buildQueue .. ") after " .. elapsed .. " frames")

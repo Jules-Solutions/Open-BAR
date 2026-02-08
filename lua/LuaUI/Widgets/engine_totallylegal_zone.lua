@@ -70,6 +70,7 @@ local unitAssignments = {}  -- unitID -> "rally" | "front" | "base"
 local rallyGroup = {}       -- array of unitIDs waiting at rally
 local frontGroup = {}       -- array of unitIDs at front
 local enemyDirection = { x = 0, z = 1 }  -- estimated direction toward enemy
+local lastSecondaryLineHash = nil        -- Bug #14: track secondary line changes
 
 -- Exposed via WG
 local zoneState = {
@@ -174,11 +175,47 @@ local function IsCombatUnit(defID)
     return true
 end
 
+-- Bug #13: Atomic dead-unit cleanup across all groups before any processing
+local function CleanDeadUnits()
+    -- Clean unitAssignments
+    for uid, assignment in pairs(unitAssignments) do
+        local health = spGetUnitHealth(uid)
+        if not health or health <= 0 then
+            unitAssignments[uid] = nil
+        end
+    end
+
+    -- Rebuild rallyGroup without dead entries
+    local aliveRally = {}
+    for _, uid in ipairs(rallyGroup) do
+        if unitAssignments[uid] then
+            aliveRally[#aliveRally + 1] = uid
+        end
+    end
+    rallyGroup = aliveRally
+
+    -- Rebuild frontGroup without dead entries
+    local aliveFront = {}
+    for _, uid in ipairs(frontGroup) do
+        if unitAssignments[uid] then
+            aliveFront[#aliveFront + 1] = uid
+        end
+    end
+    frontGroup = aliveFront
+end
+
 local function AssignNewUnits()
     local myUnits = TL.GetMyUnits()
 
     for uid, defID in pairs(myUnits) do
-        if not unitAssignments[uid] and IsCombatUnit(defID) then
+        if unitAssignments[uid] == "retreating" then
+            -- Bug #21: skip retreating units; check if they're idle (arrived at rally)
+            local cmdCount = spGetUnitCommands(uid, 0)
+            if (cmdCount or 0) == 0 then
+                unitAssignments[uid] = "rally"
+                rallyGroup[#rallyGroup + 1] = uid
+            end
+        elseif not unitAssignments[uid] and IsCombatUnit(defID) then
             -- New combat unit -> send to rally
             unitAssignments[uid] = "rally"
             rallyGroup[#rallyGroup + 1] = uid
@@ -187,14 +224,6 @@ local function AssignNewUnits()
                 local ry = Spring.GetGroundHeight(zones.rally.x, zones.rally.z) or 0
                 spGiveOrderToUnit(uid, CMD_MOVE, {zones.rally.x, ry, zones.rally.z}, {})
             end
-        end
-    end
-
-    -- Cleanup dead units
-    for uid, assignment in pairs(unitAssignments) do
-        local health = spGetUnitHealth(uid)
-        if not health or health <= 0 then
-            unitAssignments[uid] = nil
         end
     end
 
@@ -219,19 +248,7 @@ end
 local function CheckRallyGroup()
     if not zones.front.set then return end
 
-    -- Count alive units at rally
-    local alive = {}
-    for _, uid in ipairs(rallyGroup) do
-        if unitAssignments[uid] == "rally" then
-            local health = spGetUnitHealth(uid)
-            if health and health > 0 then
-                alive[#alive + 1] = uid
-            end
-        end
-    end
-
-    rallyGroup = alive
-
+    -- Dead units already cleaned by CleanDeadUnits()
     -- Mobilization: send units immediately (threshold=1)
     local stratCfg = WG.TotallyLegal and WG.TotallyLegal.Strategy
     local threshold = CFG.rallyThreshold
@@ -262,18 +279,7 @@ local function ManageFrontLine()
     if stratExec and stratExec.activeStrategy ~= "none" then return end
     if stratExec and stratExec.activeEmergency ~= "none" then return end
 
-    -- Clean dead from front group
-    local alive = {}
-    for _, uid in ipairs(frontGroup) do
-        if unitAssignments[uid] == "front" then
-            local health = spGetUnitHealth(uid)
-            if health and health > 0 then
-                alive[#alive + 1] = uid
-            end
-        end
-    end
-    frontGroup = alive
-
+    -- Dead units already cleaned by CleanDeadUnits()
     -- Ensure front never retreats behind primary defense line
     local mapZones = WG.TotallyLegal and WG.TotallyLegal.MapZones
     if mapZones and mapZones.primaryLine and mapZones.primaryLine.defined then
@@ -424,12 +430,32 @@ function widget:GameFrame(frame)
     end
 
     local ok, err = pcall(function()
+        CleanDeadUnits()   -- Bug #13: atomic cleanup before any processing
         AssignNewUnits()
         CheckRallyGroup()
         ManageFrontLine()
     end)
     if not ok then
         spEcho("[TotallyLegal Zones] GameFrame error: " .. tostring(err))
+    end
+
+    -- Bug #14: poll secondary line for changes (drawn after GameStart)
+    local mapZones = WG.TotallyLegal and WG.TotallyLegal.MapZones
+    if mapZones and mapZones.secondaryLine and mapZones.secondaryLine.defined then
+        local sl = mapZones.secondaryLine
+        local midX = (sl.p1.x + sl.p2.x) / 2
+        local midZ = (sl.p1.z + sl.p2.z) / 2
+        local hash = math.floor(midX) .. "," .. math.floor(midZ)
+        if hash ~= lastSecondaryLineHash then
+            lastSecondaryLineHash = hash
+            zones.front.x = midX
+            zones.front.z = midZ
+            if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
+                WG.TotallyLegal.InvalidateRankedMexSpots()
+            end
+            spEcho("[TotallyLegal Zones] Front updated from secondary line: " ..
+                   math.floor(midX) .. ", " .. math.floor(midZ))
+        end
     end
 end
 

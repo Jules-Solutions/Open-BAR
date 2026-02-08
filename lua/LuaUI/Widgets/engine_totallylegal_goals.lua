@@ -75,6 +75,7 @@ for _, gt in ipairs(GOAL_TYPES) do GOAL_TYPE_SET[gt] = true end
 local ROLE_OPTIONS = {
     "raider", "assault", "skirmisher", "aa", "scout",
     "light_tank", "heavy_tank", "artillery", "constructor",
+    "fighter", "bomber", "gunship", "air_constructor",
 }
 
 local DESTINATION_OPTIONS = { "front", "rally", "base" }
@@ -438,6 +439,7 @@ end
 --------------------------------------------------------------------------------
 
 local function AdvanceQueue()
+    ClearOverrides()  -- Bug #18: clear immediately so old overrides don't linger
     if goalState.activeGoal then
         goalState.activeGoal.status = "completed"
         spEcho("[TotallyLegal Goals] Completed: " .. goalState.activeGoal.goalType ..
@@ -451,6 +453,7 @@ local function AdvanceQueue()
             goal.status = "active"
             goal.progress.startFrame = spGetGameFrame()
             goal.progress.lastProgressFrame = spGetGameFrame()
+            goal._lastCheckedProgress = nil  -- Bug #17: reset stall tracking for new goal
             goalState.activeGoal = goal
             spEcho("[TotallyLegal Goals] Activated: " .. goal.goalType ..
                    " (ID=" .. goal.id .. ")")
@@ -496,7 +499,7 @@ local function GenerateOverrides(goal)
 
     elseif goal.goalType == "structure_build" then
         -- Override econ: assign constructors to build this structure
-        local defID = goal.target.defID or TL.ResolveKey(goal.target.buildKey)
+        local defID = goal.target.defID or (goal.target.buildKey and TL.ResolveKey(goal.target.buildKey))
         if defID then
             goalState.overrides.econBuildTask = {
                 key    = goal.target.buildKey,
@@ -504,11 +507,13 @@ local function GenerateOverrides(goal)
                 position = nil, -- auto-place
             }
             goalState.overrides.projectConstructors = projectFrac
+        else
+            spEcho("[TotallyLegal Goals] WARNING: Cannot resolve key '" .. tostring(goal.target.buildKey) .. "' for structure_build goal")
         end
 
     elseif goal.goalType == "structure_place" then
         -- Override econ: assign constructors to build at specific position
-        local defID = goal.target.defID or TL.ResolveKey(goal.target.buildKey)
+        local defID = goal.target.defID or (goal.target.buildKey and TL.ResolveKey(goal.target.buildKey))
         if defID and goal.target.position then
             goalState.overrides.econBuildTask = {
                 key      = goal.target.buildKey,
@@ -537,6 +542,8 @@ local function GenerateOverrides(goal)
                 position = nil,
             }
             goalState.overrides.projectConstructors = projectFrac
+        else
+            spEcho("[TotallyLegal Goals] WARNING: Cannot resolve key '" .. key .. "' for economy_target goal")
         end
 
     elseif goal.goalType == "tech_transition" then
@@ -555,6 +562,8 @@ local function GenerateOverrides(goal)
                 position = nil,
             }
             goalState.overrides.projectConstructors = projectFrac
+        else
+            spEcho("[TotallyLegal Goals] WARNING: Cannot resolve key '" .. key .. "' for tech_transition goal")
         end
         -- Reserve resources for expensive T2 factories
         local cost = defID and UnitDefs[defID] and UnitDefs[defID].metalCost or 0

@@ -101,8 +101,9 @@ local function AnalyzeEconomy()
     end
 
     -- Goal override: respect reserve thresholds (suppress float while banking)
+    -- Bug #10: only apply reserves when there's an active goal; stale reserves never clear otherwise
     local goals = WG.TotallyLegal and WG.TotallyLegal.Goals
-    if goals and goals.overrides then
+    if goals and goals.overrides and goals.activeGoal then
         local reserveM = goals.overrides.reserveMetal or 0
         local reserveE = goals.overrides.reserveEnergy or 0
         if reserveM > 0 and res.metalCurrent < reserveM and econState.state == "metal_float" then
@@ -190,7 +191,7 @@ local function AssignIdleConstructors()
     -- Assign project constructors to goal's build task
     if #projectCons > 0 and goals and goals.overrides and goals.overrides.econBuildTask then
         local task = goals.overrides.econBuildTask
-        if task.defID and CanAfford(task.defID) then
+        if task and task.defID and UnitDefs[task.defID] and CanAfford(task.defID) then
             for _, conUID in ipairs(projectCons) do
                 local cx, cy, cz = spGetUnitPosition(conUID)
                 if cx then

@@ -189,6 +189,27 @@ end
 -- Emergency mode helpers
 --------------------------------------------------------------------------------
 
+-- Bug #8: Warn on contradictory strategy combinations
+local stratWarning = nil     -- { text, expireTime }
+
+local function ValidateStrategy()
+    local warnings = {}
+    if strategy.unitComposition == "bots" and strategy.attackStrategy == "anti_aa_raid" then
+        warnings[#warnings + 1] = "Bots are slow for Anti-AA Raid"
+    end
+    if strategy.posture == "aggressive" and strategy.emergencyMode == "defend_base" then
+        warnings[#warnings + 1] = "Aggressive posture conflicts with Defend Base"
+    end
+    if strategy.role == "eco" and strategy.posture == "aggressive" then
+        warnings[#warnings + 1] = "Eco role conflicts with Aggressive posture"
+    end
+    if #warnings > 0 then
+        local msg = "[TotallyLegal Config] WARNING: " .. table.concat(warnings, "; ")
+        spEcho(msg)
+        stratWarning = { text = warnings[1], expireTime = osClock() + 3 }
+    end
+end
+
 local function ActivateEmergency(mode)
     if strategy.emergencyMode == mode then
         -- Toggle off
@@ -385,6 +406,9 @@ function widget:DrawScreen()
         local modeLabel = strategy.emergencyMode == "defend_base" and "Defend Base" or "Mobilization"
         statusText = "EMERGENCY: " .. modeLabel .. " (" .. secs .. "s)"
         SetColor(COL.emergencyActive)
+    elseif stratWarning and osClock() < stratWarning.expireTime then
+        statusText = "WARN: " .. stratWarning.text
+        SetColor(COL.emergencyOrange)
     else
         statusText = "Click values to cycle | Ctrl+F1/F2 emergency"
     end
@@ -517,6 +541,7 @@ function widget:MousePress(x, y, button)
         strategy.attackStrategy = CycleOption(strategy.attackStrategy, ATTACK_OPTIONS)
     end
 
+    ValidateStrategy()  -- Bug #8: check for contradictory combos after each change
     return true
 end
 

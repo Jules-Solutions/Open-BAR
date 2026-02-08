@@ -13,50 +13,50 @@ Tracked bugs from the codebase audit, mapped to the phase that fixes them.
 | 5 | Circular dependency econ<->goals (load order) | Multiple | All cross-widget reads nil-safe, pcall in all GameFrames, _ready flags | FIXED |
 | 6 | Config shutdown nils Strategy while others still read it | engine_config.lua | Shutdown sets Strategy._ready = false instead of niling | FIXED |
 
-## Execution Bugs (Phase 3)
+## Execution Bugs (Phase 3) -- ALL FIXED
 
 ### 3a: Config & Strategy
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 7 | Slider allocations can exceed 100% | engine_config.lua:54-91 | Redesign: orthogonal budget dimensions instead of single slider |
-| 8 | No strategy validation | engine_config.lua | Warn on invalid combos (e.g., "bots" + "vehicle_plant") |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 7 | Slider allocations can exceed 100% | engine_config.lua:54-91 | DEFERRED: only one slider exists, correctly clamped 0-100. Redesign is a future feature. | DEFERRED |
+| 8 | No strategy validation | engine_config.lua | ValidateStrategy() warns on contradictory combos (bots+anti_aa_raid, eco+aggressive, etc.) | FIXED |
 
 ### 3b: Economy Manager
 | # | Bug | File | Fix | Status |
 |---|-----|------|-----|--------|
 | 9 | Constructor collision (multiple cons build same position) | engine_econ.lua:181-270 | Mex claim system in core: ClaimMexSpot/ReleaseMexClaim prevents double-targeting | FIXED |
-| 10 | Stale goal reserves never clear | engine_econ.lua:103-117 | Clear reserves when no active goal (goals.overrides check) |
+| 10 | Stale goal reserves never clear | engine_econ.lua:103-117 | Reserve suppression only applies when goals.activeGoal exists | FIXED |
 
 ### 3c: Production Manager
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 11 | Goal production count goes negative | engine_prod.lua:292-300 | Use math.max(0, goalOverride.count - 1) |
-| 12 | Aircraft roles not differentiated | engine_prod.lua:106-109 | Add fighter/bomber/gunship/transport classification |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 11 | Goal production count goes negative | engine_prod.lua:292-300 | mathMax(0, goalOverride.count - 1) prevents underflow | FIXED |
+| 12 | Aircraft roles not differentiated | engine_prod.lua:106-109 | Added fighter/bomber/gunship/air_constructor classification | FIXED |
 
 ### 3d: Zone Manager
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 13 | Dead units remain in rally/front groups | engine_zone.lua:188-194 | Clean groups every update cycle, not just on access |
-| 14 | Secondary line only reads at GameStart | engine_zone.lua:150-157 | Poll MapZones for changes in GameFrame, not just once |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 13 | Dead units remain in rally/front groups | engine_zone.lua:188-194 | CleanDeadUnits() runs first in GameFrame, atomic cleanup across all groups | FIXED |
+| 14 | Secondary line only reads at GameStart | engine_zone.lua:150-157 | Secondary line polled every GameFrame cycle; front updates on change | FIXED |
 
 ### 3e: Build Order Executor
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 15 | Phase tracking race condition (instant rejection) | engine_build.lua:218-233 | Increase elapsed threshold from 10 to 30 frames |
-| 16 | buildOrderFile config field unused | engine_build.lua:70 / engine_config.lua:70 | Implement JSON build order import |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 15 | Phase tracking race condition (instant rejection) | engine_build.lua:218-233 | Increased elapsed threshold from 10 to 30 frames (1s) | FIXED |
+| 16 | buildOrderFile config field unused | engine_build.lua:70 / engine_config.lua:70 | LoadBuildOrderFromFile() reads JSON via VFS.LoadFile, parses array-of-objects | FIXED |
 
 ### 3f: Goals System
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 17 | Stall detection false positive | engine_goals.lua:845-860 | Reset _lastCheckedProgress when activating new goal |
-| 18 | Goal overrides linger after completion | engine_goals.lua:646-654 | ClearOverrides() immediately in AdvanceQueue(), not just on next tick |
-| 19 | Goals<->econ/prod/zone wiring is fragile | Multiple files | Define clear override protocol, validate in GenerateOverrides |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 17 | Stall detection false positive | engine_goals.lua:845-860 | Reset _lastCheckedProgress = nil when activating new goal in AdvanceQueue | FIXED |
+| 18 | Goal overrides linger after completion | engine_goals.lua:646-654 | ClearOverrides() called at top of AdvanceQueue(), before activeGoal = nil | FIXED |
+| 19 | Goals<->econ/prod/zone wiring is fragile | Multiple files | Nil-guard warnings in GenerateOverrides; UnitDefs validation in econ+prod consumers | FIXED |
 
 ### 3g: Strategy Execution
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 20 | Piercing assault has abort but others don't | engine_strategy.lua:184-256 | Add loss threshold abort to creeping, fake_retreat |
-| 21 | Retreat goes to rally point but units have no "retreating" state | engine_strategy.lua:247-249 | Track retreating state, restore zone assignment after retreat |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 20 | Piercing assault has abort but others don't | engine_strategy.lua:184-256 | Added loss threshold abort (60% casualties) to creeping; bait-death abort to fake_retreat | FIXED |
+| 21 | Retreat goes to rally point but units have no "retreating" state | engine_strategy.lua:247-249 | "retreating" assignment state; zone manager skips retreating units, flips to "rally" when idle | FIXED |
 
 ## Micro Bugs (Phase 4)
 

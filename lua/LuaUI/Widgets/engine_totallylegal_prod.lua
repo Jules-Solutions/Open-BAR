@@ -104,8 +104,34 @@ local function BuildRoleMappings()
             elseif not hasWeapons then
                 roleMappings[defID] = "utility"
             elseif def.canFly then
-                -- Check for AA-capable aircraft or fighters
-                roleMappings[defID] = "aircraft"
+                -- Bug #12: differentiate aircraft roles
+                local airIsAA = false
+                local airHasGroundAttack = false
+                local airMaxRange = 0
+                if def.weapons then
+                    for _, w in ipairs(def.weapons) do
+                        local wDefID = w.weaponDef
+                        if wDefID and WeaponDefs[wDefID] then
+                            if WeaponDefs[wDefID].canAttackGround == false then
+                                airIsAA = true
+                            else
+                                airHasGroundAttack = true
+                                airMaxRange = mathMax(airMaxRange, WeaponDefs[wDefID].range or 0)
+                            end
+                        end
+                    end
+                end
+                if airIsAA and not airHasGroundAttack then
+                    roleMappings[defID] = "fighter"
+                elseif def.buildSpeed and def.buildSpeed > 0 then
+                    roleMappings[defID] = "air_constructor"
+                elseif airMaxRange > 600 then
+                    roleMappings[defID] = "bomber"
+                elseif speed > 120 then
+                    roleMappings[defID] = "gunship"
+                else
+                    roleMappings[defID] = "bomber"
+                end
             else
                 -- Ground combat units: classify by speed and cost
                 local isAA = false
@@ -293,11 +319,11 @@ local function QueueProduction()
                 if #buildList > 0 then
                     -- Goal override: try to queue the goal's requested unit first
                     local overrideHandled = false
-                    if goalOverride and goalOverride.unitDefID and goalOverride.count > 0 then
+                    if goalOverride and goalOverride.unitDefID and UnitDefs[goalOverride.unitDefID] and goalOverride.count > 0 then
                         for _, bDefID in ipairs(buildList) do
                             if bDefID == goalOverride.unitDefID then
                                 spGiveOrderToUnit(uid, -goalOverride.unitDefID, {}, {"shift"})
-                                goalOverride.count = goalOverride.count - 1
+                                goalOverride.count = mathMax(0, goalOverride.count - 1)
                                 overrideHandled = true
                                 break
                             end
