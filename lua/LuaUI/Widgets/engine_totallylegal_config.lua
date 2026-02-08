@@ -210,6 +210,66 @@ local function ValidateStrategy()
     end
 end
 
+--------------------------------------------------------------------------------
+-- Strategy API for programmatic control (Phase 3 feature: sim bridge)
+--------------------------------------------------------------------------------
+
+local STRATEGY_OPTIONS = {
+    energyStrategy  = ENERGY_OPTIONS,
+    unitComposition = COMP_OPTIONS,
+    posture         = POSTURE_OPTIONS,
+    t2Timing        = T2_OPTIONS,
+    role            = ROLE_OPTIONS,
+    laneAssignment  = LANE_OPTIONS,
+    t2Mode          = T2MODE_OPTIONS,
+    attackStrategy  = ATTACK_OPTIONS,
+}
+
+local STRATEGY_NUMERIC = {
+    openingMexCount = { min = 1, max = 4 },
+    econArmyBalance = { min = 0, max = 100 },
+    t2ReceiveMinute = { min = 1, max = 15 },
+}
+
+local STRATEGY_READONLY = { faction = true, _ready = true, emergencyExpiry = true }
+
+local function SetStrategy(key, value)
+    if not key then return false, "key is nil" end
+    if STRATEGY_READONLY[key] then return false, "key '" .. key .. "' is read-only" end
+    if strategy[key] == nil and not STRATEGY_NUMERIC[key] then return false, "unknown key '" .. key .. "'" end
+
+    -- Validate option-based keys
+    if STRATEGY_OPTIONS[key] then
+        local valid = false
+        for _, opt in ipairs(STRATEGY_OPTIONS[key]) do
+            if opt == value then valid = true; break end
+        end
+        if not valid then return false, "invalid value '" .. tostring(value) .. "' for key '" .. key .. "'" end
+    end
+
+    -- Validate numeric keys
+    if STRATEGY_NUMERIC[key] then
+        if type(value) ~= "number" then return false, "key '" .. key .. "' requires a number" end
+        local bounds = STRATEGY_NUMERIC[key]
+        value = mathMax(bounds.min, mathMin(bounds.max, mathFloor(value)))
+    end
+
+    strategy[key] = value
+    ValidateStrategy()
+    spEcho("[TotallyLegal Config] SetStrategy: " .. key .. " = " .. tostring(value))
+    return true
+end
+
+local function GetStrategySnapshot()
+    local snap = {}
+    for k, v in pairs(strategy) do
+        if k ~= "_ready" then
+            snap[k] = v
+        end
+    end
+    return snap
+end
+
 local function ActivateEmergency(mode)
     if strategy.emergencyMode == mode then
         -- Toggle off
@@ -643,6 +703,8 @@ function widget:Initialize()
 
     -- Expose strategy to other engine widgets
     WG.TotallyLegal.Strategy = strategy
+    WG.TotallyLegal.SetStrategy = SetStrategy
+    WG.TotallyLegal.GetStrategySnapshot = GetStrategySnapshot
     strategy._ready = true
 
     windowX = 20
@@ -658,8 +720,12 @@ function widget:ViewResize(newX, newY)
 end
 
 function widget:Shutdown()
-    if WG.TotallyLegal and WG.TotallyLegal.Strategy then
-        WG.TotallyLegal.Strategy._ready = false
+    if WG.TotallyLegal then
+        if WG.TotallyLegal.Strategy then
+            WG.TotallyLegal.Strategy._ready = false
+        end
+        WG.TotallyLegal.SetStrategy = nil
+        WG.TotallyLegal.GetStrategySnapshot = nil
     end
 end
 

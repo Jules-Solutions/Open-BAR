@@ -60,6 +60,7 @@ local CFG = {
 
 local assignments = {}   -- rezbotUID -> featureID (currently assigned target)
 local assignedFeatures = {} -- featureID -> rezbotUID (reverse lookup)
+local botCooldowns = {}  -- rezbotUID -> frame when last assigned (Bug #25)
 local baseCenterX = 0
 local baseCenterZ = 0
 local baseCenterSet = false
@@ -158,11 +159,11 @@ local function UpdateBaseCenter()
     end
 end
 
-local function AssignRezbots()
+local function AssignRezbots(frame)
     local idleBots = FindIdleRezbots()
     if #idleBots == 0 then return end
 
-    -- Cleanup stale assignments
+    -- Cleanup stale assignments (dead bots)
     for uid, fID in pairs(assignments) do
         local health = spGetUnitHealth(uid)
         if not health or health <= 0 then
@@ -170,6 +171,18 @@ local function AssignRezbots()
                 assignedFeatures[fID] = nil
             end
             assignments[uid] = nil
+            botCooldowns[uid] = nil
+        end
+    end
+
+    -- Bug #25: clean stale feature assignments (feature no longer exists)
+    for fID, botUID in pairs(assignedFeatures) do
+        local fDefID = spGetFeatureDefID(fID)
+        if not fDefID then
+            assignedFeatures[fID] = nil
+            if assignments[botUID] == fID then
+                assignments[botUID] = nil
+            end
         end
     end
 
@@ -210,6 +223,11 @@ local function AssignRezbots()
 
     -- Assign each idle bot to nearest high-priority feature
     for _, botUID in ipairs(idleBots) do
+        -- Bug #25: per-bot cooldown to prevent spam-reassignment
+        if botCooldowns[botUID] and (frame - botCooldowns[botUID]) < CFG.updateFrequency * 3 then
+            goto nextBot
+        end
+
         local bx, by, bz = spGetUnitPosition(botUID)
         if not bx then goto nextBot end
 
@@ -239,6 +257,7 @@ local function AssignRezbots()
 
             assignments[botUID] = bestFeature.fID
             assignedFeatures[bestFeature.fID] = botUID
+            botCooldowns[botUID] = frame
         end
 
         ::nextBot::
@@ -276,7 +295,7 @@ function widget:GameFrame(frame)
 
     local ok, err = pcall(function()
         UpdateBaseCenter()
-        AssignRezbots()
+        AssignRezbots(frame)
     end)
     if not ok then
         Spring.Echo("[TotallyLegal Rezbot] GameFrame error: " .. tostring(err))

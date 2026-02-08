@@ -58,11 +58,11 @@ Tracked bugs from the codebase audit, mapped to the phase that fixes them.
 | 20 | Piercing assault has abort but others don't | engine_strategy.lua:184-256 | Added loss threshold abort (60% casualties) to creeping; bait-death abort to fake_retreat | FIXED |
 | 21 | Retreat goes to rally point but units have no "retreating" state | engine_strategy.lua:247-249 | "retreating" assignment state; zone manager skips retreating units, flips to "rally" when idle | FIXED |
 
-## Micro Bugs (Phase 4)
+## Micro Bugs (Phase 4) -- ALL FIXED
 
-| # | Bug | File | Fix |
-|---|-----|------|-----|
-| 22 | Dodge radius too small for large units | auto_dodge.lua:53 | Scale CFG.dodgeRadius by unit size (def.xsize * 8) |
-| 23 | Dodge has no minimum projectile travel time check | auto_dodge.lua:170-227 | Skip projectiles that will arrive in < 3 frames (undodgeable) |
-| 24 | Skirmish overrides player movement commands | auto_skirmish.lua:177-232 | Only process units that are idle or attack-moving, not player-commanded |
-| 25 | Rezbot spam-reassigns every frame | auto_rezbot.lua:161-246 | Add per-bot cooldown (CFG.updateFrequency * 3), clean stale feature assignments |
+| # | Bug | File | Fix | Status |
+|---|-----|------|-----|--------|
+| 22 | Dodge radius too small for large units | auto_dodge.lua:53 | Scale dodge distance by unit size (mathMax(dodgeRadius, radius * 1.5)) | FIXED |
+| 23 | Dodge has no minimum projectile travel time check | auto_dodge.lua:170-227 | PredictImpact returns t; skip projectiles arriving in < 3 frames | FIXED |
+| 24 | Skirmish overrides player movement commands | auto_skirmish.lua:177-232 | Only process units with FIGHT or ATTACK commands, skip player-commanded | FIXED |
+| 25 | Rezbot spam-reassigns every frame | auto_rezbot.lua:161-246 | Per-bot cooldown (CFG.updateFrequency * 3), clean stale feature assignments | FIXED |

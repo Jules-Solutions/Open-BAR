@@ -62,8 +62,8 @@ Fix engines so human-set strategy actually executes correctly. Fix in dependency
 **3a: Config & Strategy (Decision system)**
 - [x] Fix slider math: DEFERRED (only one slider, correctly clamped 0-100; future feature redesign)
 - [x] Add strategy validation (ValidateStrategy warns on contradictory combos)
-- [ ] Add SetStrategy(key, value) API for programmatic control (future sim bridge)
-- [ ] Add GetStrategySnapshot() for serialization
+- [x] Add SetStrategy(key, value) API for programmatic control (future sim bridge)
+- [x] Add GetStrategySnapshot() for serialization
 
 **3b: Economy Manager**
 - [x] Fix constructor collision (ClaimMexSpot/ReleaseMexClaim in core library)
@@ -92,10 +92,10 @@ Fix engines so human-set strategy actually executes correctly. Fix in dependency
 
 **Acceptance:** Set strategy -> system builds correctly. Goals complete. Constructors don't pile up. Dead units don't get orders. No slider combo breaks econ.
 
-### Phase 4: Polish Execution Micro (can run in parallel with Phase 3)
-- [ ] Dodge: Scale radius by unit size, add minimum projectile travel time check
-- [ ] Skirmish: Don't override player movement commands, only kite engaged units
-- [ ] Rezbot: Add per-bot cooldown (3s), clean stale feature assignments
+### Phase 4: Polish Execution Micro (can run in parallel with Phase 3) -- COMPLETED
+- [x] Dodge: Scale radius by unit size, add minimum projectile travel time check
+- [x] Skirmish: Don't override player movement commands, only kite engaged units
+- [x] Rezbot: Add per-bot cooldown (3s), clean stale feature assignments
 
 ### Phase 5: Simulation as Engine (make sim useful at Level 1-2)
 - [ ] Map data integration (terrain, walking times, mex spots per map)

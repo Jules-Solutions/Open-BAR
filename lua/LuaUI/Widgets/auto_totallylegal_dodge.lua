@@ -138,7 +138,7 @@ local function PredictImpact(px, py, pz, vx, vy, vz, ux, uy, uz)
 
     local closestDist = mathSqrt(cx * cx + cy * cy + cz * cz)
 
-    return closestDist, closestX, closestY, closestZ
+    return closestDist, closestX, closestY, closestZ, t
 end
 
 local function GetDodgeDirection(ux, uz, px, pz, vx, vz)
@@ -197,9 +197,10 @@ local function ProcessUnit(uid, data, frame)
             local vx, vy, vz = spGetProjectileVelocity(pID)
 
             if px and vx then
-                local closestDist = PredictImpact(px, py, pz, vx, vy, vz, ux, uy, uz)
+                local closestDist, _, _, _, impactTime = PredictImpact(px, py, pz, vx, vy, vz, ux, uy, uz)
 
-                if closestDist < (data.radius + CFG.hitRadius) and closestDist < bestThreatDist then
+                -- Bug #23: skip projectiles arriving in < 3 frames (undodgeable)
+                if closestDist < (data.radius + CFG.hitRadius) and impactTime >= 3 and closestDist < bestThreatDist then
                     bestThreatDist = closestDist
                     local dx, dz = GetDodgeDirection(ux, uz, px, pz, vx, vz)
                     bestDodgeX = dx
@@ -211,8 +212,10 @@ local function ProcessUnit(uid, data, frame)
     end
 
     if foundThreat and (bestDodgeX ~= 0 or bestDodgeZ ~= 0) then
-        local targetX = ux + bestDodgeX * CFG.dodgeRadius
-        local targetZ = uz + bestDodgeZ * CFG.dodgeRadius
+        -- Bug #22: scale dodge distance by unit size
+        local dodgeDist = mathMax(CFG.dodgeRadius, data.radius * 1.5)
+        local targetX = ux + bestDodgeX * dodgeDist
+        local targetZ = uz + bestDodgeZ * dodgeDist
 
         -- Clamp to map bounds
         local mapSizeX = Game.mapSizeX or 8192

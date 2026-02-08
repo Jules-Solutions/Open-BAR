@@ -32,6 +32,7 @@ local spGetGroundHeight     = Spring.GetGroundHeight
 local CMD_MOVE    = CMD.MOVE
 local CMD_STOP    = CMD.STOP
 local CMD_FIGHT   = CMD.FIGHT
+local CMD_ATTACK  = CMD.ATTACK
 
 local mathSqrt = math.sqrt
 local mathMax  = math.max
@@ -182,6 +183,15 @@ local function ProcessUnit(uid, data, frame)
 
     local ux, uy, uz = spGetUnitPosition(uid)
     if not ux then return end
+
+    -- Bug #24: only kite units that are idle or actively engaging, not player-commanded
+    local cmds = spGetUnitCommands(uid, 1)
+    if cmds and #cmds > 0 then
+        local cmdID = cmds[1].id
+        if cmdID ~= CMD_FIGHT and cmdID ~= CMD_ATTACK then
+            return  -- player gave a specific command, don't override
+        end
+    end
 
     local range = data.range
     local searchRadius = range * 1.5
