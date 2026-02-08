@@ -67,18 +67,32 @@ def save_map_cache(map_data: MapData) -> Path:
 
 def load_map_cache(map_name: str) -> Optional[MapData]:
     """Load cached MapData JSON. Returns None if not cached."""
-    from bar_sim.map_parser import map_name_to_filename
+    import re
 
     # Try direct filename match first
     stem = map_name.replace(".sd7", "")
     path = MAPS_DATA_DIR / f"{stem}.json"
 
     if not path.exists():
-        # Try fuzzy filename resolution
-        filename = map_name_to_filename(map_name)
-        if filename:
-            stem = filename.replace(".sd7", "")
-            path = MAPS_DATA_DIR / f"{stem}.json"
+        # Try normalized name matching against cached JSON file stems
+        normalized = re.sub(r'[^a-z0-9]', '', map_name.lower())
+        if MAPS_DATA_DIR.exists():
+            for json_file in MAPS_DATA_DIR.glob("*.json"):
+                file_norm = re.sub(r'[^a-z0-9]', '', json_file.stem.lower())
+                if normalized == file_norm or normalized in file_norm or file_norm in normalized:
+                    path = json_file
+                    break
+
+    if not path.exists():
+        # Try fuzzy filename resolution via parser (requires BAR installed)
+        try:
+            from bar_sim.map_parser import map_name_to_filename
+            filename = map_name_to_filename(map_name)
+            if filename:
+                stem = filename.replace(".sd7", "")
+                path = MAPS_DATA_DIR / f"{stem}.json"
+        except Exception:
+            pass
 
     if not path.exists():
         return None

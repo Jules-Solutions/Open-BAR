@@ -297,11 +297,48 @@ def list_available_maps() -> list[dict]:
     return sorted(result, key=lambda x: x["name"].lower())
 
 
+# Common shorthand aliases for popular maps
+_MAP_ALIASES = {
+    "deltasiege": "delta_siege_dry",
+    "deltasiegedry": "delta_siege_dry",
+    "cometcatcher": "comet_catcher_remake",
+    "comet": "comet_catcher_remake",
+    "supremeisthmus": "supreme_isthmus",
+    "isthmus": "supreme_isthmus",
+    "supremebattlefield": "supreme_battlefield",
+    "battlefield": "supreme_battlefield",
+    "allterrain": "all_that_glitters",
+    "glitters": "all_that_glitters",
+    "eye": "eye_of_horus",
+    "eyeofhorus": "eye_of_horus",
+    "quicksilver": "quicksilver_remake",
+}
+
+
+def _normalize_query(query: str) -> str:
+    """Strip non-alphanumeric chars and lowercase for matching."""
+    import re
+    return re.sub(r'[^a-z0-9]', '', query.lower())
+
+
 def map_name_to_filename(query: str) -> Optional[str]:
     """Fuzzy match a map name/query to its .sd7 filename.
 
-    Tries: exact filename, case-insensitive match, contains match.
+    Tries: alias, exact filename, case-insensitive match, contains match.
     """
+    # Check alias table first
+    normalized = _normalize_query(query)
+    if normalized in _MAP_ALIASES:
+        alias_target = _MAP_ALIASES[normalized]
+        # Try to find the aliased name in cache
+        entries = parse_archive_cache()
+        for e in entries:
+            fn = e["filename"].lower()
+            if alias_target in fn:
+                return e["filename"]
+        # If no archive cache entry, return the alias as-is (cache file might exist)
+        return alias_target + ".sd7"
+
     entries = parse_archive_cache()
     query_lower = query.lower().replace(" ", "_")
 

@@ -10,15 +10,13 @@ from typing import Optional, Tuple
 
 from bar_sim.models import BuildAction, BuildActionType, SimState
 from bar_sim.strategy import StrategyConfig, Role, EmergencyMode
+from bar_sim.parity import STALL_THRESHOLD, FLOAT_THRESHOLD
 
 
 # ---------------------------------------------------------------------------
 # Economy state classification
-# (mirrors Lua AnalyzeEconomy thresholds)
+# (mirrors Lua AnalyzeEconomy thresholds — see parity.py)
 # ---------------------------------------------------------------------------
-
-STALL_THRESHOLD = 0.05   # < 5% storage = stalling
-FLOAT_THRESHOLD = 0.80   # > 80% storage = floating
 
 
 def classify_econ_state(state: SimState) -> str:

@@ -230,7 +230,6 @@ end
 
 function widget:DrawScreen()
     if not TL then return end
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Timeline == false then return end
     if historyCount < 1 then return end
 
     -- Background
@@ -253,7 +252,6 @@ end
 --------------------------------------------------------------------------------
 
 function widget:IsAbove(x, y)
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Timeline == false then return false end
     return x >= windowX and x <= windowX + windowW
        and y >= windowY and y <= windowY + windowH
 end
@@ -303,9 +301,8 @@ function widget:Initialize()
 
     TL = WG.TotallyLegal
 
-    -- Position beside sidebar, at top
-    windowX = vsx - windowW - 60
-    windowY = vsy - 50 - windowH  -- near top
+    windowX = vsx - windowW - 20
+    windowY = 50
 end
 
 function widget:Update(dt)

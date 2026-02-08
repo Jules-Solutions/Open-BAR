@@ -409,7 +409,6 @@ end
 
 function widget:DrawScreen()
     if not TL then return end
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Goals == false then return end
 
     local goals = WG.TotallyLegal and WG.TotallyLegal.Goals
     if not goals then return end
@@ -525,7 +524,6 @@ end
 
 function widget:IsAbove(x, y)
     if not TL then return false end
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Goals == false then return false end
     if collapsed then
         return x >= windowX and x <= windowX + windowW
            and y >= windowY + windowH - CFG.titleHeight and y <= windowY + windowH
@@ -887,15 +885,8 @@ function widget:Initialize()
         spEcho("[TotallyLegal Goal Panel] WARNING: Goals engine not loaded yet. UI will activate when available.")
     end
 
-    -- Position beside sidebar or at sensible default avoiding bottom UI
-    local sidebar = WG.TotallyLegal.SidebarInfo
-    if sidebar and sidebar.dockRight then
-        windowX = sidebar.x - windowW - 10
-    else
-        windowX = vsx - windowW - 60
-    end
-    -- Position high enough to avoid bottom build menu/order menu (typically ~350px)
-    windowY = mathMax(380, vsy - windowH - 70)
+    windowX = 20
+    windowY = 100
 
     spEcho("[TotallyLegal Goal Panel] UI ready.")
 end

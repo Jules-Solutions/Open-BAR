@@ -98,39 +98,6 @@ end
 -- Priority calculation
 --------------------------------------------------------------------------------
 
-local CMD_GUARD = CMD.GUARD
-local CMD_REPAIR = CMD.REPAIR
-
--- Check if a builder is "effectively idle" (not building, or guarding an idle target)
-local function IsBuilderEffectivelyIdle(uid)
-    -- If actively constructing something, not idle
-    local building = spGetUnitIsBuilding(uid)
-    if building then return false end
-
-    -- Get commands
-    local cmds = spGetUnitCommands(uid, 1)
-    if not cmds or #cmds == 0 then
-        return true  -- No commands = idle
-    end
-
-    -- Check if only command is GUARD or REPAIR
-    local cmd = cmds[1]
-    if cmd and (cmd.id == CMD_GUARD or cmd.id == CMD_REPAIR) then
-        -- Has a guard/repair command - check if target is also idle
-        local targetID = cmd.params and cmd.params[1]
-        if targetID then
-            local targetBuilding = spGetUnitIsBuilding(targetID)
-            local targetCmds = spGetUnitCommands(targetID, 0)
-            -- If target is not building and has no commands, we're effectively idle
-            if not targetBuilding and (targetCmds or 0) == 0 then
-                return true
-            end
-        end
-    end
-
-    return false  -- Has other commands, not idle
-end
-
 local function UpdateHighlights()
     highlights = {}
     if not TL then return end
@@ -140,54 +107,58 @@ local function UpdateHighlights()
 
     for uid, defID in pairs(myUnits) do
         local cls = TL.GetUnitClass(defID)
-        if cls then
-            local x, y, z = spGetUnitPosition(uid)
-            if x then
-                -- Idle factories
-                if CFG.showIdleFactories and cls.isFactory then
-                    local building = spGetUnitIsBuilding(uid)
-                    local cmdCount = spGetUnitCommands(uid, 0)
-                    if not building and (cmdCount or 0) == 0 then
+        if not cls then goto continue end
+
+        local x, y, z = spGetUnitPosition(uid)
+        if not x then goto continue end
+
+        -- Idle factories
+        if CFG.showIdleFactories and cls.isFactory then
+            local building = spGetUnitIsBuilding(uid)
+            local cmdCount = spGetUnitCommands(uid, 0)
+            if not building and (cmdCount or 0) == 0 then
+                highlights[#highlights + 1] = {
+                    x = x, z = z,
+                    radius = CFG.factoryRadius,
+                    color = COL.idleFactory,
+                    pulseSpeed = 2.0,
+                }
+            end
+        end
+
+        -- Idle high-BP builders (not factories)
+        if CFG.showIdleBuilders and cls.isBuilder and not cls.isFactory and cls.buildSpeed >= CFG.idleBPThreshold then
+            local building = spGetUnitIsBuilding(uid)
+            local cmdCount = spGetUnitCommands(uid, 0)
+            if not building and (cmdCount or 0) == 0 then
+                highlights[#highlights + 1] = {
+                    x = x, z = z,
+                    radius = CFG.builderRadius,
+                    color = COL.idleBuilder,
+                    pulseSpeed = 3.0,
+                }
+            end
+        end
+
+        -- Recently attacked structures
+        if CFG.showAttacked and cls.isBuilding then
+            local attackFrame = recentlyAttacked[uid]
+            if attackFrame and (frame - attackFrame) < 150 then  -- 5 seconds
+                local health, maxHealth = spGetUnitHealth(uid)
+                if health and maxHealth and maxHealth > 0 then
+                    if (health / maxHealth) < CFG.healthThreshold then
                         highlights[#highlights + 1] = {
                             x = x, z = z,
-                            radius = CFG.factoryRadius,
-                            color = COL.idleFactory,
-                            pulseSpeed = 2.0,
+                            radius = CFG.attackedRadius,
+                            color = COL.attacked,
+                            pulseSpeed = 5.0,  -- fast pulse for urgency
                         }
-                    end
-                end
-
-                -- Idle high-BP builders (not factories) - now detects guard-on-idle too
-                if CFG.showIdleBuilders and cls.isBuilder and not cls.isFactory and cls.buildSpeed >= CFG.idleBPThreshold then
-                    if IsBuilderEffectivelyIdle(uid) then
-                        highlights[#highlights + 1] = {
-                            x = x, z = z,
-                            radius = CFG.builderRadius,
-                            color = COL.idleBuilder,
-                            pulseSpeed = 3.0,
-                        }
-                    end
-                end
-
-                -- Recently attacked structures
-                if CFG.showAttacked and cls.isBuilding then
-                    local attackFrame = recentlyAttacked[uid]
-                    if attackFrame and (frame - attackFrame) < 150 then  -- 5 seconds
-                        local health, maxHealth = spGetUnitHealth(uid)
-                        if health and maxHealth and maxHealth > 0 then
-                            if (health / maxHealth) < CFG.healthThreshold then
-                                highlights[#highlights + 1] = {
-                                    x = x, z = z,
-                                    radius = CFG.attackedRadius,
-                                    color = COL.attacked,
-                                    pulseSpeed = 5.0,  -- fast pulse for urgency
-                                }
-                            end
-                        end
                     end
                 end
             end
         end
+
+        ::continue::
     end
 
     -- Cleanup old damage records (older than 10 seconds)
@@ -204,7 +175,6 @@ end
 
 function widget:DrawWorld()
     if not TL then return end
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Priority == false then return end
     if #highlights == 0 then return end
 
     local now = osClock()

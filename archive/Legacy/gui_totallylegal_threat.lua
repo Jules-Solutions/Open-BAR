@@ -229,7 +229,6 @@ end
 
 function widget:DrawScreen()
     if not TL then return end
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Threat == false then return end
 
     -- Calculate dynamic height
     local rows = 0
@@ -348,7 +347,6 @@ end
 --------------------------------------------------------------------------------
 
 function widget:IsAbove(x, y)
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Threat == false then return false end
     return x >= windowX and x <= windowX + windowW
        and y >= windowY and y <= windowY + windowH
 end
@@ -394,9 +392,8 @@ function widget:Initialize()
     end
 
     TL = WG.TotallyLegal
-    -- Position beside sidebar, below overlay
-    windowX = vsx - windowW - 60
-    windowY = vsy - 100 - 400 - 220  -- below overlay
+    windowX = vsx - windowW - 20
+    windowY = vsy / 2 - 200
 end
 
 function widget:Update(dt)

@@ -68,6 +68,56 @@ local factionRetryActive = true
 local FACTION_RETRY_TIMEOUT = 150
 
 --------------------------------------------------------------------------------
+-- Math helpers (defined early for use in mex ranking)
+--------------------------------------------------------------------------------
+
+local function Dist2D(x1, z1, x2, z2)
+    local dx = x2 - x1
+    local dz = z2 - z1
+    return mathSqrt(dx * dx + dz * dz)
+end
+
+local function Dist3D(x1, y1, z1, x2, y2, z2)
+    local dx = x2 - x1
+    local dy = y2 - y1
+    local dz = z2 - z1
+    return mathSqrt(dx * dx + dy * dy + dz * dz)
+end
+
+local function PointInCircle(px, pz, cx, cz, r)
+    local dx = px - cx
+    local dz = pz - cz
+    return (dx * dx + dz * dz) <= (r * r)
+end
+
+local function DistToLineSegment(px, pz, x1, z1, x2, z2)
+    local dx = x2 - x1
+    local dz = z2 - z1
+    local lenSq = dx * dx + dz * dz
+    if lenSq == 0 then return Dist2D(px, pz, x1, z1) end
+    local t = mathMax(0, mathMin(1, ((px - x1) * dx + (pz - z1) * dz) / lenSq))
+    local projX = x1 + t * dx
+    local projZ = z1 + t * dz
+    return Dist2D(px, pz, projX, projZ)
+end
+
+local function NearestUnit(x, z, unitTable)
+    local bestUID = nil
+    local bestDist = math.huge
+    for uid, defID in pairs(unitTable) do
+        local ux, uy, uz = spGetUnitPosition(uid)
+        if ux then
+            local d = Dist2D(x, z, ux, uz)
+            if d < bestDist then
+                bestDist = d
+                bestUID = uid
+            end
+        end
+    end
+    return bestUID, bestDist
+end
+
+--------------------------------------------------------------------------------
 -- Mode detection
 --------------------------------------------------------------------------------
 
@@ -329,7 +379,26 @@ end
 local function LoadMexSpots()
     if mexSpots then return mexSpots end
 
-    -- Method 1: WG.metalSpots (populated by BAR's built-in mex overlay widget)
+    -- Method 1: BAR's resource_spot_finder API (most reliable, used by all BAR widgets)
+    local rsf = WG['resource_spot_finder']
+    if rsf and rsf.metalSpotsList then
+        local raw = rsf.metalSpotsList
+        if type(raw) == "table" and #raw > 0 then
+            mexSpots = {}
+            for _, spot in ipairs(raw) do
+                if spot.x and spot.z then
+                    mexSpots[#mexSpots + 1] = { x = spot.x, z = spot.z, _full = spot }
+                end
+            end
+            if #mexSpots > 0 then
+                mexSpotsMethod = "resource_spot_finder"
+                spEcho("[TotallyLegal Core] Mex spots from resource_spot_finder: " .. #mexSpots)
+                return mexSpots
+            end
+        end
+    end
+
+    -- Method 2: WG.metalSpots (populated by BAR's built-in mex overlay widget)
     if WG.metalSpots then
         local raw = WG.metalSpots
         if type(raw) == "table" then
@@ -642,12 +711,85 @@ local function CleanStaleMexClaims(frame)
 end
 
 -- Find the nearest unoccupied mex spot to (x, z).
+-- Now uses BAR's built-in resource_spot APIs for proper mex placement.
 -- Optional buildArea: {center={x,z}, radius=N, defined=bool} to constrain search.
 -- Optional options: { useTieredPriority = bool } to use 3-tier ranking system.
 local function FindNearestMexSpot(x, z, buildArea, options)
     local mexDefID = ResolveKey("mex")
     if not mexDefID then return nil, nil end
 
+    -- Try BAR's built-in resource_spot_builder API first (most reliable)
+    local rsb = WG['resource_spot_builder']
+    local rsf = WG['resource_spot_finder']
+
+    if rsb and rsf and rsf.metalSpotsList then
+        local spots = rsf.metalSpotsList
+        if spots and #spots > 0 then
+            -- DON'T use FindNearestValidSpotForExtractor directly - it doesn't know about our pending claims
+            -- Instead, iterate through spots sorted by distance and check both:
+            -- 1. BAR's ExtractorCanBeBuiltOnSpot (actual occupancy)
+            -- 2. Our IsMexSpotClaimed (pending orders from this widget)
+            
+            -- First, build a distance-sorted list of candidate spots
+            local candidates = {}
+            for _, spot in ipairs(spots) do
+                -- Check buildArea constraint if specified
+                local inArea = true
+                if buildArea and buildArea.defined then
+                    inArea = PointInCircle(spot.x, spot.z, buildArea.center.x, buildArea.center.z, buildArea.radius)
+                end
+                
+                if inArea then
+                    local d = Dist2D(x, z, spot.x, spot.z)
+                    candidates[#candidates + 1] = { spot = spot, dist = d }
+                end
+            end
+            
+            -- Sort by distance (closest first)
+            table.sort(candidates, function(a, b) return a.dist < b.dist end)
+            
+            -- Find the first spot that passes ALL checks
+            local facing = Spring.GetBuildFacing and Spring.GetBuildFacing() or 0
+            for _, cand in ipairs(candidates) do
+                local spot = cand.spot
+                -- Check 1: BAR's occupancy check (is there already a mex/building there?)
+                local barOk = rsb.ExtractorCanBeBuiltOnSpot(spot, mexDefID)
+                
+                if barOk then
+                    -- Get the build position first (claims are stored using build coordinates)
+                    local buildPositions = rsf.GetBuildingPositions(spot, mexDefID, facing, true)
+                    local buildX, buildZ
+                    if buildPositions and #buildPositions > 0 then
+                        -- Find closest build position
+                        local bestDist = math.huge
+                        for _, pos in ipairs(buildPositions) do
+                            local d = Dist2D(x, z, pos.x, pos.z)
+                            if d < bestDist then
+                                bestDist = d
+                                buildX, buildZ = pos.x, pos.z
+                            end
+                        end
+                    else
+                        buildX, buildZ = spot.x, spot.z
+                    end
+                    
+                    -- Check 2: Our claim check using BUILD coordinates (must match what build executor claims)
+                    if not IsMexSpotClaimed(buildX, buildZ) then
+                        spEcho("[TotallyLegal Core] Mex via BAR API: spot(" .. mathFloor(spot.x) .. "," .. mathFloor(spot.z) .. ") -> build(" .. mathFloor(buildX) .. "," .. mathFloor(buildZ) .. ")")
+                        return buildX, buildZ
+                    end
+                end
+            end
+            
+            spEcho("[TotallyLegal Core] No valid mex spot from BAR API (all occupied or claimed)")
+        else
+            spEcho("[TotallyLegal Core] BAR resource_spot_finder has no spots")
+        end
+    else
+        spEcho("[TotallyLegal Core] BAR resource_spot APIs not available, using fallback")
+    end
+
+    -- Fallback to our own logic if BAR APIs not available
     local useTiered = options and options.useTieredPriority
 
     if useTiered then
@@ -687,13 +829,14 @@ local function FindNearestMexSpot(x, z, buildArea, options)
         local bestDist = math.huge
 
         for _, spot in ipairs(spots) do
+            local skipSpot = false
             if buildArea and buildArea.defined then
                 if not PointInCircle(spot.x, spot.z, buildArea.center.x, buildArea.center.z, buildArea.radius) then
-                    goto continue
+                    skipSpot = true
                 end
             end
 
-            if not IsMexSpotClaimed(spot.x, spot.z) then
+            if not skipSpot and not IsMexSpotClaimed(spot.x, spot.z) then
                 local dx = spot.x - x
                 local dz = spot.z - z
                 local dist = mathSqrt(dx * dx + dz * dz)
@@ -707,8 +850,6 @@ local function FindNearestMexSpot(x, z, buildArea, options)
                     end
                 end
             end
-
-            ::continue::
         end
 
         return bestX, bestZ
@@ -749,22 +890,21 @@ local function FindBuildPosition(builderID, defID, baseX, baseZ, options)
         tz = mathMax(64, mathMin(tz, mapSizeZ - 64))
 
         -- Respect build area constraint
+        local skipPos = false
         if buildArea and buildArea.defined then
             local dx = tx - buildArea.center.x
             local dz = tz - buildArea.center.z
             if (dx * dx + dz * dz) > (buildArea.radius * buildArea.radius) then
-                goto continue
+                skipPos = true
             end
         end
 
-        do
+        if not skipPos then
             local result = spTestBuildOrder(defID, tx, spGetGroundHeight(tx, tz) or 0, tz, 0)
             if result and result > 0 then
                 return tx, tz
             end
         end
-
-        ::continue::
     end
 
     return nil, nil
@@ -944,56 +1084,6 @@ end
 
 local function GetTeamResources()
     return UpdateTeamResources()
-end
-
---------------------------------------------------------------------------------
--- Math helpers
---------------------------------------------------------------------------------
-
-local function Dist2D(x1, z1, x2, z2)
-    local dx = x2 - x1
-    local dz = z2 - z1
-    return mathSqrt(dx * dx + dz * dz)
-end
-
-local function Dist3D(x1, y1, z1, x2, y2, z2)
-    local dx = x2 - x1
-    local dy = y2 - y1
-    local dz = z2 - z1
-    return mathSqrt(dx * dx + dy * dy + dz * dz)
-end
-
-local function NearestUnit(x, z, unitTable)
-    local bestUID = nil
-    local bestDist = math.huge
-    for uid, defID in pairs(unitTable) do
-        local ux, uy, uz = spGetUnitPosition(uid)
-        if ux then
-            local d = Dist2D(x, z, ux, uz)
-            if d < bestDist then
-                bestDist = d
-                bestUID = uid
-            end
-        end
-    end
-    return bestUID, bestDist
-end
-
-local function PointInCircle(px, pz, cx, cz, r)
-    local dx = px - cx
-    local dz = pz - cz
-    return (dx * dx + dz * dz) <= (r * r)
-end
-
-local function DistToLineSegment(px, pz, x1, z1, x2, z2)
-    local dx = x2 - x1
-    local dz = z2 - z1
-    local lenSq = dx * dx + dz * dz
-    if lenSq == 0 then return Dist2D(px, pz, x1, z1) end
-    local t = mathMax(0, mathMin(1, ((px - x1) * dx + (pz - z1) * dz) / lenSq))
-    local projX = x1 + t * dx
-    local projZ = z1 + t * dz
-    return Dist2D(px, pz, projX, projZ)
 end
 
 --------------------------------------------------------------------------------

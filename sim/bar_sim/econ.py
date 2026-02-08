@@ -29,6 +29,7 @@ class Unit:
     energy_production: float = 0  # per second
     energy_upkeep: float = 0  # per second (negative = consumes)
     health: int = 0
+    speed: float = 0  # elmos/s movement speed (0 = stationary/building)
     notes: str = ""
 
 
@@ -267,6 +268,7 @@ _LEGACY_UNITS = {
         build_power=100,
         energy_production=3,  # Constructors produce small energy
         health=400,
+        speed=52,
         notes="100 BP. +50 storage. Produces 3 E/s just by existing."
     ),
     "rez_bot": Unit(
@@ -286,6 +288,7 @@ _LEGACY_UNITS = {
         build_power=200,
         energy_production=7,
         health=800,
+        speed=40,
         notes="T2. 200 BP. +100 storage. Produces 7 E/s."
     ),
     
@@ -314,6 +317,7 @@ _LEGACY_UNITS = {
         build_power=100,
         energy_production=5,
         health=600,
+        speed=65,
         notes="100 BP. +50 storage. Faster than con bot."
     ),
     
@@ -344,6 +348,7 @@ _LEGACY_UNITS = {
         build_power=200,
         energy_production=25,  # Commanders produce energy
         health=3500,
+        speed=37,
         notes="200 BP. D-gun costs 500 energy. Dies = you lose!"
     ),
 }

@@ -78,7 +78,9 @@ local CFG = {
     tooltipFontSize = 11,
     tooltipPadding  = 6,
     separatorHeight = 6,
-    levelIndicatorHeight = 8,
+    levelIndicatorHeight = 28,  -- bigger automation button
+    levelFontSize = 14,
+    dragHandleHeight = 10,
     dockRight    = true,      -- true = right edge, false = left edge
     collapseSize = 32,        -- collapsed bar width = just the logo button
 }
@@ -96,6 +98,8 @@ local COL = {
     tooltipText   = { 0.90, 0.90, 0.95, 1.00 },
     logoBg        = { 0.10, 0.15, 0.25, 0.95 },
     logoText      = { 0.50, 0.80, 1.00, 1.00 },
+    dragHandle    = { 0.30, 0.30, 0.40, 0.60 },
+    dragHandleHover = { 0.45, 0.50, 0.65, 0.90 },
     -- Level indicator colors
     levelGrey     = { 0.40, 0.40, 0.40, 0.90 },
     levelGreen    = { 0.30, 0.80, 0.30, 0.90 },
@@ -111,10 +115,17 @@ local LEVEL_COLORS = {
 }
 
 local LEVEL_NAMES = {
-    [0] = "Overlay",
-    [1] = "Execute",
-    [2] = "Advise",
-    [3] = "Autonomous",
+    [0] = "PvP",
+    [1] = "PvE",
+    [2] = "Train",
+    [3] = "EvE",
+}
+
+local LEVEL_DESCRIPTIONS = {
+    [0] = "Manual play, no automation",
+    [1] = "AI executes commands",
+    [2] = "AI advises (suggestions)",
+    [3] = "Fully autonomous AI",
 }
 
 --------------------------------------------------------------------------------
@@ -123,11 +134,17 @@ local LEVEL_NAMES = {
 
 local vsx, vsy = 0, 0
 local sidebarCollapsed = false
-local hoveredButton = nil      -- index into WIDGET_REGISTRY, or "logo", or "level"
+local hoveredButton = nil      -- index into WIDGET_REGISTRY, or "logo", or "level", or "drag"
 local buttonRects = {}         -- [i] = { x1, y1, x2, y2 }
 local logoRect = {}            -- { x1, y1, x2, y2 }
 local levelRect = {}           -- { x1, y1, x2, y2 }
+local dragHandleRect = {}      -- { x1, y1, x2, y2 }
 local barX, barY, barW, barH = 0, 0, 0, 0
+
+-- Drag state for vertical repositioning
+local isDraggingY = false
+local dragOffsetY = 0
+local userBarY = nil  -- nil = auto-center, number = user-set position
 
 --------------------------------------------------------------------------------
 -- Visibility state management
@@ -178,8 +195,8 @@ local function CalculateLayout()
     local gap = CFG.buttonGap
     local pad = CFG.edgePadding
 
-    -- Total height: logo + buttons + separators + level indicator
-    local totalH = pad + btnSize + gap  -- logo button
+    -- Total height: drag handle + logo + buttons + separators + level indicator
+    local totalH = CFG.dragHandleHeight + pad + btnSize + gap  -- drag handle + logo button
 
     local lastCat = nil
     for _, entry in ipairs(WIDGET_REGISTRY) do
@@ -200,10 +217,21 @@ local function CalculateLayout()
     else
         barX = 0
     end
-    barY = (vsy - barH) / 2  -- vertically centered
+    
+    -- Use user-set Y position or center
+    if userBarY then
+        barY = mathMax(0, mathMin(userBarY, vsy - barH))
+    else
+        barY = (vsy - barH) / 2
+    end
 
     -- Calculate button positions (top to bottom)
-    local y = barY + barH - pad
+    local y = barY + barH
+
+    -- Drag handle at top
+    y = y - CFG.dragHandleHeight
+    dragHandleRect = { x1 = barX, y1 = y, x2 = barX + barW, y2 = y + CFG.dragHandleHeight }
+    y = y - pad
 
     -- Logo button
     local x = barX + pad
@@ -228,6 +256,17 @@ local function CalculateLayout()
     y = y - CFG.separatorHeight
     y = y - CFG.levelIndicatorHeight
     levelRect = { x1 = x, y1 = y, x2 = x + btnSize, y2 = y + CFG.levelIndicatorHeight }
+    
+    -- Expose sidebar position for other widgets to dock beside
+    if WG.TotallyLegal then
+        WG.TotallyLegal.SidebarInfo = {
+            x = barX,
+            y = barY,
+            w = barW,
+            h = barH,
+            dockRight = CFG.dockRight,
+        }
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -248,6 +287,22 @@ local function DrawSeparator(y)
     end)
 end
 
+local function DrawDragHandle(hovered)
+    -- Three horizontal lines (grip pattern)
+    SetColor(hovered and COL.dragHandleHover or COL.dragHandle)
+    local cx = (dragHandleRect.x1 + dragHandleRect.x2) / 2
+    local cy = (dragHandleRect.y1 + dragHandleRect.y2) / 2
+    local hw = 6
+    glLineWidth(1)
+    for i = -1, 1 do
+        local ly = cy + i * 2.5
+        glBeginEnd(GL_LINES, function()
+            glVertex(cx - hw, ly, 0)
+            glVertex(cx + hw, ly, 0)
+        end)
+    end
+end
+
 --------------------------------------------------------------------------------
 -- Main rendering
 --------------------------------------------------------------------------------
@@ -256,6 +311,9 @@ local function DrawBar()
     -- Bar background
     SetColor(COL.barBg)
     FillRect(barX, barY, barX + barW, barY + barH)
+
+    -- Drag handle at top
+    DrawDragHandle(hoveredButton == "drag")
 
     -- Logo button
     local lr = logoRect
@@ -308,11 +366,29 @@ local function DrawBar()
         glText(entry.icon, bcx, bcy, CFG.fontSize, "ocB")
     end
 
-    -- Level indicator
+    -- Level indicator (automation mode button)
     local level = TL and TL.GetAutomationLevel and TL.GetAutomationLevel() or 0
     local levelCol = LEVEL_COLORS[level] or COL.levelGrey
-    SetColor(levelCol)
+    local isHovered = (hoveredButton == "level")
+    
+    -- Background
+    if isHovered then
+        SetColor(COL.buttonHover)
+    else
+        SetColor(COL.buttonBg)
+    end
     FillRect(levelRect.x1, levelRect.y1, levelRect.x2, levelRect.y2)
+    
+    -- Colored accent bar at bottom
+    SetColor(levelCol)
+    FillRect(levelRect.x1, levelRect.y1, levelRect.x2, levelRect.y1 + 4)
+    
+    -- Text label
+    local levelText = LEVEL_NAMES[level] or "?"
+    SetColor(COL.iconLit)
+    local lcx = (levelRect.x1 + levelRect.x2) / 2
+    local lcy = (levelRect.y1 + levelRect.y2) / 2 - 2
+    glText(levelText, lcx, lcy, CFG.levelFontSize, "ocB")
 end
 
 local function DrawTooltip()
@@ -321,9 +397,12 @@ local function DrawTooltip()
     local text = nil
     if hoveredButton == "logo" then
         text = sidebarCollapsed and "Expand Sidebar" or "Collapse Sidebar"
+    elseif hoveredButton == "drag" then
+        text = "Drag to reposition"
     elseif hoveredButton == "level" then
         local level = TL and TL.GetAutomationLevel and TL.GetAutomationLevel() or 0
-        text = "Level " .. level .. ": " .. (LEVEL_NAMES[level] or "?")
+        local desc = LEVEL_DESCRIPTIONS and LEVEL_DESCRIPTIONS[level] or ""
+        text = (LEVEL_NAMES[level] or "?") .. ": " .. desc .. " (click to cycle)"
     elseif type(hoveredButton) == "number" then
         local entry = WIDGET_REGISTRY[hoveredButton]
         if entry then
@@ -352,6 +431,8 @@ local function DrawTooltip()
         refRect = logoRect
     elseif hoveredButton == "level" then
         refRect = levelRect
+    elseif hoveredButton == "drag" then
+        refRect = dragHandleRect
     else
         refRect = buttonRects[hoveredButton]
     end
@@ -417,12 +498,26 @@ end
 function widget:MouseMove(x, y, dx, dy, button)
     if not TL then return false end
 
+    -- Handle Y-drag
+    if isDraggingY then
+        userBarY = y - dragOffsetY
+        userBarY = mathMax(0, mathMin(userBarY, vsy - barH))
+        CalculateLayout()
+        return true
+    end
+
     hoveredButton = nil
 
     if sidebarCollapsed then
         if PointInRect(x, y, logoRect) then
             hoveredButton = "logo"
         end
+        return false
+    end
+
+    -- Check drag handle
+    if PointInRect(x, y, dragHandleRect) then
+        hoveredButton = "drag"
         return false
     end
 
@@ -452,6 +547,13 @@ end
 function widget:MousePress(x, y, button)
     if button ~= 1 then return false end
     if not TL then return false end
+
+    -- Drag handle: start Y-drag
+    if not sidebarCollapsed and PointInRect(x, y, dragHandleRect) then
+        isDraggingY = true
+        dragOffsetY = y - barY
+        return true
+    end
 
     -- Logo: toggle collapse
     if PointInRect(x, y, logoRect) then
@@ -484,6 +586,14 @@ function widget:MousePress(x, y, button)
         end
     end
 
+    return false
+end
+
+function widget:MouseRelease(x, y, button)
+    if isDraggingY then
+        isDraggingY = false
+        return true
+    end
     return false
 end
 
@@ -530,6 +640,7 @@ function widget:GetConfigData()
     return {
         collapsed = sidebarCollapsed,
         dockRight = CFG.dockRight,
+        userBarY = userBarY,
         visibility = visData,
     }
 end
@@ -537,6 +648,7 @@ end
 function widget:SetConfigData(data)
     if data.collapsed ~= nil then sidebarCollapsed = data.collapsed end
     if data.dockRight ~= nil then CFG.dockRight = data.dockRight end
+    if data.userBarY ~= nil then userBarY = data.userBarY end
     if data.visibility then
         EnsureVisibilityTable()
         if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility then

@@ -1,0 +1,46 @@
+{
+  "name": "Supreme Isthmus",
+  "filename": "supreme_isthmus.sd7",
+  "shortname": "SupremeIsthmus",
+  "map_width": 14336,
+  "map_height": 14336,
+  "wind_min": 5.0,
+  "wind_max": 20.0,
+  "tidal_strength": 18.0,
+  "gravity": 100.0,
+  "max_metal": 2.0,
+  "extractor_radius": 90.0,
+  "start_positions": [
+    {"x": 2048, "z": 2048, "team_id": 0},
+    {"x": 12288, "z": 12288, "team_id": 1}
+  ],
+  "mex_spots": [
+    {"x": 1800, "z": 1800, "metal": 2.0},
+    {"x": 2296, "z": 1800, "metal": 2.0},
+    {"x": 1800, "z": 2296, "metal": 2.0},
+    {"x": 2600, "z": 2600, "metal": 2.0},
+    {"x": 1200, "z": 3200, "metal": 2.0},
+    {"x": 3200, "z": 1200, "metal": 2.0},
+    {"x": 4000, "z": 3000, "metal": 2.0},
+    {"x": 3000, "z": 4000, "metal": 2.0},
+    {"x": 5000, "z": 5000, "metal": 2.0},
+    {"x": 7168, "z": 7168, "metal": 2.5},
+    {"x": 9336, "z": 9336, "metal": 2.0},
+    {"x": 10336, "z": 11136, "metal": 2.0},
+    {"x": 11136, "z": 10336, "metal": 2.0},
+    {"x": 11136, "z": 13136, "metal": 2.0},
+    {"x": 13136, "z": 11136, "metal": 2.0},
+    {"x": 11740, "z": 11740, "metal": 2.0},
+    {"x": 12040, "z": 12536, "metal": 2.0},
+    {"x": 12536, "z": 12040, "metal": 2.0},
+    {"x": 12536, "z": 12536, "metal": 2.0}
+  ],
+  "geo_vents": [
+    {"x": 7168, "z": 7168}
+  ],
+  "total_reclaim_metal": 1200.0,
+  "total_reclaim_energy": 500.0,
+  "author": "Beherith",
+  "description": "Island map with central land bridge, tidal-viable, geo at center",
+  "source": "manual_cache"
+}

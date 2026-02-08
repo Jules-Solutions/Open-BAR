@@ -137,25 +137,16 @@ end
 
 local function ClearBuildingArea()
     mapZones.buildingArea.defined = false
-    if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
-        WG.TotallyLegal.InvalidateRankedMexSpots()
-    end
     spEcho("[TotallyLegal MapZones] Building area cleared.")
 end
 
 local function ClearPrimaryLine()
     mapZones.primaryLine.defined = false
-    if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
-        WG.TotallyLegal.InvalidateRankedMexSpots()
-    end
     spEcho("[TotallyLegal MapZones] Primary defense line cleared.")
 end
 
 local function ClearSecondaryLine()
     mapZones.secondaryLine.defined = false
-    if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
-        WG.TotallyLegal.InvalidateRankedMexSpots()
-    end
     spEcho("[TotallyLegal MapZones] Secondary defense line cleared.")
 end
 
@@ -197,7 +188,6 @@ end
 --------------------------------------------------------------------------------
 
 function widget:DrawInMiniMap(sx, sz)
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.MapZones == false then return end
     local mapSizeX = Game.mapSizeX or 8192
     local mapSizeZ = Game.mapSizeZ or 8192
     local scaleX = sx / mapSizeX
@@ -205,11 +195,6 @@ function widget:DrawInMiniMap(sx, sz)
 
     glPushMatrix()
     glScale(1, 1, 1)
-
-    -- Helper: convert world coords to minimap coords (flip Z axis)
-    local function toMinimap(worldX, worldZ)
-        return worldX * scaleX, sz - (worldZ * scaleZ)
-    end
 
     -- Building area (green circle)
     if mapZones.buildingArea.defined then
@@ -219,7 +204,8 @@ function widget:DrawInMiniMap(sx, sz)
         glBeginEnd(GL_LINE_LOOP, function()
             for i = 0, CFG.circleSegments - 1 do
                 local angle = (i / CFG.circleSegments) * 2 * mathPi
-                local px, pz = toMinimap(ba.center.x + mathCos(angle) * ba.radius, ba.center.z + mathSin(angle) * ba.radius)
+                local px = (ba.center.x + mathCos(angle) * ba.radius) * scaleX
+                local pz = (ba.center.z + mathSin(angle) * ba.radius) * scaleZ
                 glVertex(px, pz, 0)
             end
         end)
@@ -231,10 +217,8 @@ function widget:DrawInMiniMap(sx, sz)
         glColor(COL.primaryLine[1], COL.primaryLine[2], COL.primaryLine[3], COL.primaryLine[4])
         glLineWidth(2.5)
         glBeginEnd(GL_LINES, function()
-            local x1, z1 = toMinimap(pl.p1.x, pl.p1.z)
-            local x2, z2 = toMinimap(pl.p2.x, pl.p2.z)
-            glVertex(x1, z1, 0)
-            glVertex(x2, z2, 0)
+            glVertex(pl.p1.x * scaleX, pl.p1.z * scaleZ, 0)
+            glVertex(pl.p2.x * scaleX, pl.p2.z * scaleZ, 0)
         end)
     end
 
@@ -250,10 +234,8 @@ function widget:DrawInMiniMap(sx, sz)
             local t0 = d / dashCount
             local t1 = (d + 1) / dashCount
             glBeginEnd(GL_LINES, function()
-                local x1, z1 = toMinimap(sl.p1.x + dx * t0, sl.p1.z + dz * t0)
-                local x2, z2 = toMinimap(sl.p1.x + dx * t1, sl.p1.z + dz * t1)
-                glVertex(x1, z1, 0)
-                glVertex(x2, z2, 0)
+                glVertex((sl.p1.x + dx * t0) * scaleX, (sl.p1.z + dz * t0) * scaleZ, 0)
+                glVertex((sl.p1.x + dx * t1) * scaleX, (sl.p1.z + dz * t1) * scaleZ, 0)
             end)
         end
     end
@@ -269,17 +251,16 @@ function widget:DrawInMiniMap(sx, sz)
             glBeginEnd(GL_LINE_LOOP, function()
                 for i = 0, CFG.circleSegments - 1 do
                     local angle = (i / CFG.circleSegments) * 2 * mathPi
-                    local px, pz = toMinimap(cx + mathCos(angle) * r, cz + mathSin(angle) * r)
+                    local px = (cx + mathCos(angle) * r) * scaleX
+                    local pz = (cz + mathSin(angle) * r) * scaleZ
                     glVertex(px, pz, 0)
                 end
             end)
         else
             -- Preview line
             glBeginEnd(GL_LINES, function()
-                local x1, z1 = toMinimap(firstClickPos.x, firstClickPos.z)
-                local x2, z2 = toMinimap(previewX, previewZ)
-                glVertex(x1, z1, 0)
-                glVertex(x2, z2, 0)
+                glVertex(firstClickPos.x * scaleX, firstClickPos.z * scaleZ, 0)
+                glVertex(previewX * scaleX, previewZ * scaleZ, 0)
             end)
         end
     end
@@ -293,7 +274,6 @@ end
 --------------------------------------------------------------------------------
 
 function widget:DrawWorldPreUnit()
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.MapZones == false then return end
     -- Building area ground circle
     if mapZones.buildingArea.defined then
         local ba = mapZones.buildingArea
@@ -369,7 +349,6 @@ end
 
 function widget:DrawScreen()
     if not TL then return end
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.MapZones == false then return end
 
     local pH = panelCollapsed and CFG.titleHeight or CFG.panelHeight
 
@@ -439,7 +418,6 @@ local function IsAbovePanel(x, y)
 end
 
 function widget:IsAbove(x, y)
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.MapZones == false then return false end
     return IsAbovePanel(x, y)
 end
 
@@ -547,11 +525,6 @@ function widget:MousePress(x, y, button)
                 spEcho("[TotallyLegal MapZones] Secondary defense line defined.")
             end
 
-            -- Invalidate mex ranking when any zone boundary changes
-            if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
-                WG.TotallyLegal.InvalidateRankedMexSpots()
-            end
-
             CancelDraw()
             return true
         end
@@ -606,19 +579,12 @@ function widget:Initialize()
         return
     end
 
-    -- Position panel beside sidebar or at sensible default
-    local sidebar = WG.TotallyLegal.SidebarInfo
-    if sidebar and sidebar.dockRight then
-        panelX = sidebar.x - CFG.panelWidth - 10
-    else
-        panelX = vsx - CFG.panelWidth - 60
-    end
-    -- Position high enough to avoid bottom build menu/order menu (typically ~350px)
-    panelY = mathMax(380, vsy - CFG.panelHeight - 70)
+    -- Position panel above BAR's bottom UI (build menu is ~200px tall)
+    panelX = 20
+    panelY = 280
 
     -- Expose state and API
     WG.TotallyLegal.MapZones = mapZones
-    mapZones._ready = true
     WG.TotallyLegal.MapZonesAPI = {
         StartDrawBuildingArea  = StartDrawBuildingArea,
         StartDrawPrimaryLine   = StartDrawPrimaryLine,
@@ -639,39 +605,10 @@ function widget:ViewResize(newX, newY)
     panelY = mathMax(0, mathMin(panelY, vsy - CFG.panelHeight))
 end
 
-function widget:GameStart()
-    -- Clear all zones on new game start - zones are map-specific and should be redrawn
-    mapZones.buildingArea.defined = false
-    mapZones.buildingArea.center = { x = 0, z = 0 }
-    mapZones.buildingArea.radius = 600
-    mapZones.primaryLine.defined = false
-    mapZones.primaryLine.p1 = { x = 0, z = 0 }
-    mapZones.primaryLine.p2 = { x = 0, z = 0 }
-    mapZones.secondaryLine.defined = false
-    mapZones.secondaryLine.p1 = { x = 0, z = 0 }
-    mapZones.secondaryLine.p2 = { x = 0, z = 0 }
-    mapZones.drawMode = "none"
-    drawClick = 0
-    firstClickPos = nil
-    -- Reset panel position beside sidebar
-    local sidebar = WG.TotallyLegal and WG.TotallyLegal.SidebarInfo
-    if sidebar and sidebar.dockRight then
-        panelX = sidebar.x - CFG.panelWidth - 10
-    else
-        panelX = vsx - CFG.panelWidth - 60
-    end
-    panelY = mathMax(380, vsy - CFG.panelHeight - 70)
-    spEcho("[TotallyLegal MapZones] Zones cleared for new game.")
-end
-
 function widget:Shutdown()
     if WG.TotallyLegal then
-        if WG.TotallyLegal.MapZones then
-            WG.TotallyLegal.MapZones._ready = false
-        end
-        if WG.TotallyLegal.MapZonesAPI then
-            WG.TotallyLegal.MapZonesAPI._ready = false
-        end
+        WG.TotallyLegal.MapZones = nil
+        WG.TotallyLegal.MapZonesAPI = nil
     end
 end
 

@@ -70,7 +70,6 @@ local unitAssignments = {}  -- unitID -> "rally" | "front" | "base"
 local rallyGroup = {}       -- array of unitIDs waiting at rally
 local frontGroup = {}       -- array of unitIDs at front
 local enemyDirection = { x = 0, z = 1 }  -- estimated direction toward enemy
-local lastSecondaryLineHash = nil        -- Bug #14: track secondary line changes
 
 -- Exposed via WG
 local zoneState = {
@@ -155,11 +154,6 @@ local function SetupZones()
         zones.front.x = (sl.p1.x + sl.p2.x) / 2
         zones.front.z = (sl.p1.z + sl.p2.z) / 2
     end
-
-    -- Invalidate mex ranking when zone positions change
-    if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
-        WG.TotallyLegal.InvalidateRankedMexSpots()
-    end
 end
 
 --------------------------------------------------------------------------------
@@ -175,47 +169,11 @@ local function IsCombatUnit(defID)
     return true
 end
 
--- Bug #13: Atomic dead-unit cleanup across all groups before any processing
-local function CleanDeadUnits()
-    -- Clean unitAssignments
-    for uid, assignment in pairs(unitAssignments) do
-        local health = spGetUnitHealth(uid)
-        if not health or health <= 0 then
-            unitAssignments[uid] = nil
-        end
-    end
-
-    -- Rebuild rallyGroup without dead entries
-    local aliveRally = {}
-    for _, uid in ipairs(rallyGroup) do
-        if unitAssignments[uid] then
-            aliveRally[#aliveRally + 1] = uid
-        end
-    end
-    rallyGroup = aliveRally
-
-    -- Rebuild frontGroup without dead entries
-    local aliveFront = {}
-    for _, uid in ipairs(frontGroup) do
-        if unitAssignments[uid] then
-            aliveFront[#aliveFront + 1] = uid
-        end
-    end
-    frontGroup = aliveFront
-end
-
 local function AssignNewUnits()
     local myUnits = TL.GetMyUnits()
 
     for uid, defID in pairs(myUnits) do
-        if unitAssignments[uid] == "retreating" then
-            -- Bug #21: skip retreating units; check if they're idle (arrived at rally)
-            local cmdCount = spGetUnitCommands(uid, 0)
-            if (cmdCount or 0) == 0 then
-                unitAssignments[uid] = "rally"
-                rallyGroup[#rallyGroup + 1] = uid
-            end
-        elseif not unitAssignments[uid] and IsCombatUnit(defID) then
+        if not unitAssignments[uid] and IsCombatUnit(defID) then
             -- New combat unit -> send to rally
             unitAssignments[uid] = "rally"
             rallyGroup[#rallyGroup + 1] = uid
@@ -224,6 +182,14 @@ local function AssignNewUnits()
                 local ry = Spring.GetGroundHeight(zones.rally.x, zones.rally.z) or 0
                 spGiveOrderToUnit(uid, CMD_MOVE, {zones.rally.x, ry, zones.rally.z}, {})
             end
+        end
+    end
+
+    -- Cleanup dead units
+    for uid, assignment in pairs(unitAssignments) do
+        local health = spGetUnitHealth(uid)
+        if not health or health <= 0 then
+            unitAssignments[uid] = nil
         end
     end
 
@@ -248,7 +214,19 @@ end
 local function CheckRallyGroup()
     if not zones.front.set then return end
 
-    -- Dead units already cleaned by CleanDeadUnits()
+    -- Count alive units at rally
+    local alive = {}
+    for _, uid in ipairs(rallyGroup) do
+        if unitAssignments[uid] == "rally" then
+            local health = spGetUnitHealth(uid)
+            if health and health > 0 then
+                alive[#alive + 1] = uid
+            end
+        end
+    end
+
+    rallyGroup = alive
+
     -- Mobilization: send units immediately (threshold=1)
     local stratCfg = WG.TotallyLegal and WG.TotallyLegal.Strategy
     local threshold = CFG.rallyThreshold
@@ -279,7 +257,18 @@ local function ManageFrontLine()
     if stratExec and stratExec.activeStrategy ~= "none" then return end
     if stratExec and stratExec.activeEmergency ~= "none" then return end
 
-    -- Dead units already cleaned by CleanDeadUnits()
+    -- Clean dead from front group
+    local alive = {}
+    for _, uid in ipairs(frontGroup) do
+        if unitAssignments[uid] == "front" then
+            local health = spGetUnitHealth(uid)
+            if health and health > 0 then
+                alive[#alive + 1] = uid
+            end
+        end
+    end
+    frontGroup = alive
+
     -- Ensure front never retreats behind primary defense line
     local mapZones = WG.TotallyLegal and WG.TotallyLegal.MapZones
     if mapZones and mapZones.primaryLine and mapZones.primaryLine.defined then
@@ -291,10 +280,6 @@ local function ManageFrontLine()
         if frontDist < lineDist then
             zones.front.x = midX
             zones.front.z = midZ
-            -- Front snapped to defense line: re-rank mex spots
-            if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
-                WG.TotallyLegal.InvalidateRankedMexSpots()
-            end
         end
     end
 
@@ -338,11 +323,6 @@ function widget:DrawInMiniMap(sx, sz)
     local scaleX = sx / mapSizeX
     local scaleZ = sz / mapSizeZ
 
-    -- Helper: convert world coords to minimap coords (flip Z axis)
-    local function toMinimap(worldX, worldZ)
-        return worldX * scaleX, sz - (worldZ * scaleZ)
-    end
-
     gl.PushMatrix()
     gl.Scale(1, 1, 1)
 
@@ -353,7 +333,8 @@ function widget:DrawInMiniMap(sx, sz)
     gl.BeginEnd(GL.LINE_LOOP, function()
         for i = 0, segments - 1 do
             local angle = (i / segments) * 2 * math.pi
-            local px, pz = toMinimap(zones.base.x + math.cos(angle) * zones.base.radius, zones.base.z + math.sin(angle) * zones.base.radius)
+            local px = (zones.base.x + math.cos(angle) * zones.base.radius) * scaleX
+            local pz = (zones.base.z + math.sin(angle) * zones.base.radius) * scaleZ
             gl.Vertex(px, pz, 0)
         end
     end)
@@ -361,7 +342,8 @@ function widget:DrawInMiniMap(sx, sz)
     -- Rally point (yellow dot)
     if zones.rally.set then
         gl.Color(0.9, 0.9, 0.2, 0.8)
-        local rx, rz = toMinimap(zones.rally.x, zones.rally.z)
+        local rx = zones.rally.x * scaleX
+        local rz = zones.rally.z * scaleZ
         gl.Rect(rx - 3, rz - 3, rx + 3, rz + 3)
     end
 
@@ -371,7 +353,8 @@ function widget:DrawInMiniMap(sx, sz)
         gl.BeginEnd(GL.LINE_LOOP, function()
             for i = 0, segments - 1 do
                 local angle = (i / segments) * 2 * math.pi
-                local px, pz = toMinimap(zones.front.x + math.cos(angle) * zones.front.radius, zones.front.z + math.sin(angle) * zones.front.radius)
+                local px = (zones.front.x + math.cos(angle) * zones.front.radius) * scaleX
+                local pz = (zones.front.z + math.sin(angle) * zones.front.radius) * scaleZ
                 gl.Vertex(px, pz, 0)
             end
         end)
@@ -383,8 +366,9 @@ function widget:DrawInMiniMap(sx, sz)
     if laneDraw ~= "center" then
         gl.Color(1, 1, 1, 0.7)
         local laneLabel = laneDraw:upper():sub(1, 1)
-        local lx, lz = toMinimap(zones.base.x, zones.base.z)
-        gl.Text(laneLabel, lx, lz + 12, 10, "oc")
+        local lx = zones.base.x * scaleX
+        local lz = zones.base.z * scaleZ - 12
+        gl.Text(laneLabel, lx, lz, 10, "oc")
     end
 
     gl.Color(1, 1, 1, 1)
@@ -411,7 +395,6 @@ function widget:Initialize()
     end
 
     WG.TotallyLegal.Zones = zoneState
-    zoneState._ready = true
 
     spEcho("[TotallyLegal Zones] Zone manager ready.")
 end
@@ -422,46 +405,19 @@ end
 
 function widget:GameFrame(frame)
     if not TL then return end
-    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
-    if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if frame % CFG.updateFrequency ~= 0 then return end
     if not zones.base.set then
         SetupZones()
         if not zones.base.set then return end
     end
 
-    local ok, err = pcall(function()
-        CleanDeadUnits()   -- Bug #13: atomic cleanup before any processing
-        AssignNewUnits()
-        CheckRallyGroup()
-        ManageFrontLine()
-    end)
-    if not ok then
-        spEcho("[TotallyLegal Zones] GameFrame error: " .. tostring(err))
-    end
-
-    -- Bug #14: poll secondary line for changes (drawn after GameStart)
-    local mapZones = WG.TotallyLegal and WG.TotallyLegal.MapZones
-    if mapZones and mapZones.secondaryLine and mapZones.secondaryLine.defined then
-        local sl = mapZones.secondaryLine
-        local midX = (sl.p1.x + sl.p2.x) / 2
-        local midZ = (sl.p1.z + sl.p2.z) / 2
-        local hash = math.floor(midX) .. "," .. math.floor(midZ)
-        if hash ~= lastSecondaryLineHash then
-            lastSecondaryLineHash = hash
-            zones.front.x = midX
-            zones.front.z = midZ
-            if WG.TotallyLegal and WG.TotallyLegal.InvalidateRankedMexSpots then
-                WG.TotallyLegal.InvalidateRankedMexSpots()
-            end
-            spEcho("[TotallyLegal Zones] Front updated from secondary line: " ..
-                   math.floor(midX) .. ", " .. math.floor(midZ))
-        end
-    end
+    AssignNewUnits()
+    CheckRallyGroup()
+    ManageFrontLine()
 end
 
 function widget:Shutdown()
-    if WG.TotallyLegal and WG.TotallyLegal.Zones then
-        WG.TotallyLegal.Zones._ready = false
+    if WG.TotallyLegal then
+        WG.TotallyLegal.Zones = nil
     end
 end

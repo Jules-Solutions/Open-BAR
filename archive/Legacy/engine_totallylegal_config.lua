@@ -138,8 +138,6 @@ local ROLE_OPTIONS    = { "balanced", "eco", "aggro", "support" }
 local LANE_OPTIONS    = { "left", "center", "right" }
 local T2MODE_OPTIONS  = { "solo", "receive" }
 local ATTACK_OPTIONS  = { "none", "creeping", "piercing", "fake_retreat", "anti_aa_raid" }
-local LEVEL_OPTIONS   = { 0, 1, 2, 3 }
-local LEVEL_LABELS    = { [0] = "Overlay", [1] = "Execute", [2] = "Advise", [3] = "Autonomous" }
 
 local ENERGY_LABELS  = { auto = "Auto", wind_only = "Wind Only", solar_only = "Solar Only", mixed = "Mixed" }
 local COMP_LABELS    = { bots = "Bots", vehicles = "Vehicles", mixed = "Mixed" }
@@ -188,87 +186,6 @@ end
 --------------------------------------------------------------------------------
 -- Emergency mode helpers
 --------------------------------------------------------------------------------
-
--- Bug #8: Warn on contradictory strategy combinations
-local stratWarning = nil     -- { text, expireTime }
-
-local function ValidateStrategy()
-    local warnings = {}
-    if strategy.unitComposition == "bots" and strategy.attackStrategy == "anti_aa_raid" then
-        warnings[#warnings + 1] = "Bots are slow for Anti-AA Raid"
-    end
-    if strategy.posture == "aggressive" and strategy.emergencyMode == "defend_base" then
-        warnings[#warnings + 1] = "Aggressive posture conflicts with Defend Base"
-    end
-    if strategy.role == "eco" and strategy.posture == "aggressive" then
-        warnings[#warnings + 1] = "Eco role conflicts with Aggressive posture"
-    end
-    if #warnings > 0 then
-        local msg = "[TotallyLegal Config] WARNING: " .. table.concat(warnings, "; ")
-        spEcho(msg)
-        stratWarning = { text = warnings[1], expireTime = osClock() + 3 }
-    end
-end
-
---------------------------------------------------------------------------------
--- Strategy API for programmatic control (Phase 3 feature: sim bridge)
---------------------------------------------------------------------------------
-
-local STRATEGY_OPTIONS = {
-    energyStrategy  = ENERGY_OPTIONS,
-    unitComposition = COMP_OPTIONS,
-    posture         = POSTURE_OPTIONS,
-    t2Timing        = T2_OPTIONS,
-    role            = ROLE_OPTIONS,
-    laneAssignment  = LANE_OPTIONS,
-    t2Mode          = T2MODE_OPTIONS,
-    attackStrategy  = ATTACK_OPTIONS,
-}
-
-local STRATEGY_NUMERIC = {
-    openingMexCount = { min = 1, max = 4 },
-    econArmyBalance = { min = 0, max = 100 },
-    t2ReceiveMinute = { min = 1, max = 15 },
-}
-
-local STRATEGY_READONLY = { faction = true, _ready = true, emergencyExpiry = true }
-
-local function SetStrategy(key, value)
-    if not key then return false, "key is nil" end
-    if STRATEGY_READONLY[key] then return false, "key '" .. key .. "' is read-only" end
-    if strategy[key] == nil and not STRATEGY_NUMERIC[key] then return false, "unknown key '" .. key .. "'" end
-
-    -- Validate option-based keys
-    if STRATEGY_OPTIONS[key] then
-        local valid = false
-        for _, opt in ipairs(STRATEGY_OPTIONS[key]) do
-            if opt == value then valid = true; break end
-        end
-        if not valid then return false, "invalid value '" .. tostring(value) .. "' for key '" .. key .. "'" end
-    end
-
-    -- Validate numeric keys
-    if STRATEGY_NUMERIC[key] then
-        if type(value) ~= "number" then return false, "key '" .. key .. "' requires a number" end
-        local bounds = STRATEGY_NUMERIC[key]
-        value = mathMax(bounds.min, mathMin(bounds.max, mathFloor(value)))
-    end
-
-    strategy[key] = value
-    ValidateStrategy()
-    spEcho("[TotallyLegal Config] SetStrategy: " .. key .. " = " .. tostring(value))
-    return true
-end
-
-local function GetStrategySnapshot()
-    local snap = {}
-    for k, v in pairs(strategy) do
-        if k ~= "_ready" then
-            snap[k] = v
-        end
-    end
-    return snap
-end
 
 local function ActivateEmergency(mode)
     if strategy.emergencyMode == mode then
@@ -329,11 +246,10 @@ end
 
 function widget:DrawScreen()
     if not TL then return end
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Config == false then return end
 
-    -- Row count: level(1) + faction(1) + role(1) + mex(1) + energy(1) + units(1) + lane(1) + posture(1) + t2timing(1) + t2mode(1)
-    -- + slider(2) + separator(0.5) + attack(1) + separator(0.5) + emergency buttons(1.5) + status(1) = ~16 rows
-    local rows = collapsed and 0 or 16
+    -- Row count: faction(1) + role(1) + mex(1) + energy(1) + units(1) + lane(1) + posture(1) + t2timing(1) + t2mode(1)
+    -- + slider(2) + separator(0.5) + attack(1) + separator(0.5) + emergency buttons(1.5) + status(1) = ~15 rows
+    local rows = collapsed and 0 or 15
     windowH = CFG.titleHeight + (collapsed and 0 or (rows * CFG.rowHeight + CFG.padding * 2))
 
     -- Background
@@ -359,12 +275,6 @@ function widget:DrawScreen()
     local x = windowX + CFG.padding
     local rEdge = windowX + windowW - CFG.padding
     local y = windowY + windowH - CFG.titleHeight - CFG.padding
-
-    -- Automation Level
-    local curLevel = TL.GetAutomationLevel and TL.GetAutomationLevel() or 0
-    local levelLabel = LEVEL_LABELS[curLevel] or tostring(curLevel)
-    local levelColor = curLevel == 0 and COL.labelText or COL.active
-    y = DrawColoredRow(x, y, "Level:", levelLabel, levelColor)
 
     -- Faction (read-only, yellow)
     local factionDisplay = strategy.faction == "unknown" and "Detecting..." or
@@ -466,9 +376,6 @@ function widget:DrawScreen()
         local modeLabel = strategy.emergencyMode == "defend_base" and "Defend Base" or "Mobilization"
         statusText = "EMERGENCY: " .. modeLabel .. " (" .. secs .. "s)"
         SetColor(COL.emergencyActive)
-    elseif stratWarning and osClock() < stratWarning.expireTime then
-        statusText = "WARN: " .. stratWarning.text
-        SetColor(COL.emergencyOrange)
     else
         statusText = "Click values to cycle | Ctrl+F1/F2 emergency"
     end
@@ -480,7 +387,6 @@ end
 --------------------------------------------------------------------------------
 
 function widget:IsAbove(x, y)
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Config == false then return false end
     return x >= windowX and x <= windowX + windowW
        and y >= windowY and y <= windowY + windowH
 end
@@ -533,7 +439,7 @@ function widget:MousePress(x, y, button)
     -- Only cycle values when clicking the right half (value area).
     -- Clicking the left half (label area) starts a drag for easier repositioning.
     local midX = windowX + windowW * 0.45
-    if x < midX and rowClicked ~= 10 and rowClicked ~= 11 then
+    if x < midX and rowClicked ~= 9 and rowClicked ~= 10 then
         -- Label area → drag
         isDragging = true
         dragOffsetX = x - windowX
@@ -542,45 +448,38 @@ function widget:MousePress(x, y, button)
     end
 
     -- Row mapping:
-    -- 0: Automation Level
-    -- 1: Faction (read-only, no action)
-    -- 2: Role
-    -- 3: Opening Mex Count
-    -- 4: Energy Strategy
-    -- 5: Unit Composition
-    -- 6: Lane Assignment
-    -- 7: Posture
-    -- 8: T2 Timing
-    -- 9: T2 Mode (left-click cycles mode, right side adjusts minute)
-    -- 10+: Slider area (econArmyBalance)
+    -- 0: Faction (read-only, no action)
+    -- 1: Role
+    -- 2: Opening Mex Count
+    -- 3: Energy Strategy
+    -- 4: Unit Composition
+    -- 5: Lane Assignment
+    -- 6: Posture
+    -- 7: T2 Timing
+    -- 8: T2 Mode (left-click cycles mode, right side adjusts minute)
+    -- 9+: Slider area (econArmyBalance)
     -- then: attack strategy, emergency buttons
 
     if rowClicked == 0 then
-        -- Automation Level: cycle 0->1->2->3->0
-        if TL.SetAutomationLevel then
-            local cur = TL.GetAutomationLevel and TL.GetAutomationLevel() or 0
-            TL.SetAutomationLevel((cur + 1) % 4)
-        end
-    elseif rowClicked == 1 then
         -- Faction: read-only, start drag
         isDragging = true
         dragOffsetX = x - windowX
         dragOffsetY = y - windowY
-    elseif rowClicked == 2 then
+    elseif rowClicked == 1 then
         strategy.role = CycleOption(strategy.role, ROLE_OPTIONS)
-    elseif rowClicked == 3 then
+    elseif rowClicked == 2 then
         strategy.openingMexCount = (strategy.openingMexCount % 4) + 1
-    elseif rowClicked == 4 then
+    elseif rowClicked == 3 then
         strategy.energyStrategy = CycleOption(strategy.energyStrategy, ENERGY_OPTIONS)
-    elseif rowClicked == 5 then
+    elseif rowClicked == 4 then
         strategy.unitComposition = CycleOption(strategy.unitComposition, COMP_OPTIONS)
-    elseif rowClicked == 6 then
+    elseif rowClicked == 5 then
         strategy.laneAssignment = CycleOption(strategy.laneAssignment, LANE_OPTIONS)
-    elseif rowClicked == 7 then
+    elseif rowClicked == 6 then
         strategy.posture = CycleOption(strategy.posture, POSTURE_OPTIONS)
-    elseif rowClicked == 8 then
+    elseif rowClicked == 7 then
         strategy.t2Timing = CycleOption(strategy.t2Timing, T2_OPTIONS)
-    elseif rowClicked == 9 then
+    elseif rowClicked == 8 then
         -- T2 Mode: cycle mode, or adjust minute if receive mode
         -- Only the far-right 60px adjusts the minute; everything else cycles mode
         local minuteZone = windowX + windowW - CFG.padding - 60
@@ -589,19 +488,18 @@ function widget:MousePress(x, y, button)
         else
             strategy.t2Mode = CycleOption(strategy.t2Mode, T2MODE_OPTIONS)
         end
-    elseif rowClicked == 10 or rowClicked == 11 then
+    elseif rowClicked == 9 or rowClicked == 10 then
         -- Slider area
         local sliderX = windowX + CFG.padding
         local sliderW = windowW - CFG.padding * 2
         local frac = mathMax(0, mathMin(1, (x - sliderX) / sliderW))
         strategy.econArmyBalance = mathFloor(frac * 100)
         sliderDragging = "econArmy"
-    elseif rowClicked == 12 then
+    elseif rowClicked == 11 then
         -- Attack Strategy (after separator)
         strategy.attackStrategy = CycleOption(strategy.attackStrategy, ATTACK_OPTIONS)
     end
 
-    ValidateStrategy()  -- Bug #8: check for contradictory combos after each change
     return true
 end
 
@@ -654,29 +552,23 @@ end
 
 function widget:GameFrame(frame)
     if not TL then return end
-    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
 
-    local ok, err = pcall(function()
-        -- Auto-expire emergency modes
-        if strategy.emergencyMode ~= "none" and strategy.emergencyExpiry > 0 then
-            if frame >= strategy.emergencyExpiry then
-                spEcho("[TotallyLegal Config] Emergency mode expired.")
-                strategy.emergencyMode = "none"
-                strategy.emergencyExpiry = 0
-            end
+    -- Auto-expire emergency modes
+    if strategy.emergencyMode ~= "none" and strategy.emergencyExpiry > 0 then
+        if frame >= strategy.emergencyExpiry then
+            spEcho("[TotallyLegal Config] Emergency mode expired.")
+            strategy.emergencyMode = "none"
+            strategy.emergencyExpiry = 0
         end
+    end
 
-        -- Auto-detect faction if not yet known (poll every 2s)
-        if strategy.faction == "unknown" and frame % 60 == 0 and frame > 30 then
-            local faction = TL.GetFaction()
-            if faction ~= "unknown" then
-                strategy.faction = faction
-                spEcho("[TotallyLegal Config] Faction detected: " .. faction)
-            end
+    -- Auto-detect faction if not yet known (poll every 2s)
+    if strategy.faction == "unknown" and frame % 60 == 0 and frame > 30 then
+        local faction = TL.GetFaction()
+        if faction ~= "unknown" then
+            strategy.faction = faction
+            spEcho("[TotallyLegal Config] Faction detected: " .. faction)
         end
-    end)
-    if not ok then
-        spEcho("[TotallyLegal Config] GameFrame error: " .. tostring(err))
     end
 end
 
@@ -703,9 +595,6 @@ function widget:Initialize()
 
     -- Expose strategy to other engine widgets
     WG.TotallyLegal.Strategy = strategy
-    WG.TotallyLegal.SetStrategy = SetStrategy
-    WG.TotallyLegal.GetStrategySnapshot = GetStrategySnapshot
-    strategy._ready = true
 
     windowX = 20
     windowY = vsy / 2
@@ -721,11 +610,7 @@ end
 
 function widget:Shutdown()
     if WG.TotallyLegal then
-        if WG.TotallyLegal.Strategy then
-            WG.TotallyLegal.Strategy._ready = false
-        end
-        WG.TotallyLegal.SetStrategy = nil
-        WG.TotallyLegal.GetStrategySnapshot = nil
+        WG.TotallyLegal.Strategy = nil
     end
 end
 
@@ -738,7 +623,6 @@ function widget:GetConfigData()
         windowX = windowX,
         windowY = windowY,
         collapsed = collapsed,
-        automationLevel = TL.GetAutomationLevel and TL.GetAutomationLevel() or 0,
         openingMexCount = strategy.openingMexCount,
         energyStrategy = strategy.energyStrategy,
         unitComposition = strategy.unitComposition,
@@ -757,9 +641,6 @@ function widget:SetConfigData(data)
     if data.windowX then windowX = data.windowX end
     if data.windowY then windowY = data.windowY end
     if data.collapsed ~= nil then collapsed = data.collapsed end
-    if data.automationLevel and TL and TL.SetAutomationLevel then
-        TL.SetAutomationLevel(data.automationLevel)
-    end
     if data.openingMexCount then strategy.openingMexCount = data.openingMexCount end
     if data.energyStrategy then strategy.energyStrategy = data.energyStrategy end
     if data.unitComposition then strategy.unitComposition = data.unitComposition end

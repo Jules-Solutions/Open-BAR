@@ -60,7 +60,6 @@ local CFG = {
 
 local assignments = {}   -- rezbotUID -> featureID (currently assigned target)
 local assignedFeatures = {} -- featureID -> rezbotUID (reverse lookup)
-local botCooldowns = {}  -- rezbotUID -> frame when last assigned (Bug #25)
 local baseCenterX = 0
 local baseCenterZ = 0
 local baseCenterSet = false
@@ -159,11 +158,11 @@ local function UpdateBaseCenter()
     end
 end
 
-local function AssignRezbots(frame)
+local function AssignRezbots()
     local idleBots = FindIdleRezbots()
     if #idleBots == 0 then return end
 
-    -- Cleanup stale assignments (dead bots)
+    -- Cleanup stale assignments
     for uid, fID in pairs(assignments) do
         local health = spGetUnitHealth(uid)
         if not health or health <= 0 then
@@ -171,18 +170,6 @@ local function AssignRezbots(frame)
                 assignedFeatures[fID] = nil
             end
             assignments[uid] = nil
-            botCooldowns[uid] = nil
-        end
-    end
-
-    -- Bug #25: clean stale feature assignments (feature no longer exists)
-    for fID, botUID in pairs(assignedFeatures) do
-        local fDefID = spGetFeatureDefID(fID)
-        if not fDefID then
-            assignedFeatures[fID] = nil
-            if assignments[botUID] == fID then
-                assignments[botUID] = nil
-            end
         end
     end
 
@@ -223,42 +210,38 @@ local function AssignRezbots(frame)
 
     -- Assign each idle bot to nearest high-priority feature
     for _, botUID in ipairs(idleBots) do
-        -- Bug #25: per-bot cooldown to prevent spam-reassignment
-        local skipBot = botCooldowns[botUID] and (frame - botCooldowns[botUID]) < CFG.updateFrequency * 3
+        local bx, by, bz = spGetUnitPosition(botUID)
+        if not bx then goto nextBot end
 
-        if not skipBot then
-            local bx, by, bz = spGetUnitPosition(botUID)
-            if bx then
-                local bestFeature = nil
-                local bestScore = 0
+        local bestFeature = nil
+        local bestScore = 0
 
-                for _, sf in ipairs(scoredFeatures) do
-                    if not assignedFeatures[sf.fID] then
-                        -- Factor in distance to this specific bot
-                        local dx = sf.x - bx
-                        local dz = sf.z - bz
-                        local dist = mathSqrt(dx * dx + dz * dz)
-                        local adjustedScore = sf.score / mathMax(1, dist / 300)
+        for _, sf in ipairs(scoredFeatures) do
+            if not assignedFeatures[sf.fID] then
+                -- Factor in distance to this specific bot
+                local dx = sf.x - bx
+                local dz = sf.z - bz
+                local dist = mathSqrt(dx * dx + dz * dz)
+                local adjustedScore = sf.score / mathMax(1, dist / 300)
 
-                        if adjustedScore > bestScore then
-                            bestScore = adjustedScore
-                            bestFeature = sf
-                        end
-                    end
-                end
-
-                if bestFeature then
-                    local cmdID = bestFeature.resurrect and CMD_RESURRECT or CMD_RECLAIM
-                    -- Feature IDs need Game.maxUnits offset for commands
-                    local maxUnits = Game.maxUnits or 32000
-                    spGiveOrderToUnit(botUID, cmdID, {bestFeature.fID + maxUnits}, {})
-
-                    assignments[botUID] = bestFeature.fID
-                    assignedFeatures[bestFeature.fID] = botUID
-                    botCooldowns[botUID] = frame
+                if adjustedScore > bestScore then
+                    bestScore = adjustedScore
+                    bestFeature = sf
                 end
             end
         end
+
+        if bestFeature then
+            local cmdID = bestFeature.resurrect and CMD_RESURRECT or CMD_RECLAIM
+            -- Feature IDs need Game.maxUnits offset for commands
+            local maxUnits = Game.maxUnits or 32000
+            spGiveOrderToUnit(botUID, cmdID, {bestFeature.fID + maxUnits}, {})
+
+            assignments[botUID] = bestFeature.fID
+            assignedFeatures[bestFeature.fID] = botUID
+        end
+
+        ::nextBot::
     end
 end
 
@@ -287,15 +270,8 @@ end
 
 function widget:GameFrame(frame)
     if not TL then return end
-    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
-    if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if frame % CFG.updateFrequency ~= 0 then return end
 
-    local ok, err = pcall(function()
-        UpdateBaseCenter()
-        AssignRezbots(frame)
-    end)
-    if not ok then
-        Spring.Echo("[TotallyLegal Rezbot] GameFrame error: " .. tostring(err))
-    end
+    UpdateBaseCenter()
+    AssignRezbots()
 end

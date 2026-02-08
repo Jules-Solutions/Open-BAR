@@ -97,12 +97,26 @@ Fix engines so human-set strategy actually executes correctly. Fix in dependency
 - [x] Skirmish: Don't override player movement commands, only kite engaged units
 - [x] Rezbot: Add per-bot cooldown (3s), clean stale feature assignments
 
-### Phase 5: Simulation as Engine (make sim useful at Level 1-2)
-- [ ] Map data integration (terrain, walking times, mex spots per map)
-- [ ] Build order optimization (run N sims, rank by fitness)
-- [ ] Maintain parity between Python logic and Lua execution logic
-- [ ] Python test suite (pytest) to validate sim behavior
-- [ ] CLI improvements for practical use
+### Phase 5: Simulation as Engine (make sim useful at Level 1-2) -- COMPLETED
+- [x] Map data integration (terrain, walking times, mex spots per map)
+  - WalkTimeEstimator: speed-based walk time per builder type and distance
+  - Cached map data pipeline with normalized name matching and alias table
+  - Pre-cached maps: delta_siege_dry, comet_catcher_remake, supreme_isthmus
+- [x] Build order optimization (run N sims, rank by fitness)
+  - GA optimizer already worked; added --top N flag for ranked comparison
+  - Auto-save optimized builds to data/build_orders/
+- [x] Maintain parity between Python logic and Lua execution logic
+  - parity.py: central registry of Lua-mirrored constants (STALL/FLOAT thresholds, RESOURCE_BUFFER, ECON_PRIORITIES)
+  - Resource buffer check (15% affordability) added to engine.py
+  - econ_ctrl.py imports from parity.py instead of local constants
+- [x] Python test suite (pytest) to validate sim behavior
+  - 36 tests across 7 files: engine, econ_ctrl, walk_time, map_data, parity, IO, CLI
+  - pytest added to pyproject.toml optional deps
+- [x] CLI improvements for practical use
+  - Improved optimize output header (shows map, wind, mex, GA params)
+  - --top N flag for ranked candidate comparison
+  - Auto-save to data/build_orders/optimized_{map}_{goal}.yaml
+  - cache-popular map action for batch scanning
 
 **Acceptance:** `bar-sim optimize --map DeltaSiege` produces ranked build orders. Sim accounts for map-specific walking times.
 

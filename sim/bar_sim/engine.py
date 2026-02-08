@@ -30,6 +30,7 @@ WALK_TIME = 3
 class SimulationEngine:
     def __init__(self, build_order: BuildOrder, duration: int = 600, seed: int = 42):
         self.bo = build_order
+        self._map_data = None  # store raw MapData for walk time estimator
         # Auto-resolve map_name to MapConfig if set
         if build_order.map_name and build_order.map_config == MapConfig():
             try:
@@ -37,6 +38,7 @@ class SimulationEngine:
                 md = get_map_data(build_order.map_name)
                 if md:
                     build_order.map_config = map_data_to_map_config(md)
+                    self._map_data = md
             except Exception:
                 pass
         self.duration = duration
@@ -49,6 +51,11 @@ class SimulationEngine:
         self._nano_counter = 0
         self._current_stall: Optional[StallEvent] = None
         self._army_value = 0.0
+        self._mex_build_count = 0  # track how many mexes have been assigned
+
+        # Walk time estimator (uses map data if available)
+        self._walk_estimator = None
+        self._init_walk_estimator()
 
         # Strategy mode
         self._strategy_mode = build_order.strategy_config is not None
@@ -65,6 +72,51 @@ class SimulationEngine:
         else:
             self._army = None
             self._goal_queue = None
+
+    def _init_walk_estimator(self):
+        """Initialize the walk time estimator from map data if available."""
+        if not self._map_data:
+            return
+        try:
+            from bar_sim.walk_time import WalkTimeEstimator
+            from bar_sim.map_data import assign_mex_spots
+            md = self._map_data
+            if md.mex_spots and md.start_positions:
+                my_mexes = assign_mex_spots(md.mex_spots, md.start_positions, 0)
+                start = md.start_positions[0] if md.start_positions else None
+                self._walk_estimator = WalkTimeEstimator(my_mexes, start)
+        except Exception:
+            pass
+
+    def _estimate_walk(self, builder: 'Builder', unit_key: str) -> int:
+        """Estimate walk time for a builder to reach a build site."""
+        if builder.builder_type not in ("commander", "constructor"):
+            return 0
+
+        if self._walk_estimator:
+            # Get builder speed from unit data
+            speed = 0.0
+            if builder.builder_type == "commander":
+                cmd_unit = ECON_UNITS.get("commander")
+                speed = cmd_unit.speed if cmd_unit else 37.0
+            else:
+                # Constructor: find speed from the constructor's unit key
+                for key in CONSTRUCTOR_KEYS:
+                    u = ECON_UNITS.get(key)
+                    if u and u.speed > 0:
+                        speed = u.speed
+                        break
+                if speed == 0:
+                    speed = 52.0  # default con_bot speed
+
+            build_index = 0
+            if unit_key == "mex":
+                build_index = self._mex_build_count
+                self._mex_build_count += 1
+
+            return self._walk_estimator.estimate(unit_key, speed, build_index)
+
+        return WALK_TIME
 
     # ------------------------------------------------------------------
     # Public API
@@ -174,7 +226,17 @@ class SimulationEngine:
             if unit is None:
                 continue
 
-            walk = WALK_TIME if builder.builder_type in ("commander", "constructor") else 0
+            # Resource buffer check (parity with Lua: 15% of cost needed to start)
+            from bar_sim.parity import RESOURCE_BUFFER
+            metal_needed = unit.metal_cost * RESOURCE_BUFFER
+            energy_needed = unit.energy_cost * RESOURCE_BUFFER
+            if self.state.metal_stored < metal_needed or self.state.energy_stored < energy_needed:
+                # Can't afford to start — put action back and skip
+                if builder.queue_index > 0:
+                    builder.queue_index -= 1
+                continue
+
+            walk = self._estimate_walk(builder, unit_key)
 
             task = BuildTask(
                 task_id=self._next_task_id(),

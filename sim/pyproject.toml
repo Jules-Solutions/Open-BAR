@@ -9,5 +9,8 @@ dependencies = [
     "uvicorn[standard]",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest"]
+
 [project.scripts]
 bar-sim = "cli:main"

@@ -1,0 +1,47 @@
+name: Optimized (max_metal)
+description: ''
+map:
+  avg_wind: 10.0
+  wind_variance: 5.0
+  mex_value: 2.0
+  mex_spots: 13
+  has_geo: true
+  tidal_value: 0.0
+commander_queue:
+- mex
+- mex
+- wind
+- wind
+- bot_lab
+- mex
+- wind
+- wind
+- radar
+- mex
+- wind
+- wind
+- mex
+- wind
+- nano
+factory_0_queue:
+- tick
+- grunt
+- grunt
+- con_bot
+- grunt
+- grunt
+- grunt
+- grunt
+- grunt
+- grunt
+- grunt
+- grunt
+con_1_queue:
+- mex
+- wind
+- mex
+- wind
+- mex
+- wind
+- wind
+- wind

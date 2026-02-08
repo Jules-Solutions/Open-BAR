@@ -1,0 +1,51 @@
+{
+  "name": "Delta Siege Dry",
+  "filename": "delta_siege_dry.sd7",
+  "shortname": "DeltaSiegeDry",
+  "map_width": 16384,
+  "map_height": 16384,
+  "wind_min": 5.0,
+  "wind_max": 15.0,
+  "tidal_strength": 0.0,
+  "gravity": 100.0,
+  "max_metal": 2.0,
+  "extractor_radius": 90.0,
+  "start_positions": [
+    {"x": 1024, "z": 1024, "team_id": 0},
+    {"x": 15360, "z": 15360, "team_id": 1}
+  ],
+  "mex_spots": [
+    {"x": 888, "z": 888, "metal": 2.0},
+    {"x": 1160, "z": 888, "metal": 2.0},
+    {"x": 888, "z": 1160, "metal": 2.0},
+    {"x": 1400, "z": 1400, "metal": 2.0},
+    {"x": 600, "z": 1600, "metal": 2.0},
+    {"x": 1600, "z": 600, "metal": 2.0},
+    {"x": 2200, "z": 2200, "metal": 2.0},
+    {"x": 3000, "z": 1200, "metal": 2.0},
+    {"x": 1200, "z": 3000, "metal": 2.0},
+    {"x": 4000, "z": 4000, "metal": 2.0},
+    {"x": 5500, "z": 5500, "metal": 2.0},
+    {"x": 7000, "z": 7000, "metal": 2.0},
+    {"x": 8192, "z": 8192, "metal": 2.0},
+    {"x": 9384, "z": 9384, "metal": 2.0},
+    {"x": 10884, "z": 10884, "metal": 2.0},
+    {"x": 12384, "z": 12384, "metal": 2.0},
+    {"x": 13184, "z": 13184, "metal": 2.0},
+    {"x": 13384, "z": 15184, "metal": 2.0},
+    {"x": 15184, "z": 13384, "metal": 2.0},
+    {"x": 14984, "z": 14984, "metal": 2.0},
+    {"x": 15224, "z": 15496, "metal": 2.0},
+    {"x": 15496, "z": 15224, "metal": 2.0},
+    {"x": 14984, "z": 14600, "metal": 2.0},
+    {"x": 14600, "z": 14984, "metal": 2.0}
+  ],
+  "geo_vents": [
+    {"x": 8192, "z": 8192}
+  ],
+  "total_reclaim_metal": 800.0,
+  "total_reclaim_energy": 300.0,
+  "author": "Beherith",
+  "description": "Symmetric 1v1 map with central geo vent and distributed metal",
+  "source": "manual_cache"
+}

@@ -157,11 +157,38 @@ def cmd_map(args):
         except (FileNotFoundError, RuntimeError) as e:
             print(f"Scan failed: {e}")
 
+    elif action == "cache-popular":
+        POPULAR_MAPS = [
+            "delta_siege_dry", "comet_catcher_remake", "supreme_isthmus",
+            "supreme_battlefield", "eye_of_horus", "quicksilver_remake",
+            "all_that_glitters",
+        ]
+        from bar_sim.headless import HeadlessEngine
+        from bar_sim.map_data import list_cached_maps
+        cached = set(list_cached_maps())
+        he = None
+        for map_name in POPULAR_MAPS:
+            if map_name in cached:
+                print(f"  [cached] {map_name}")
+                continue
+            print(f"  [scanning] {map_name}...")
+            try:
+                if he is None:
+                    he = HeadlessEngine()
+                md = he.scan_map(map_name)
+                print(f"    -> {len(md.mex_spots)} mex spots, {len(md.geo_vents)} geo vents")
+            except Exception as e:
+                print(f"    -> FAILED: {e}")
+
 
 def cmd_optimize(args):
+    from pathlib import Path
+
     # If --map is specified, auto-resolve MapConfig from map data
+    map_label = "defaults"
     if args.map:
         mc = _resolve_map_config(args.map)
+        map_label = args.map
     else:
         mc = MapConfig(
             avg_wind=args.wind,
@@ -172,9 +199,17 @@ def cmd_optimize(args):
 
     goal = make_goal(args.goal, target_time=args.target_time)
 
-    print(f"Goal: {goal.description}")
-    print(f"Map: wind={mc.avg_wind}, mex={mc.mex_value}, spots={mc.mex_spots}")
-    print(f"GA: pop={args.pop_size}, generations={args.generations}")
+    print("=" * 60)
+    print("  BAR BUILD ORDER OPTIMIZER")
+    print("=" * 60)
+    print(f"  Goal:        {goal.description}")
+    print(f"  Map:         {map_label}")
+    print(f"  Wind:        avg={mc.avg_wind}, variance={mc.wind_variance}")
+    print(f"  Mex:         {mc.mex_spots} spots x {mc.mex_value} M/s")
+    print(f"  Geo:         {'yes' if mc.has_geo else 'no'}")
+    print(f"  GA:          pop={args.pop_size}, generations={args.generations}")
+    print(f"  Duration:    {args.duration}s")
+    print("=" * 60)
     print()
 
     # Load starting BO if provided
@@ -220,17 +255,40 @@ def cmd_optimize(args):
             name = unit.name if unit else a.unit_key
             print(f"  {i+1:>3}. {a.unit_key:<18} ({name})")
 
-    # Run final sim
+    # Run final sim and show top N comparison if requested
     print("\n--- SIMULATION OF OPTIMIZED BUILD ---")
     engine = SimulationEngine(best, args.duration)
     result = engine.run()
     print_full_report(result)
 
-    # Save if requested
-    if args.output:
-        from bar_sim.io import save_build_order
-        save_build_order(best, args.output)
-        print(f"\nSaved to {args.output}")
+    # Show top N candidates comparison
+    top_n = getattr(args, "top", 1)
+    if top_n > 1 and hasattr(opt, "top_results") and opt.top_results:
+        print(f"\n--- TOP {min(top_n, len(opt.top_results))} CANDIDATES ---")
+        print(f"{'#':<4} {'Score':>10} {'Factory(s)':>10} {'Metal @300':>10}")
+        print("-" * 40)
+        for i, (score, bo_candidate) in enumerate(opt.top_results[:top_n]):
+            sim = SimulationEngine(bo_candidate, args.duration)
+            r = sim.run()
+            factory_tick = r.time_to_first_factory or "-"
+            metal_300 = "-"
+            for snap in r.snapshots:
+                if snap.tick >= 300:
+                    metal_300 = f"{snap.metal_income:.1f}"
+                    break
+            print(f"{i+1:<4} {score:>10.2f} {str(factory_tick):>10} {metal_300:>10}")
+
+    # Auto-save: if --output not specified, save to default path
+    output_path = args.output
+    if not output_path:
+        data_dir = Path(__file__).parent / "data" / "build_orders"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        map_slug = map_label.replace(" ", "_").lower()
+        output_path = str(data_dir / f"optimized_{map_slug}_{args.goal}.yaml")
+
+    from bar_sim.io import save_build_order
+    save_build_order(best, output_path)
+    print(f"\nSaved to {output_path}")
 
     if args.export_json:
         from bar_sim.io import export_build_order_json
@@ -307,13 +365,15 @@ def main():
                        help="Start from existing build order YAML")
     p_opt.add_argument("--output", "-o",
                        help="Save optimized build order to YAML")
+    p_opt.add_argument("--top", type=int, default=1,
+                       help="Show top N candidates after optimization (default: 1)")
     p_opt.add_argument("--export-json", default=None,
                        help="Export optimized build order as JSON for Lua widget consumption")
 
     # map
     p_map = sub.add_parser("map", help="Map data management")
-    p_map.add_argument("map_action", choices=["list", "info", "scan"],
-                       help="list=show all maps, info=show details, scan=headless scan")
+    p_map.add_argument("map_action", choices=["list", "info", "scan", "cache-popular"],
+                       help="list=show all maps, info=show details, scan=headless scan, cache-popular=scan popular maps")
     p_map.add_argument("name", nargs="?", default=None,
                        help="Map name (required for info/scan)")
 

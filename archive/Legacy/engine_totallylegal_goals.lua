@@ -75,7 +75,6 @@ for _, gt in ipairs(GOAL_TYPES) do GOAL_TYPE_SET[gt] = true end
 local ROLE_OPTIONS = {
     "raider", "assault", "skirmisher", "aa", "scout",
     "light_tank", "heavy_tank", "artillery", "constructor",
-    "fighter", "bomber", "gunship", "air_constructor",
 }
 
 local DESTINATION_OPTIONS = { "front", "rally", "base" }
@@ -139,23 +138,160 @@ local goalState = {
 local conCooldowns = {}
 
 --------------------------------------------------------------------------------
+-- Unit key resolution (same pattern as build.lua / econ.lua)
+--------------------------------------------------------------------------------
+
+local keyToDefID = {}
+
+local function BuildKeyTable()
+    keyToDefID = {}
+    for defID, def in pairs(UnitDefs) do
+        local name = (def.name or ""):lower()
+        local cp = def.customParams or {}
+
+        keyToDefID[name] = defID
+
+        if def.extractsMetal and def.extractsMetal > 0 then
+            local tl = tonumber(cp.techlevel) or 1
+            if tl >= 2 then
+                keyToDefID["moho"] = keyToDefID["moho"] or defID
+                keyToDefID["adv_mex"] = keyToDefID["adv_mex"] or defID
+            else
+                keyToDefID["mex"] = keyToDefID["mex"] or defID
+            end
+        end
+        if def.windGenerator and def.windGenerator > 0 then
+            keyToDefID["wind"] = keyToDefID["wind"] or defID
+        end
+        if def.isFactory and name:find("bot") then
+            local tl = tonumber(cp.techlevel) or 1
+            if tl >= 2 then
+                keyToDefID["adv_bot_lab"] = keyToDefID["adv_bot_lab"] or defID
+            else
+                keyToDefID["bot_lab"] = keyToDefID["bot_lab"] or defID
+            end
+        end
+        if def.isFactory and name:find("veh") then
+            local tl = tonumber(cp.techlevel) or 1
+            if tl >= 2 then
+                keyToDefID["adv_vehicle_plant"] = keyToDefID["adv_vehicle_plant"] or defID
+            else
+                keyToDefID["vehicle_plant"] = keyToDefID["vehicle_plant"] or defID
+            end
+        end
+        if def.isFactory and name:find("air") then
+            local tl = tonumber(cp.techlevel) or 1
+            if tl >= 2 then
+                keyToDefID["adv_air_plant"] = keyToDefID["adv_air_plant"] or defID
+            else
+                keyToDefID["air_plant"] = keyToDefID["air_plant"] or defID
+            end
+        end
+        if cp.energyconv_capacity then
+            local tl = tonumber(cp.techlevel) or 1
+            if tl >= 2 then
+                keyToDefID["adv_converter"] = keyToDefID["adv_converter"] or defID
+            else
+                keyToDefID["converter"] = keyToDefID["converter"] or defID
+            end
+        end
+        if cp.geothermal then
+            keyToDefID["geo"] = keyToDefID["geo"] or defID
+        end
+        if def.energyMake and def.energyMake > 0 and def.isBuilding
+           and not (def.windGenerator and def.windGenerator > 0) then
+            if def.energyMake >= 200 then
+                keyToDefID["fusion"] = keyToDefID["fusion"] or defID
+            else
+                keyToDefID["solar"] = keyToDefID["solar"] or defID
+            end
+        end
+        -- Defense structures
+        if def.isBuilding and def.weapons and #def.weapons > 0 then
+            local cost = def.metalCost or 0
+            if cost < 200 then
+                keyToDefID["llt"] = keyToDefID["llt"] or defID
+            elseif cost < 600 then
+                keyToDefID["hlt"] = keyToDefID["hlt"] or defID
+            end
+        end
+        -- Nuke silo
+        if cp.stockpile_type and cp.stockpile_type == "nuclear" then
+            keyToDefID["nuke_silo"] = keyToDefID["nuke_silo"] or defID
+        end
+        -- Nano turret (static builder)
+        if def.isBuilding and def.buildSpeed and def.buildSpeed > 0 and not def.isFactory then
+            keyToDefID["nano"] = keyToDefID["nano"] or defID
+        end
+    end
+end
+
+local function ResolveKey(key)
+    if not key then return nil end
+    return keyToDefID[key:lower()] or keyToDefID[key]
+end
+
+--------------------------------------------------------------------------------
 -- Role resolution (uses prod.lua's Production state)
 --------------------------------------------------------------------------------
 
 local function FindBestUnitForRole(role)
-    local prod = WG.TotallyLegal and WG.TotallyLegal.Production
-    local rm = prod and prod.roleMappings
-    if not rm then
-        Spring.Echo("[TotallyLegal Goals] WARNING: Production roleMappings not available.")
-        return nil
-    end
-    local bestDefID, bestCost = nil, 0
-    for defID, unitRole in pairs(rm) do
-        if unitRole == role then
-            local cost = (UnitDefs[defID] and UnitDefs[defID].metalCost) or 0
-            if cost > bestCost then bestCost = cost; bestDefID = defID end
+    -- Use prod.lua's role mappings via Production state
+    -- Fall back to searching UnitDefs if Production isn't available
+    local bestDefID = nil
+    local bestCost = 0
+
+    for defID, def in pairs(UnitDefs) do
+        if not def.isBuilding and def.canMove and not def.isFactory then
+            local cp = def.customParams or {}
+            local hasWeapons = def.weapons and #def.weapons > 0
+            local speed = def.speed or 0
+            local cost = def.metalCost or 0
+
+            local unitRole = nil
+            if def.buildSpeed and def.buildSpeed > 0 then
+                unitRole = "constructor"
+            elseif not hasWeapons then
+                unitRole = "utility"
+            elseif def.canFly then
+                unitRole = "aircraft"
+            else
+                -- Ground combat classification (mirrors prod.lua)
+                local isAA = false
+                if def.weapons then
+                    for _, w in ipairs(def.weapons) do
+                        local wDefID = w.weaponDef
+                        if wDefID and WeaponDefs[wDefID] then
+                            if WeaponDefs[wDefID].canAttackGround == false then
+                                isAA = true
+                            end
+                        end
+                    end
+                end
+
+                if isAA then unitRole = "aa"
+                elseif speed > 90 and cost < 200 then unitRole = "raider"
+                elseif speed > 60 and cost < 150 then unitRole = "scout"
+                elseif cost > 500 then unitRole = "heavy_tank"
+                elseif cost > 200 then unitRole = "assault"
+                elseif speed < 40 then unitRole = "artillery"
+                else
+                    local mn = def.moveDef and def.moveDef.name and def.moveDef.name:lower() or ""
+                    if mn:find("tank") or mn:find("veh") then
+                        unitRole = "light_tank"
+                    else
+                        unitRole = "skirmisher"
+                    end
+                end
+            end
+
+            if unitRole == role and cost > bestCost then
+                bestCost = cost
+                bestDefID = defID
+            end
         end
     end
+
     return bestDefID
 end
 
@@ -186,8 +322,8 @@ local function CreateGoal(goalType, target)
 
     -- Resolve defID for structure goals
     if goalType == "structure_build" or goalType == "structure_place" then
-        if target.buildKey and TL and TL.ResolveKey then
-            goal.target.defID = TL.ResolveKey(target.buildKey)
+        if target.buildKey then
+            goal.target.defID = ResolveKey(target.buildKey)
         end
     end
 
@@ -290,19 +426,61 @@ end
 --------------------------------------------------------------------------------
 
 local function CountUnitsMatchingRole(role)
-    local prod = WG.TotallyLegal and WG.TotallyLegal.Production
-    local rm = prod and prod.roleMappings
-    if not rm then return 0 end
     local myUnits = TL.GetMyUnits()
     local count = 0
     for uid, defID in pairs(myUnits) do
-        if rm[defID] == role then count = count + 1 end
+        local cls = TL.GetUnitClass(defID)
+        if cls and not cls.isBuilding and not cls.isFactory then
+            -- Check if this unit's role matches
+            -- Use the same classification as prod.lua
+            local def = UnitDefs[defID]
+            if def then
+                local hasWeapons = def.weapons and #def.weapons > 0
+                local speed = def.speed or 0
+                local cost = def.metalCost or 0
+                local unitRole = nil
+
+                if def.buildSpeed and def.buildSpeed > 0 then
+                    unitRole = "constructor"
+                elseif not hasWeapons then
+                    unitRole = "utility"
+                elseif def.canFly then
+                    unitRole = "aircraft"
+                else
+                    local isAA = false
+                    if def.weapons then
+                        for _, w in ipairs(def.weapons) do
+                            local wDefID = w.weaponDef
+                            if wDefID and WeaponDefs[wDefID] and WeaponDefs[wDefID].canAttackGround == false then
+                                isAA = true
+                            end
+                        end
+                    end
+                    if isAA then unitRole = "aa"
+                    elseif speed > 90 and cost < 200 then unitRole = "raider"
+                    elseif speed > 60 and cost < 150 then unitRole = "scout"
+                    elseif cost > 500 then unitRole = "heavy_tank"
+                    elseif cost > 200 then unitRole = "assault"
+                    elseif speed < 40 then unitRole = "artillery"
+                    else
+                        local mn = def.moveDef and def.moveDef.name and def.moveDef.name:lower() or ""
+                        if mn:find("tank") or mn:find("veh") then
+                            unitRole = "light_tank"
+                        else
+                            unitRole = "skirmisher"
+                        end
+                    end
+                end
+
+                if unitRole == role then count = count + 1 end
+            end
+        end
     end
     return count
 end
 
 local function CountStructures(buildKey)
-    local targetDefID = TL.ResolveKey(buildKey)
+    local targetDefID = ResolveKey(buildKey)
     if not targetDefID then return 0 end
     local myUnits = TL.GetMyUnits()
     local count = 0
@@ -439,7 +617,6 @@ end
 --------------------------------------------------------------------------------
 
 local function AdvanceQueue()
-    ClearOverrides()  -- Bug #18: clear immediately so old overrides don't linger
     if goalState.activeGoal then
         goalState.activeGoal.status = "completed"
         spEcho("[TotallyLegal Goals] Completed: " .. goalState.activeGoal.goalType ..
@@ -453,7 +630,6 @@ local function AdvanceQueue()
             goal.status = "active"
             goal.progress.startFrame = spGetGameFrame()
             goal.progress.lastProgressFrame = spGetGameFrame()
-            goal._lastCheckedProgress = nil  -- Bug #17: reset stall tracking for new goal
             goalState.activeGoal = goal
             spEcho("[TotallyLegal Goals] Activated: " .. goal.goalType ..
                    " (ID=" .. goal.id .. ")")
@@ -499,7 +675,7 @@ local function GenerateOverrides(goal)
 
     elseif goal.goalType == "structure_build" then
         -- Override econ: assign constructors to build this structure
-        local defID = goal.target.defID or (goal.target.buildKey and TL.ResolveKey(goal.target.buildKey))
+        local defID = goal.target.defID or ResolveKey(goal.target.buildKey)
         if defID then
             goalState.overrides.econBuildTask = {
                 key    = goal.target.buildKey,
@@ -507,13 +683,11 @@ local function GenerateOverrides(goal)
                 position = nil, -- auto-place
             }
             goalState.overrides.projectConstructors = projectFrac
-        else
-            spEcho("[TotallyLegal Goals] WARNING: Cannot resolve key '" .. tostring(goal.target.buildKey) .. "' for structure_build goal")
         end
 
     elseif goal.goalType == "structure_place" then
         -- Override econ: assign constructors to build at specific position
-        local defID = goal.target.defID or (goal.target.buildKey and TL.ResolveKey(goal.target.buildKey))
+        local defID = goal.target.defID or ResolveKey(goal.target.buildKey)
         if defID and goal.target.position then
             goalState.overrides.econBuildTask = {
                 key      = goal.target.buildKey,
@@ -534,7 +708,7 @@ local function GenerateOverrides(goal)
         if goal.target.metric == "energyIncome" then
             key = "wind"
         end
-        local defID = TL.ResolveKey(key)
+        local defID = ResolveKey(key)
         if defID then
             goalState.overrides.econBuildTask = {
                 key    = key,
@@ -542,8 +716,6 @@ local function GenerateOverrides(goal)
                 position = nil,
             }
             goalState.overrides.projectConstructors = projectFrac
-        else
-            spEcho("[TotallyLegal Goals] WARNING: Cannot resolve key '" .. key .. "' for economy_target goal")
         end
 
     elseif goal.goalType == "tech_transition" then
@@ -554,7 +726,7 @@ local function GenerateOverrides(goal)
         elseif goal.target.factoryType == "air" then
             key = "adv_air_plant"
         end
-        local defID = TL.ResolveKey(key)
+        local defID = ResolveKey(key)
         if defID then
             goalState.overrides.econBuildTask = {
                 key    = key,
@@ -562,8 +734,6 @@ local function GenerateOverrides(goal)
                 position = nil,
             }
             goalState.overrides.projectConstructors = projectFrac
-        else
-            spEcho("[TotallyLegal Goals] WARNING: Cannot resolve key '" .. key .. "' for tech_transition goal")
         end
         -- Reserve resources for expensive T2 factories
         local cost = defID and UnitDefs[defID] and UnitDefs[defID].metalCost or 0
@@ -573,7 +743,7 @@ local function GenerateOverrides(goal)
 
     elseif goal.goalType == "buildpower_target" then
         -- Override econ: build nanos or constructors
-        local defID = TL.ResolveKey("nano")
+        local defID = ResolveKey("nano")
         if defID then
             goalState.overrides.econBuildTask = {
                 key    = "nano",
@@ -742,56 +912,49 @@ end
 
 function widget:GameFrame(frame)
     if not TL then return end
-    if not (WG.TotallyLegal and WG.TotallyLegal._ready) then return end
-    if (WG.TotallyLegal.automationLevel or 0) < 1 then return end
     if frame % CFG.updateFrequency ~= 0 then return end
     if frame < 90 then return end  -- skip first 3 seconds
 
-    local ok, err = pcall(function()
-        -- 1. Evaluate current active goal completion
-        local active = goalState.activeGoal
-        if active then
-            if EvaluateGoalCompletion(active) then
-                AdvanceQueue()
-                active = goalState.activeGoal
-            elseif CheckStalled(active) then
-                active._stalled = true
-            else
-                active._stalled = false
-            end
+    -- 1. Evaluate current active goal completion
+    local active = goalState.activeGoal
+    if active then
+        if EvaluateGoalCompletion(active) then
+            AdvanceQueue()
+            active = goalState.activeGoal
+        elseif CheckStalled(active) then
+            active._stalled = true
         else
-            -- No active goal, try to find one
-            for _, goal in ipairs(goalState.queue) do
-                if goal.status == "pending" then
-                    goal.status = "active"
-                    goal.progress.startFrame = frame
-                    goal.progress.lastProgressFrame = frame
-                    goalState.activeGoal = goal
-                    active = goal
-                    break
-                end
+            active._stalled = false
+        end
+    else
+        -- No active goal, try to find one
+        for _, goal in ipairs(goalState.queue) do
+            if goal.status == "pending" then
+                goal.status = "active"
+                goal.progress.startFrame = frame
+                goal.progress.lastProgressFrame = frame
+                goalState.activeGoal = goal
+                active = goal
+                break
             end
         end
-
-        -- 2. Generate overrides for the active goal
-        GenerateOverrides(active)
-
-        -- 3. Auto-mode resource allocation
-        if goalState.allocation.autoMode then
-            ComputeAutoAllocation()
-        end
-
-        -- 4. Team sharing
-        if goalState.allocation.teamShareRate > 0 then
-            ApplyTeamShare()
-        end
-
-        -- 5. Clean up completed goals from queue display
-        -- (keep them for history but don't process)
-    end)
-    if not ok then
-        spEcho("[TotallyLegal Goals] GameFrame error: " .. tostring(err))
     end
+
+    -- 2. Generate overrides for the active goal
+    GenerateOverrides(active)
+
+    -- 3. Auto-mode resource allocation
+    if goalState.allocation.autoMode then
+        ComputeAutoAllocation()
+    end
+
+    -- 4. Team sharing
+    if goalState.allocation.teamShareRate > 0 then
+        ApplyTeamShare()
+    end
+
+    -- 5. Clean up completed goals from queue display
+    -- (keep them for history but don't process)
 end
 
 --------------------------------------------------------------------------------
@@ -813,9 +976,10 @@ function widget:Initialize()
         return
     end
 
+    BuildKeyTable()
+
     -- Expose goal state to other widgets and the GUI
     WG.TotallyLegal.Goals = goalState
-    goalState._ready = true
 
     -- Expose API functions for the GUI widget
     WG.TotallyLegal.GoalsAPI = {
@@ -838,12 +1002,8 @@ end
 
 function widget:Shutdown()
     if WG.TotallyLegal then
-        if WG.TotallyLegal.Goals then
-            WG.TotallyLegal.Goals._ready = false
-        end
-        if WG.TotallyLegal.GoalsAPI then
-            WG.TotallyLegal.GoalsAPI._ready = false
-        end
+        WG.TotallyLegal.Goals = nil
+        WG.TotallyLegal.GoalsAPI = nil
     end
 end
 
@@ -871,8 +1031,6 @@ function widget:GetConfigData()
 end
 
 function widget:SetConfigData(data)
-    if not TL then return end  -- Core not loaded, skip restoring goals
-
     if data.allocation then
         for k, v in pairs(data.allocation) do
             if goalState.allocation[k] ~= nil then

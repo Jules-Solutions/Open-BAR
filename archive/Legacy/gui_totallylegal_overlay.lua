@@ -702,7 +702,6 @@ end
 
 function widget:DrawScreen()
     if not TL then return end
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Overlay == false then return end
 
     windowH = CalculateWindowHeight()
     CalculatePanelPositions()
@@ -716,7 +715,6 @@ end
 --------------------------------------------------------------------------------
 
 function widget:IsAbove(x, y)
-    if WG.TotallyLegal and WG.TotallyLegal.WidgetVisibility and WG.TotallyLegal.WidgetVisibility.Overlay == false then return false end
     return x >= windowX and x <= windowX + windowW
        and y >= windowY and y <= windowY + windowH
 end
@@ -785,9 +783,8 @@ function widget:Initialize()
     FormatInt = TL.FormatInt
     FormatBP = TL.FormatBP
 
-    -- Position beside sidebar (48px bar + 12px gap)
-    windowX = vsx - windowW - 60
-    windowY = vsy - 100 - 400  -- stack from top
+    windowX = vsx - windowW - 20
+    windowY = vsy / 2
 
     if spGetGameFrame() > 0 then
         CollectResourceData()
