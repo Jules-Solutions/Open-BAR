@@ -31,10 +31,12 @@ local spGetGameFrame        = Spring.GetGameFrame
 local spGetGroundHeight     = Spring.GetGroundHeight
 local spGiveOrderToUnit     = Spring.GiveOrderToUnit
 local spGetSelectedUnits    = Spring.GetSelectedUnits
+local spGetUnitCommands     = Spring.GetUnitCommands
 local spEcho                = Spring.Echo
 local spTestMoveOrder       = Spring.TestMoveOrder
 
 local CMD_MOVE                = CMD.MOVE
+local CMD_STOP                = CMD.STOP
 local CMD_SET_WANTED_MAX_SPEED = 70  -- CMD code for speed limiting
 
 local mathSqrt = math.sqrt
@@ -253,19 +255,25 @@ local function ProcessScatter(frame)
     local units = {}
     local count = 0
 
-    -- Collect units to scatter (not dodging, not too recently processed)
+    -- Collect units to scatter (idle/moving only, not dodging, not too recently processed)
     for uid, udata in pairs(PUP.units) do
         if count >= CFG.scatterMaxUnits then break end
 
         if udata.state ~= "dodging" then
             local lastProcessed = scatterLastProcessed[uid] or 0
             if (frame - lastProcessed) >= CFG.scatterFrequency then
-                local health = spGetUnitHealth(uid)
-                if health and health > 0 then
-                    local ux, uy, uz = spGetUnitPosition(uid)
-                    if ux then
-                        units[#units + 1] = { uid = uid, x = ux, y = uy, z = uz, data = udata }
-                        count = count + 1
+                -- Only scatter idle units or units with just a move command
+                local cmds = spGetUnitCommands(uid, 1)
+                local isIdle = (not cmds or #cmds == 0)
+                local isMoving = (cmds and #cmds > 0 and cmds[1].id == CMD_MOVE)
+                if isIdle or isMoving then
+                    local health = spGetUnitHealth(uid)
+                    if health and health > 0 then
+                        local ux, uy, uz = spGetUnitPosition(uid)
+                        if ux then
+                            units[#units + 1] = { uid = uid, x = ux, y = uy, z = uz, data = udata }
+                            count = count + 1
+                        end
                     end
                 end
             end
