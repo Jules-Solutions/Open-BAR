@@ -90,8 +90,12 @@ local function GetWeaponRange(defID)
     for _, w in ipairs(def.weapons) do
         local wDefID = w.weaponDef
         if wDefID and WeaponDefs[wDefID] then
-            local r = WeaponDefs[wDefID].range or 0
-            if r > maxRange then maxRange = r end
+            local wd = WeaponDefs[wDefID]
+            -- Skip AA-only weapons (can't hit ground units)
+            if wd.canAttackGround ~= false then
+                local r = wd.range or 0
+                if r > maxRange then maxRange = r end
+            end
         end
     end
 
