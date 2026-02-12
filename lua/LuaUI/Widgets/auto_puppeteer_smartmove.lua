@@ -397,6 +397,27 @@ local function CalcSmartPath(unitID, unitX, unitZ, destX, destZ, unitDefID)
 
             local arcWP = CalcArcWaypoints(cx, cz, radius, entryAngle, exitAngle, CFG.arcSegments)
 
+            -- Validate arc doesn't cross through danger
+            local arcCrossesDanger = false
+            for _, wp in ipairs(arcWP) do
+                if PointInCircle(wp.x, wp.z, cx, cz, danger.range) then
+                    arcCrossesDanger = true
+                    break
+                end
+            end
+
+            -- If shorter arc goes through danger, use the longer arc
+            if arcCrossesDanger then
+                -- Reverse: swap angles to go the long way around
+                arcWP = CalcArcWaypoints(cx, cz, radius, exitAngle, entryAngle, CFG.arcSegments)
+                -- Reverse the waypoint order so direction is correct
+                local reversed = {}
+                for i = #arcWP, 1, -1 do
+                    reversed[#reversed + 1] = arcWP[i]
+                end
+                arcWP = reversed
+            end
+
             -- Validate arc waypoints
             for _, wp in ipairs(arcWP) do
                 local vx, vy, vz
@@ -617,7 +638,14 @@ function widget:GameFrame(frame)
 
         -- Cleanup stale reroutes
         for uid, rr in pairs(activeReroutes) do
-            if frame - rr.frame > 300 or not PUP.units[uid] then
+            local unitData = PUP.units[uid]
+            -- Scale timeout: slow units get more time. Base 300 frames, scale by speed ratio
+            local timeout = 300
+            if unitData and unitData.speed and unitData.speed > 0 then
+                -- Slower units get longer timeouts (base speed ~60 elmos/s)
+                timeout = mathMax(300, mathMin(1800, math.floor(600 / unitData.speed * 60)))
+            end
+            if frame - rr.frame > timeout or not PUP.units[uid] then
                 activeReroutes[uid] = nil
             end
         end

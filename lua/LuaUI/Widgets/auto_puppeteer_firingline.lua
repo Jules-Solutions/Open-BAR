@@ -343,6 +343,14 @@ local function ProcessUnitStateMachine(line, slotIdx, frame)
             -- Reached firing position
             TransitionUnit(line, uid, "firing", frame)
             if PUP.units[uid] then PUP.units[uid].state = "firing" end
+
+            -- Issue attack order toward enemy to ensure unit fires
+            if line.enemyUID then
+                spGiveOrderToUnit(uid, CMD_FIGHT, {line.enemyUID}, {})
+            elseif line.frontX and line.frontZ then
+                local fy = spGetGroundHeight(line.frontX, line.frontZ) or 0
+                spGiveOrderToUnit(uid, CMD_FIGHT, {line.frontX, fy, line.frontZ}, {})
+            end
         else
             -- Move to firing position
             local targetY = spGetGroundHeight(targetX, targetZ) or 0

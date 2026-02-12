@@ -173,7 +173,9 @@ local function GenerateCircle(centerX, centerZ, radius, count, facing)
         local angle = 2 * mathPi * (i - 1) / count
         local x = centerX + radius * mathCos(angle)
         local z = centerZ + radius * mathSin(angle)
-        positions[i] = { x = x, z = z, depth = 0.5 }
+        -- Fix 5: Use facing-relative depth instead of hardcoded 0.5
+        local depth = 0.5 - 0.5 * mathCos(angle - facing)  -- 0 = front, 1 = back
+        positions[i] = { x = x, z = z, depth = depth }
     end
     return positions
 end
@@ -241,7 +243,8 @@ local function GenerateStar(centerX, centerZ, radius, count, facing)
         local r = (i % 2 == 1) and radius or innerRadius
         local x = centerX + r * mathCos(angle)
         local z = centerZ + r * mathSin(angle)
-        local depth = (i % 2 == 1) and 0.3 or 0.7
+        -- Fix 5: Use facing-relative depth instead of hardcoded values
+        local depth = 0.5 - 0.5 * mathCos(angle - facing)  -- 0 = front, 1 = back
 
         positions[i] = { x = x, z = z, depth = depth }
     end
@@ -502,7 +505,10 @@ local function AssignNoX(unitPositions, nodePositions, unitCount)
             local dist = dx * dx + dz * dz
             if dist > fdist then
                 fdist = dist
-                fm = (prev[3] - up[3]) / (prev[1] - up[1])
+                -- Fix 2: Guard against division by zero
+                local dx_safe = prev[1] - up[1]
+                if mathAbs(dx_safe) < 0.001 then dx_safe = 0.001 end
+                fm = (prev[3] - up[3]) / dx_safe
             end
         end
     end
@@ -517,14 +523,20 @@ local function AssignNoX(unitPositions, nodePositions, unitCount)
             local dist = dx * dx + dz * dz
             if dist > fdist then
                 fdist = dist
-                fm = (mp[3] - nz) / (mp[1] - nx)
+                -- Fix 2: Guard against division by zero
+                local dx_safe = mp[1] - nx
+                if mathAbs(dx_safe) < 0.001 then dx_safe = 0.001 end
+                fm = (mp[3] - nz) / dx_safe
             end
         end
     end
 
     if fm then
+        -- Fix 2: Guard against division by zero in sort function
+        local fm_safe = fm
+        if mathAbs(fm_safe) < 0.001 then fm_safe = 0.001 end
         local function sortFunc(a, b)
-            return (a[3] + a[1] / fm) < (b[3] + b[1] / fm)
+            return (a[3] + a[1] / fm_safe) < (b[3] + b[1] / fm_safe)
         end
         table.sort(unitSet, sortFunc)
         table.sort(nodePositions, sortFunc)
@@ -550,7 +562,10 @@ local function AssignNoX(unitPositions, nodePositions, unitCount)
             local mn = ud[4]
             local nx, nz = mn[1], mn[3]
 
-            local Mu = (nz - uz) / (nx - ux)
+            -- Fix 2: Guard against division by zero in slope calculation
+            local dx_u = nx - ux
+            if mathAbs(dx_u) < 0.001 then dx_u = 0.001 end
+            local Mu = (nz - uz) / dx_u
             local Cu = uz - Mu * ux
 
             local clashes = false
@@ -560,7 +575,10 @@ local function AssignNoX(unitPositions, nodePositions, unitCount)
                 local fd = unitSet[f]
                 if fd then
                     local tn = fd[4]
-                    local ix = (Cs[f] - Cu) / (Mu - Ms[f])
+                    -- Fix 2: Guard against division by zero in intersection calculation
+                    local denom = Mu - Ms[f]
+                    if mathAbs(denom) < 0.001 then denom = 0.001 end
+                    local ix = (Cs[f] - Cu) / denom
                     local iz = Mu * ix + Cu
 
                     if ((ux - ix) * (ix - nx) >= 0) and
@@ -617,29 +635,61 @@ local function AssignUnitsToPositions(positions, units, shifted)
     end
 
     if unitCount <= CFG.maxHungarianUnits then
-        -- Hungarian: build distance matrix
-        local distances = {}
+        -- Fix 3: Filter out units with nil positions BEFORE building matrix
+        local validUnits = {}
         for i = 1, unitCount do
+            local uid = units[i]
             local ux, uz
             if shifted then
-                ux, _, uz = GetUnitFinalPosition(units[i])
+                ux, _, uz = GetUnitFinalPosition(uid)
             else
-                ux, _, uz = spGetUnitPosition(units[i])
+                ux, _, uz = spGetUnitPosition(uid)
             end
             if ux then
-                distances[i] = {}
-                for j = 1, unitCount do
-                    local dx, dz = nodes[j][1] - ux, nodes[j][3] - uz
-                    distances[i][j] = mathFloor(mathSqrt(dx * dx + dz * dz) + 0.5)
+                validUnits[#validUnits + 1] = { uid = uid, x = ux, z = uz, idx = i }
+            end
+        end
+
+        local validCount = #validUnits
+        if validCount == 0 then return {} end
+
+        -- Hungarian: build distance matrix (only for valid units)
+        local distances = {}
+        for i = 1, validCount do
+            local ux = validUnits[i].x
+            local uz = validUnits[i].z
+            distances[i] = {}
+            for j = 1, validCount do
+                local dx, dz = nodes[j][1] - ux, nodes[j][3] - uz
+                distances[i][j] = mathFloor(mathSqrt(dx * dx + dz * dz) + 0.5)
+            end
+        end
+
+        -- Fix 1: Add role-distance bias to cost matrix when roleSort is enabled
+        if PUP and PUP.toggles.roleSort then
+            for i = 1, validCount do
+                local uid = validUnits[i].uid
+                local udata = PUP.units[uid]
+                local role = udata and udata.role or "standard"
+                for j = 1, validCount do
+                    local depth = positions[j].depth or 0.5
+                    -- Penalty: assault units assigned to deep positions, artillery to shallow
+                    if role == "assault" and depth > 0.6 then
+                        distances[i][j] = distances[i][j] * 1.5
+                    elseif role == "artillery" and depth < 0.4 then
+                        distances[i][j] = distances[i][j] * 1.5
+                    elseif role == "scout" and depth > 0.3 and depth < 0.7 then
+                        distances[i][j] = distances[i][j] * 1.2
+                    end
                 end
             end
         end
 
-        local pairings = FindHungarian(distances, unitCount)
+        local pairings = FindHungarian(distances, validCount)
 
         local result = {}
         for _, pair in ipairs(pairings) do
-            result[units[pair[1]]] = pair[2]  -- unitID -> position index
+            result[validUnits[pair[1]].uid] = pair[2]  -- unitID -> position index
         end
         return result
     else
@@ -780,7 +830,9 @@ local function ProcessFormationCommand(cmdParams, cmdOpts)
             local defID = PUP.units[uid] and PUP.units[uid].defID
             local x, y, z = ValidatePosition(pos.x, pos.z, defID)
             if x then
-                spGiveOrderToUnit(uid, CMD_MOVE, { x, y, z }, {})
+                -- Fix 4: Respect shift-queue modifier
+                local moveOpts = shifted and { "shift" } or {}
+                spGiveOrderToUnit(uid, CMD_MOVE, { x, y, z }, moveOpts)
 
                 -- Store formation position (numeric indices for compatibility with dodge)
                 if PUP.units[uid] then

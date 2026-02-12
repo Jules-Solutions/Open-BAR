@@ -21,17 +21,12 @@ end
 --------------------------------------------------------------------------------
 
 local spGetMyTeamID         = Spring.GetMyTeamID
-local spGetUnitDefID        = Spring.GetUnitDefID
-local spGetUnitPosition     = Spring.GetUnitPosition
-local spGetUnitHealth       = Spring.GetUnitHealth
-local spGetGameFrame        = Spring.GetGameFrame
 local spGetConfigInt        = Spring.GetConfigInt
 local spSetConfigInt        = Spring.SetConfigInt
 local spEcho                = Spring.Echo
 
 local mathSqrt = math.sqrt
 local mathMax  = math.max
-local mathMin  = math.min
 
 --------------------------------------------------------------------------------
 -- Core library reference
@@ -278,7 +273,7 @@ function widget:Initialize()
 
         -- Public API
         GetShapeName  = GetShapeName,
-        CycleShape    = function() return CycleShape(toggles) end,
+        CycleShape    = function() return CycleShape(WG.TotallyLegal.Puppeteer.toggles) end,
         SetToggle     = function(key, val) SetToggle(WG.TotallyLegal.Puppeteer, key, val) end,
         ToggleBool    = function(key) ToggleBool(WG.TotallyLegal.Puppeteer, key) end,
         GetWeaponRange = GetWeaponRange,

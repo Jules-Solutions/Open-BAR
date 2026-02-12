@@ -187,6 +187,15 @@ local function GetDodgeDirection(ux, uz, px, pz, vx, vz, unitHeading, formationP
     bisX = bisX / bisLen
     bisZ = bisZ / bisLen
 
+    -- Check if bisector is too forward-heavy (broadside projectile edge case)
+    -- If the dodge direction is almost the same as forward, use pure perpendicular instead
+    local dot = fwdX * bisX + fwdZ * bisZ
+    if dot > 0.9 then
+        -- Too forward-heavy, bias toward perpendicular for lateral displacement
+        bisX = perpX
+        bisZ = perpZ
+    end
+
     return bisX, bisZ
 end
 
@@ -488,4 +497,9 @@ function widget:Shutdown()
     -- Clean up state
     dodgeCooldowns = {}
     dodgedUnits = {}
+end
+
+function widget:UnitDestroyed(unitID)
+    dodgeCooldowns[unitID] = nil
+    dodgedUnits[unitID] = nil
 end

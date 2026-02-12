@@ -282,6 +282,8 @@ local function ProcessScatter(frame)
     -- Repulsion solver
     for iteration = 1, CFG.scatterMaxIterations do
         local moved = false
+        -- Compute displacements (don't apply yet)
+        local displacements = {}
 
         for i = 1, #units do
             local u1 = units[i]
@@ -305,12 +307,19 @@ local function ProcessScatter(frame)
                 end
             end
 
-            -- Apply nudge if force exists
+            -- Calculate nudge if force exists
             if forceX ~= 0 or forceZ ~= 0 then
                 local fx, fz = Normalize2D(forceX, forceZ)
-                u1.x = u1.x + fx * CFG.scatterNudgeDistance
-                u1.z = u1.z + fz * CFG.scatterNudgeDistance
+                displacements[i] = { fx * CFG.scatterNudgeDistance, fz * CFG.scatterNudgeDistance }
                 moved = true
+            end
+        end
+
+        -- Apply all displacements at once
+        if moved then
+            for i, disp in pairs(displacements) do
+                units[i].x = units[i].x + disp[1]
+                units[i].z = units[i].z + disp[2]
             end
         end
 
