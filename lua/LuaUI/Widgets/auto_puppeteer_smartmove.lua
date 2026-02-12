@@ -1,9 +1,11 @@
--- Unit Puppeteer: Smart Move - Range-aware pathing
--- Intercepts CMD_MOVE to prevent units walking into enemy weapon ranges.
--- Uses Spring.GetUnitEstimatedPath to check the engine's actual planned path,
--- Spring.TestMoveOrder to validate reroute waypoints, and circle-avoidance
--- geometry for calculating safe detours.
--- FIGHT command overrides (aggressive push).
+-- Unit Puppeteer: Smart Move - Range-aware pathing + proactive range-keeping
+-- Three layers of range awareness:
+--   1. MOVE interception: reroutes commands around enemy weapon ranges
+--   2. Reactive danger check: pushes idle/moving units out of danger zones
+--   3. Proactive range-keep: units auto-retreat before enemies get in range
+-- Supports radar contacts (assumes default range for unidentified units).
+-- Kite logic: outranging units maintain firing distance, outranged units flee.
+-- FIGHT/ATTACK commands override range-keeping (explicit engagement).
 -- PvE/Unranked ONLY. Requires: auto_puppeteer_core.lua
 -- Requires: 01_totallylegal_core.lua (WG.TotallyLegal)
 --
@@ -50,6 +52,7 @@ local PathRequestPath          = nil  -- set at init if available
 
 local CMD_MOVE    = CMD.MOVE
 local CMD_FIGHT   = CMD.FIGHT
+local CMD_ATTACK  = CMD.ATTACK
 local CMD_STOP    = CMD.STOP
 
 local mathSqrt  = math.sqrt
@@ -80,6 +83,12 @@ local CFG = {
     arcSegments        = 8,      -- number of waypoints for arcing around danger
     maxDetourRatio     = 3.0,    -- if arc is > 3x direct distance, go through instead
     waypointCheckStep  = 100,    -- check estimated path every N elmos for danger
+    -- Range-keeping
+    rangeKeepFrequency = 8,      -- proactive retreat check every N frames
+    radarDefaultRange  = 350,    -- assumed weapon range for unidentified radar contacts
+    comfortBuffer      = 60,     -- start retreating this far before enemy range edge
+    rangeKeepScanPad   = 1200,   -- scan radius for range-keeping enemies
+    retreatCooldown    = 20,     -- frames between retreat orders per unit
 }
 
 local mapSizeX = 0
@@ -90,6 +99,7 @@ local mapSizeZ = 0
 --------------------------------------------------------------------------------
 
 local activeReroutes = {}    -- unitID -> { destX, destZ, frame, stoppedAtEdge }
+local retreatCooldowns = {}  -- unitID -> frame (last retreat order)
 local enemyRangeCache = {}   -- enemyDefID -> maxWeaponRange
 local hasPathAPI = false     -- set at init: can we use Path.RequestPath?
 local hasTestMove = false    -- set at init: can we use TestMoveOrder?
@@ -101,7 +111,11 @@ local hasEstimatedPath = false -- set at init: can we use GetUnitEstimatedPath?
 
 local function GetEnemyWeaponRange(unitID)
     local defID = spGetUnitDefID(unitID)
-    if not defID then return 0 end
+    if not defID then
+        -- Radar contact: unit visible on radar but type unknown
+        -- Assume a default danger range rather than ignoring it
+        return CFG.radarDefaultRange
+    end
 
     if enemyRangeCache[defID] then return enemyRangeCache[defID] end
 
@@ -699,6 +713,135 @@ local function CheckUnitsInDanger(frame)
 end
 
 --------------------------------------------------------------------------------
+-- Proactive range-keeping: stay out of enemy weapon range at all times
+--------------------------------------------------------------------------------
+
+local function IsUnitEngaged(uid)
+    local cmds = spGetUnitCommands(uid, 1)
+    if not cmds or #cmds == 0 then return false end
+    local cmdID = cmds[1].id
+    -- FIGHT, ATTACK, or attack-move mean the player explicitly chose to engage
+    return (cmdID == CMD_FIGHT or cmdID == CMD_ATTACK)
+end
+
+local function ProactiveRangeKeep(frame)
+    if not PUP or not PUP.toggles.rangeKeep then return end
+
+    for uid, data in pairs(PUP.units) do
+        -- Skip units already being rerouted
+        if activeReroutes[uid] then goto continue_unit end
+
+        -- Skip units on retreat cooldown
+        if retreatCooldowns[uid] and (frame - retreatCooldowns[uid]) < CFG.retreatCooldown then
+            goto continue_unit
+        end
+
+        -- Skip units explicitly engaged (FIGHT/ATTACK commands)
+        if IsUnitEngaged(uid) then goto continue_unit end
+
+        -- Skip firing line units (they have their own positioning)
+        if data.state == "firing" or data.state == "advancing" or data.state == "cycling" or data.state == "reloading" then
+            goto continue_unit
+        end
+
+        local ux, uy, uz = spGetUnitPosition(uid)
+        if not ux then goto continue_unit end
+
+        local health = spGetUnitHealth(uid)
+        if not health or health <= 0 then goto continue_unit end
+
+        -- Scan for nearby enemies
+        local pad = CFG.rangeKeepScanPad
+        local enemies = spGetUnitsInRectangle(
+            mathMax(0, ux - pad), mathMax(0, uz - pad),
+            mathMin(mapSizeX, ux + pad), mathMin(mapSizeZ, uz + pad)
+        )
+        if not enemies then goto continue_unit end
+
+        -- Find threats: enemies whose weapon range (+ buffer) covers our position
+        local retreatX, retreatZ = 0, 0
+        local threatCount = 0
+        local ourRange = data.range or 0
+
+        for _, eid in ipairs(enemies) do
+            if not spIsUnitAllied(eid) then
+                local ex, ey, ez = spGetUnitPosition(eid)
+                if ex then
+                    local enemyRange = GetEnemyWeaponRange(eid)
+                    if enemyRange > 50 then
+                        local dangerRadius = enemyRange + CFG.safetyMargin + CFG.comfortBuffer
+                        local dist = Dist2D(ux, uz, ex, ez)
+
+                        if dist < dangerRadius then
+                            -- We're too close. Compute retreat direction.
+                            local dx = ux - ex
+                            local dz = uz - ez
+                            local len = mathSqrt(dx * dx + dz * dz)
+                            if len < 0.001 then
+                                dx, dz, len = 1, 0, 1
+                            end
+                            local nx, nz = dx / len, dz / len
+
+                            -- Kite distance: where should we stand?
+                            local targetDist
+                            if ourRange > enemyRange + 30 then
+                                -- We outrange them: stand at our max range (can shoot, they can't)
+                                targetDist = ourRange * 0.95
+                            else
+                                -- They outrange or match us: stand just outside their range
+                                targetDist = enemyRange + CFG.safetyMargin + CFG.comfortBuffer
+                            end
+
+                            -- How much to move
+                            local moveDist = targetDist - dist
+                            if moveDist > 10 then
+                                -- Weight by urgency (deeper inside = stronger push)
+                                local urgency = mathMax(0.1, 1.0 - dist / dangerRadius)
+                                retreatX = retreatX + nx * moveDist * urgency
+                                retreatZ = retreatZ + nz * moveDist * urgency
+                                threatCount = threatCount + 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        if threatCount > 0 then
+            -- Average retreat vector
+            retreatX = retreatX / threatCount
+            retreatZ = retreatZ / threatCount
+
+            local targetX = ux + retreatX
+            local targetZ = uz + retreatZ
+            targetX, targetZ = ClampToMap(targetX, targetZ)
+
+            -- Validate retreat position
+            local targetY
+            if hasTestMove and data.defID then
+                local vx, vy, vz = ValidateWaypoint(targetX, targetZ, data.defID)
+                if vx then
+                    targetX, targetY, targetZ = vx, vy, vz
+                else
+                    goto continue_unit
+                end
+            else
+                targetY = spGetGroundHeight(targetX, targetZ) or 0
+            end
+
+            -- Only retreat if displacement is meaningful (avoid micro-stuttering)
+            local moveDist = Dist2D(ux, uz, targetX, targetZ)
+            if moveDist > 15 then
+                spGiveOrderToUnit(uid, CMD_MOVE, { targetX, targetY, targetZ }, {})
+                retreatCooldowns[uid] = frame
+            end
+        end
+
+        ::continue_unit::
+    end
+end
+
+--------------------------------------------------------------------------------
 -- Lifecycle
 --------------------------------------------------------------------------------
 
@@ -760,6 +903,11 @@ function widget:GameFrame(frame)
     local ok, err = pcall(function()
         CheckUnitsInDanger(frame)
 
+        -- Proactive range-keeping (slightly less frequent)
+        if frame % CFG.rangeKeepFrequency == 0 then
+            ProactiveRangeKeep(frame)
+        end
+
         -- Cleanup stale reroutes
         for uid, rr in pairs(activeReroutes) do
             local unitData = PUP.units[uid]
@@ -773,6 +921,15 @@ function widget:GameFrame(frame)
                 activeReroutes[uid] = nil
             end
         end
+
+        -- Cleanup stale retreat cooldowns
+        if frame % 300 == 0 then
+            for uid, cd in pairs(retreatCooldowns) do
+                if frame - cd > 600 then
+                    retreatCooldowns[uid] = nil
+                end
+            end
+        end
     end)
     if not ok then
         Spring.Echo("[Puppeteer SmartMove] GameFrame error: " .. tostring(err))
@@ -781,6 +938,7 @@ end
 
 function widget:Shutdown()
     activeReroutes = {}
+    retreatCooldowns = {}
     PUP = nil
     TL = nil
 end

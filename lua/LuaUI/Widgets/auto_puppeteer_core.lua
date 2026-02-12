@@ -60,6 +60,7 @@ local DEFAULT_TOGGLES = {
     scatterDistance   = 120,      -- elmos
     march            = false,
     rangeWalk        = false,
+    rangeKeep        = true,         -- proactive range-keeping: auto-retreat from enemy weapon range
 }
 
 -- Shape name lookup
