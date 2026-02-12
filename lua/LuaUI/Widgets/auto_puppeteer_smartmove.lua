@@ -272,6 +272,21 @@ local function IsPointInDanger(px, pz, dangers)
 end
 
 --------------------------------------------------------------------------------
+-- Check if a point is in any danger zone (excluding one specific danger)
+--------------------------------------------------------------------------------
+
+local function IsPointInAnyDanger(px, pz, dangers, excludeIdx)
+    for i, d in ipairs(dangers) do
+        if i ~= excludeIdx then
+            if PointInCircle(px, pz, d.x, d.z, d.range) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+--------------------------------------------------------------------------------
 -- Check the engine's estimated path for a unit against danger zones
 -- Returns the first dangerous waypoint index, or nil if safe
 --------------------------------------------------------------------------------
@@ -385,7 +400,7 @@ local function CalcSmartPath(unitID, unitX, unitZ, destX, destZ, unitDefID)
     local waypoints = {}
     local curX, curZ = unitX, unitZ
 
-    for _, danger in ipairs(pathDangers) do
+    for dangerIdx, danger in ipairs(pathDangers) do
         local cx, cz = danger.x, danger.z
         local radius = danger.range + 10
 
@@ -418,8 +433,14 @@ local function CalcSmartPath(unitID, unitX, unitZ, destX, destZ, unitDefID)
                 arcWP = reversed
             end
 
-            -- Validate arc waypoints
+            -- Validate arc waypoints (both terrain reachability AND against all other dangers)
             for _, wp in ipairs(arcWP) do
+                -- Check if this waypoint lands inside any OTHER danger zone
+                if IsPointInAnyDanger(wp.x, wp.z, pathDangers, dangerIdx) then
+                    -- Skip this waypoint - it lands in another danger zone
+                    goto continue_waypoint
+                end
+
                 local vx, vy, vz
                 if hasTestMove and unitDefID then
                     vx, vy, vz = ValidateWaypoint(wp.x, wp.z, unitDefID)
@@ -432,6 +453,8 @@ local function CalcSmartPath(unitID, unitX, unitZ, destX, destZ, unitDefID)
                     waypoints[#waypoints + 1] = { x = vx, z = vz }
                     curX, curZ = vx, vz
                 end
+
+                ::continue_waypoint::
             end
         end
     end
@@ -452,6 +475,20 @@ local function CalcSmartPath(unitID, unitX, unitZ, destX, destZ, unitDefID)
 
     if arcDist > directDist * CFG.maxDetourRatio then
         return nil  -- too far to reroute, go direct
+    end
+
+    -- Check if waypoints are actually safe (not landing inside ANY danger zone)
+    local unsafeCount = 0
+    for _, wp in ipairs(waypoints) do
+        for _, d in ipairs(allDangers) do
+            if PointInCircle(wp.x, wp.z, d.x, d.z, d.range) then
+                unsafeCount = unsafeCount + 1
+                break
+            end
+        end
+    end
+    if unsafeCount > #waypoints * 0.5 then
+        return nil  -- can't find safe path, go direct
     end
 
     return waypoints, false
@@ -551,24 +588,76 @@ local function CheckUnitsInDanger(frame)
                         ux - pad, uz - pad, ux + pad, uz + pad
                     )
 
+                    -- Find all zones the unit is inside
+                    local insideDangers = {}
                     for _, d in ipairs(dangers) do
                         if PointInCircle(ux, uz, d.x, d.z, d.range) then
-                            local edgeX, edgeZ = CircleEdgePoint(d.x, d.z, d.range, ux, uz)
+                            insideDangers[#insideDangers + 1] = d
+                        end
+                    end
 
-                            local vx, vy, vz
-                            if hasTestMove and data.defID then
-                                vx, vy, vz = ValidateWaypoint(edgeX, edgeZ, data.defID)
+                    if #insideDangers > 0 then
+                        -- Compute combined escape vector (average direction away from all danger centers)
+                        local escX, escZ = 0, 0
+                        for _, d in ipairs(insideDangers) do
+                            local dx = ux - d.x
+                            local dz = uz - d.z
+                            local len = mathSqrt(dx * dx + dz * dz)
+                            if len > 0.001 then
+                                -- Weight by how deep inside the zone we are (deeper = stronger push)
+                                local depth = 1.0 - (len / d.range)
+                                escX = escX + (dx / len) * mathMax(0.1, depth)
+                                escZ = escZ + (dz / len) * mathMax(0.1, depth)
                             else
-                                edgeX, edgeZ = ClampToMap(edgeX, edgeZ)
-                                vx = edgeX
-                                vy = spGetGroundHeight(edgeX, edgeZ) or 0
-                                vz = edgeZ
+                                -- Exactly at center, pick arbitrary direction
+                                escX = escX + 1
+                            end
+                        end
+
+                        local escLen = mathSqrt(escX * escX + escZ * escZ)
+                        if escLen > 0.001 then
+                            escX = escX / escLen
+                            escZ = escZ / escLen
+
+                            -- Walk along escape direction until outside ALL zones
+                            local maxDist = 0
+                            for _, d in ipairs(insideDangers) do
+                                maxDist = mathMax(maxDist, d.range)
                             end
 
-                            if vx then
-                                spGiveOrderToUnit(uid, CMD_MOVE, { vx, vy, vz }, {})
+                            -- Try escape at increasing distances
+                            local escaped = false
+                            for tryDist = 100, maxDist + 200, 50 do
+                                local tryX = ux + escX * tryDist
+                                local tryZ = uz + escZ * tryDist
+                                tryX, tryZ = ClampToMap(tryX, tryZ)
+
+                                local safe = true
+                                for _, d in ipairs(insideDangers) do
+                                    if PointInCircle(tryX, tryZ, d.x, d.z, d.range) then
+                                        safe = false
+                                        break
+                                    end
+                                end
+
+                                if safe then
+                                    local vx, vy, vz
+                                    if hasTestMove and data.defID then
+                                        vx, vy, vz = ValidateWaypoint(tryX, tryZ, data.defID)
+                                    else
+                                        vx = tryX
+                                        vy = spGetGroundHeight(tryX, tryZ) or 0
+                                        vz = tryZ
+                                    end
+
+                                    if vx then
+                                        spGiveOrderToUnit(uid, CMD_MOVE, { vx, vy, vz }, {})
+                                        escaped = true
+                                        break
+                                    end
+                                end
                             end
-                            break
+                            -- If can't escape, do nothing (don't ping-pong)
                         end
                     end
 

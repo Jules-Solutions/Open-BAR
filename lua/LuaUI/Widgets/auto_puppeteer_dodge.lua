@@ -65,15 +65,15 @@ local PUP = nil
 --------------------------------------------------------------------------------
 
 local CFG = {
-    updateFrequency = 3,        -- every N game frames (~0.1s)
-    dodgeRadius     = 60,       -- how far to dodge (elmos)
-    hitRadius       = 40,       -- consider projectile dangerous if impact within this radius
-    maxProjectileSpeed = 800,   -- ignore projectiles faster than this (undodgeable)
-    minUnitSpeed    = 30,       -- don't dodge with units slower than this
-    cooldownFrames  = 15,       -- frames between dodge commands per unit
-    returnCooldown  = 30,       -- frames after dodge before returning to formation
-    maxManagedUnits = 40,       -- performance cap
-    searchPadding   = 400,      -- search area around each unit for projectiles
+    updateFrequency = 2,        -- every 2 game frames (~0.067s) — tighter polling
+    dodgeRadius     = 90,       -- how far to dodge (elmos) — more displacement
+    hitRadius       = 50,       -- base danger radius (before AoE added)
+    maxProjectileSpeed = 1200,  -- elmos/s — higher threshold, fewer false hitscan classifications
+    minUnitSpeed    = 20,       -- dodge with slower units too
+    cooldownFrames  = 12,       -- slightly faster re-dodge
+    returnCooldown  = 25,       -- faster return
+    maxManagedUnits = 50,       -- more units can dodge
+    searchPadding   = 600,      -- larger search area for earlier detection
 }
 
 --------------------------------------------------------------------------------
@@ -90,6 +90,19 @@ local mapSizeZ = 0
 
 -- Cache: defIDs that are hitscan/beam weapons (undodgeable)
 local hitscanWeapons = {}    -- weaponDefID -> true
+local weaponAoECache = {}    -- weaponDefID -> aoe radius
+
+local function GetWeaponAoE(wDefID)
+    if weaponAoECache[wDefID] ~= nil then return weaponAoECache[wDefID] end
+    local wDef = WeaponDefs[wDefID]
+    if not wDef then
+        weaponAoECache[wDefID] = 0
+        return 0
+    end
+    local aoe = wDef.damageAreaOfEffect or wDef.areaOfEffect or 0
+    weaponAoECache[wDefID] = aoe
+    return aoe
+end
 
 local function BuildHitscanTable()
     hitscanWeapons = {}
@@ -279,6 +292,7 @@ local function ProcessUnit(uid, data, frame)
 
     local bestThreatDist = math.huge
     local bestDodgeX, bestDodgeZ = 0, 0
+    local bestAoE = 0
     local foundThreat = false
 
     for _, pID in ipairs(projectiles) do
@@ -291,9 +305,14 @@ local function ProcessUnit(uid, data, frame)
             if px and vx then
                 local closestDist, _, _, _, impactTime = PredictImpact(px, py, pz, vx, vy, vz, ux, uy, uz)
 
-                -- Skip projectiles arriving in < 3 frames (undodgeable)
-                if closestDist < (data.radius + CFG.hitRadius) and impactTime >= 3 and closestDist < bestThreatDist then
+                -- Get weapon AoE and calculate effective hit radius
+                local aoe = GetWeaponAoE(pDefID)
+                local effectiveHitRadius = data.radius + CFG.hitRadius + aoe * 0.5
+
+                -- Skip projectiles arriving in < 2 frames (undodgeable)
+                if closestDist < effectiveHitRadius and impactTime >= 2 and closestDist < bestThreatDist then
                     bestThreatDist = closestDist
+                    bestAoE = aoe
                     local dx, dz = GetDodgeDirection(ux, uz, px, pz, vx, vz, unitHeading, data.formationPos)
                     bestDodgeX = dx
                     bestDodgeZ = dz
@@ -304,8 +323,12 @@ local function ProcessUnit(uid, data, frame)
     end
 
     if foundThreat and (bestDodgeX ~= 0 or bestDodgeZ ~= 0) then
-        -- Scale dodge distance by unit size
+        -- Scale dodge distance by unit size and weapon AoE
         local dodgeDist = mathMax(CFG.dodgeRadius, data.radius * 1.5)
+        -- Scale up for AoE weapons
+        if bestAoE > 0 then
+            dodgeDist = dodgeDist + bestAoE * 0.5
+        end
         local targetX = ux + bestDodgeX * dodgeDist
         local targetZ = uz + bestDodgeZ * dodgeDist
 
@@ -461,8 +484,8 @@ function widget:GameFrame(frame)
         for uid, data in pairs(PUP.units) do
             if count >= CFG.maxManagedUnits then break end
 
-            -- Only dodge units with weapons and sufficient speed
-            if data.hasWeapon and data.speed >= CFG.minUnitSpeed then
+            -- Dodge units with sufficient speed (scouts, transports, all mobile units)
+            if data.speed >= CFG.minUnitSpeed then
                 local health = spGetUnitHealth(uid)
                 if health and health > 0 then
                     ProcessUnit(uid, data, frame)

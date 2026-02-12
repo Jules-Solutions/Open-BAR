@@ -39,6 +39,8 @@ local spTestMoveOrder       = Spring.TestMoveOrder
 local CMD_MOVE   = CMD.MOVE
 local CMD_FIGHT  = CMD.FIGHT
 local CMD_ATTACK = CMD.ATTACK
+local CMD_STOP   = CMD.STOP
+local CMD_PATROL = CMD.PATROL
 
 local mathSqrt = math.sqrt
 local mathMax  = math.max
@@ -163,6 +165,11 @@ end
 -- waiting -> advancing -> firing -> cycling -> reloading -> waiting
 
 local function TransitionUnit(line, uid, newState, frame)
+    -- Update PUP-level state for cross-widget coordination
+    if PUP and PUP.units[uid] then
+        PUP.units[uid].state = newState
+    end
+
     -- Find slot for this unit
     for slotIdx, slot in ipairs(line.slots) do
         if slot.uid == uid then
@@ -342,7 +349,6 @@ local function ProcessUnitStateMachine(line, slotIdx, frame)
         if dist <= CFG.positionTolerance then
             -- Reached firing position
             TransitionUnit(line, uid, "firing", frame)
-            if PUP.units[uid] then PUP.units[uid].state = "firing" end
 
             -- Issue attack order toward enemy to ensure unit fires
             if line.enemyUID then
@@ -362,7 +368,6 @@ local function ProcessUnitStateMachine(line, slotIdx, frame)
         if elapsedFrames >= line.reloadTime then
             -- Weapon has fired, now in reload
             TransitionUnit(line, uid, "cycling", frame)
-            if PUP.units[uid] then PUP.units[uid].state = "idle" end
 
             -- Advance next unit from queue
             if #line.queue > 0 then
@@ -391,42 +396,6 @@ local function ProcessUnitStateMachine(line, slotIdx, frame)
             -- Move to reload position
             local targetY = spGetGroundHeight(reloadX, reloadZ) or 0
             spGiveOrderToUnit(uid, CMD_MOVE, {reloadX, targetY, reloadZ}, {})
-        end
-
-    elseif state == "reloading" then
-        -- Seek nearby constructor for healing
-        local constructorUID, cx, cz = FindConstructor(ux, uz, CFG.healSeekRadius)
-        if constructorUID then
-            local dx = cx - ux
-            local dz = cz - uz
-            local distToConstructor = mathSqrt(dx * dx + dz * dz)
-
-            -- Also check distance from reload position
-            local reloadX, reloadZ = CalculateReloadPosition(line, slotIdx)
-            local drx = reloadX - ux
-            local drz = reloadZ - uz
-            local distFromReload = mathSqrt(drx * drx + drz * drz)
-
-            if distToConstructor > CFG.healApproachDist and distFromReload < CFG.healMaxDeviation then
-                -- Move toward constructor
-                local approachX = ux + dx * 0.5
-                local approachZ = uz + dz * 0.5
-                local approachY = spGetGroundHeight(approachX, approachZ) or 0
-                spGiveOrderToUnit(uid, CMD_MOVE, {approachX, approachY, approachZ}, {})
-            end
-        end
-
-        -- Check if reload complete
-        local elapsedFrames = frame - stateFrame
-        if elapsedFrames >= line.reloadTime then
-            -- Reload complete, back to queue
-            for rIdx, rUID in ipairs(line.reloading) do
-                if rUID == uid then
-                    table.remove(line.reloading, rIdx)
-                    table.insert(line.queue, uid)
-                    break
-                end
-            end
         end
     end
 end
@@ -520,7 +489,7 @@ local function CreateFiringLine(groupUnits, groupDefID, frame)
         local uid = groupUnits[i]
         table.insert(line.slots, { uid = uid, state = "advancing", stateFrame = frame, slotIdx = i })
         unitToLine[uid] = lineID
-        if PUP.units[uid] then PUP.units[uid].state = "idle" end
+        if PUP.units[uid] then PUP.units[uid].state = "advancing" end
     end
 
     -- Rest go to queue
@@ -615,6 +584,23 @@ local function ProcessFiringLine(lineID, frame)
             table.remove(line.reloading, i)
             line.reloadStartFrame[uid] = nil
         else
+            -- Heal-seeking: move toward nearby constructors during reload
+            local ux, uy, uz = spGetUnitPosition(uid)
+            if ux then
+                local constructorUID, cx, cz = FindConstructor(ux, uz, CFG.healSeekRadius)
+                if constructorUID then
+                    local dx = cx - ux
+                    local dz = cz - uz
+                    local distToConstructor = mathSqrt(dx * dx + dz * dz)
+                    if distToConstructor > CFG.healApproachDist then
+                        local approachX = ux + dx * 0.5
+                        local approachZ = uz + dz * 0.5
+                        local approachY = spGetGroundHeight(approachX, approachZ) or 0
+                        spGiveOrderToUnit(uid, CMD_MOVE, {approachX, approachY, approachZ}, {})
+                    end
+                end
+            end
+
             local startFrame = line.reloadStartFrame[uid] or 0
             if (frame - startFrame) >= line.reloadTime then
                 table.remove(line.reloading, i)
@@ -689,6 +675,45 @@ end
 
 function widget:CommandNotify(cmdID, cmdParams, cmdOptions)
     if not PUP or not PUP.toggles.firingLine then return false end
+
+    -- If user manually commands a unit in a firing line, remove it from the line
+    if cmdID == CMD_MOVE or cmdID == CMD_STOP or cmdID == CMD_PATROL then
+        local selected = Spring.GetSelectedUnits()
+        if selected then
+            for _, uid in ipairs(selected) do
+                local lineID = unitToLine[uid]
+                if lineID then
+                    -- Remove unit from its line
+                    local line = firingLines[lineID]
+                    if line then
+                        for si = #line.slots, 1, -1 do
+                            if line.slots[si].uid == uid then
+                                table.remove(line.slots, si)
+                                break
+                            end
+                        end
+                        for qi = #line.queue, 1, -1 do
+                            if line.queue[qi] == uid then
+                                table.remove(line.queue, qi)
+                                break
+                            end
+                        end
+                        for ri = #line.reloading, 1, -1 do
+                            if line.reloading[ri] == uid then
+                                table.remove(line.reloading, ri)
+                                line.reloadStartFrame[uid] = nil
+                                break
+                            end
+                        end
+                    end
+                    unitToLine[uid] = nil
+                    if PUP and PUP.units[uid] then PUP.units[uid].state = "idle" end
+                end
+            end
+        end
+        return false  -- don't block the command
+    end
+
     if cmdID ~= CMD_FIGHT and cmdID ~= CMD_ATTACK then return false end
 
     local selected = Spring.GetSelectedUnits()

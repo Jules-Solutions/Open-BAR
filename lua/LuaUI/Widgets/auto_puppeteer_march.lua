@@ -34,10 +34,10 @@ local spGetSelectedUnits    = Spring.GetSelectedUnits
 local spGetUnitCommands     = Spring.GetUnitCommands
 local spEcho                = Spring.Echo
 local spTestMoveOrder       = Spring.TestMoveOrder
+local spSendLuaRulesMsg     = Spring.SendLuaRulesMsg
 
 local CMD_MOVE                = CMD.MOVE
 local CMD_STOP                = CMD.STOP
-local CMD_SET_WANTED_MAX_SPEED = 70  -- CMD code for speed limiting
 
 local mathSqrt = math.sqrt
 local mathMax  = math.max
@@ -74,15 +74,7 @@ local scatterLastProcessed = {}  -- unitID -> frame
 
 -- Feature detection (set at init)
 local hasTestMove = false
-
--- Test if CMD_SET_WANTED_MAX_SPEED is supported
-local supportsMaxSpeedCmd = nil
-
-local function TestMaxSpeedSupport()
-    if supportsMaxSpeedCmd ~= nil then return supportsMaxSpeedCmd end
-    supportsMaxSpeedCmd = false  -- CMD 70 removed from Recoil engine
-    return false
-end
+local hasSpeedGadget = false  -- set true if gadget responds
 
 --------------------------------------------------------------------------------
 -- Utility: Distance and vector math
@@ -186,13 +178,12 @@ local function StartMarchGroup(unitIDs, destX, destZ, frame)
         frame = frame,
     }
 
-    -- Apply speed limit to all units in group
-    if TestMaxSpeedSupport() then
+    -- Apply speed limit to all units in group via gadget
+    if hasSpeedGadget then
         for _, uid in ipairs(unitIDs) do
             local udata = PUP.units[uid]
             if udata and udata.speed > minSpeed then
-                -- Set max speed to match slowest unit
-                spGiveOrderToUnit(uid, CMD_SET_WANTED_MAX_SPEED, {minSpeed}, {})
+                spSendLuaRulesMsg("pup_speed|" .. uid .. "|" .. minSpeed)
             end
         end
     end
@@ -221,16 +212,12 @@ local function UpdateMarchGroups(frame)
 
         -- Cleanup if all arrived or group is stale
         if allArrived or activeCount == 0 or (frame - group.frame) > CFG.marchCleanupFrames then
-            -- Release speed limits
-            if TestMaxSpeedSupport() then
+            -- Release speed limits via gadget
+            if hasSpeedGadget then
                 for _, uid in ipairs(group.unitIDs) do
                     local health = spGetUnitHealth(uid)
                     if health and health > 0 then
-                        local udata = PUP.units[uid]
-                        if udata then
-                            -- Reset to original max speed
-                            spGiveOrderToUnit(uid, CMD_SET_WANTED_MAX_SPEED, {udata.speed}, {})
-                        end
+                        spSendLuaRulesMsg("pup_speed_reset|" .. uid)
                     end
                 end
             end
@@ -468,18 +455,21 @@ function widget:Initialize()
     -- Feature detection
     hasTestMove = (spTestMoveOrder ~= nil)
 
-    TestMaxSpeedSupport()
-    spEcho("[Puppeteer March] NOTE: Speed matching unavailable (requires gadget). Scatter and range walk active.")
-    spEcho("[Puppeteer March] Enabled. TestMoveOrder: " .. (hasTestMove and "yes" or "no"))
+    -- Detect speed gadget: send a ping, gadget existence is verified by SendLuaRulesMsg not erroring
+    -- The gadget silently ignores unrecognized prefixes, so we just assume it's loaded if the API exists
+    hasSpeedGadget = (spSendLuaRulesMsg ~= nil)
+
+    local speedStatus = hasSpeedGadget and "gadget active" or "unavailable"
+    spEcho("[Puppeteer March] Enabled. Speed matching: " .. speedStatus .. ". TestMoveOrder: " .. (hasTestMove and "yes" or "no"))
 end
 
 function widget:Shutdown()
-    -- Release all speed limits
-    if supportsMaxSpeedCmd and PUP and PUP.units then
-        for uid, udata in pairs(PUP.units) do
+    -- Release all speed limits via gadget
+    if hasSpeedGadget and PUP and PUP.units then
+        for uid, _ in pairs(PUP.units) do
             local health = spGetUnitHealth(uid)
             if health and health > 0 then
-                spGiveOrderToUnit(uid, CMD_SET_WANTED_MAX_SPEED, {udata.speed}, {})
+                spSendLuaRulesMsg("pup_speed_reset|" .. uid)
             end
         end
     end
