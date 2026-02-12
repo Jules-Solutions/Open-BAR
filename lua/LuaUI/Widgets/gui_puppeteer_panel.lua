@@ -481,7 +481,10 @@ end
 --------------------------------------------------------------------------------
 
 function widget:DrawScreen()
-    if not TL or not PUP then return end
+    if not TL then return end
+    -- Lazy grab: Puppeteer Core loads after this widget
+    PUP = TL.Puppeteer
+    if not PUP then return end
     if not panelVisible then return end
 
     if panelCollapsed then
@@ -500,12 +503,12 @@ local function PointInRect(mx, my, r)
 end
 
 function widget:IsAbove(mx, my)
-    if not TL or not PUP or not panelVisible then return false end
+    if not TL or not TL.Puppeteer or not panelVisible then return false end
     return mx >= panelX and mx <= panelX + PANEL.width and my >= panelY and my <= panelY + panelH
 end
 
 function widget:MouseMove(mx, my, dx, dy, button)
-    if not TL or not PUP or not panelVisible then return false end
+    if not TL or not TL.Puppeteer or not panelVisible then return false end
 
     -- Dragging
     if isDragging then
@@ -531,7 +534,8 @@ end
 
 function widget:MousePress(mx, my, button)
     if button ~= 1 then return false end
-    if not TL or not PUP or not panelVisible then return false end
+    if not TL or not TL.Puppeteer or not panelVisible then return false end
+    PUP = TL.Puppeteer
 
     -- Check if click is on the panel
     if not self:IsAbove(mx, my) then return false end
@@ -646,13 +650,9 @@ function widget:Initialize()
 
     TL = WG.TotallyLegal
 
-    if not WG.TotallyLegal.Puppeteer then
-        spEcho("[Puppeteer Panel] Puppeteer Core not loaded. Disabling.")
-        widgetHandler:RemoveWidget(self)
-        return
-    end
-
-    PUP = WG.TotallyLegal.Puppeteer
+    -- PUP is grabbed lazily in DrawScreen/mouse handlers
+    -- because Puppeteer Core (layer 103) loads AFTER this widget (layer 100)
+    PUP = TL.Puppeteer  -- may be nil at this point, that's OK
 
     -- Default position: left of sidebar if it exists, otherwise right side of screen
     local sidebarInfo = TL.SidebarInfo
@@ -671,7 +671,7 @@ function widget:Initialize()
         IsVisible = function() return panelVisible end,
     }
 
-    spEcho("[Puppeteer Panel] Initialized.")
+    spEcho("[Puppeteer Panel] Initialized (waiting for Puppeteer Core).")
 end
 
 function widget:ViewResize(newX, newY)

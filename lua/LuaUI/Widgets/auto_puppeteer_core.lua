@@ -177,7 +177,7 @@ local function RefreshUnitRegistry(puppeteer)
         if count >= CFG.maxManagedUnits then break end
 
         local cls = TL.GetUnitClass(defID)
-        if cls and cls.canMove and not cls.isFactory and not cls.isBuilding then
+        if cls and cls.canMove and not cls.isFactory and not cls.isBuilding and not cls.isBuilder then
             local speed = cls.maxSpeed or 0
             if speed > 0 then
                 local def = UnitDefs[defID]
@@ -325,7 +325,7 @@ function widget:UnitCreated(unitID, unitDefID, unitTeam)
     if unitTeam ~= spGetMyTeamID() then return end
 
     local cls = TL.GetUnitClass(unitDefID)
-    if cls and cls.canMove and not cls.isFactory and not cls.isBuilding then
+    if cls and cls.canMove and not cls.isFactory and not cls.isBuilding and not cls.isBuilder then
         local speed = cls.maxSpeed or 0
         if speed > 0 and puppeteer.unitCount < CFG.maxManagedUnits then
             local def = UnitDefs[unitDefID]
