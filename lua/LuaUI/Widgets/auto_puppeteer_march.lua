@@ -259,11 +259,9 @@ local function ProcessScatter(frame)
         if udata.state ~= "dodging" then
             local lastProcessed = scatterLastProcessed[uid] or 0
             if (frame - lastProcessed) >= CFG.scatterFrequency then
-                -- Only scatter idle units or units with just a move command
+                -- Only scatter idle units (no commands) — never override active orders
                 local cmds = spGetUnitCommands(uid, 1)
-                local isIdle = (not cmds or #cmds == 0)
-                local isMoving = (cmds and #cmds > 0 and cmds[1].id == CMD_MOVE)
-                if isIdle or isMoving then
+                if not cmds or #cmds == 0 then
                     local health = spGetUnitHealth(uid)
                     if health and health > 0 then
                         local ux, uy, uz = spGetUnitPosition(uid)
