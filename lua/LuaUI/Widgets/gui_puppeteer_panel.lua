@@ -110,6 +110,7 @@ local BOOL_TOGGLES = {
     { key = "rangeWalk",  label = "Range Walk" },
     { key = "rangeKeep",  label = "Range Keep" },
     { key = "jitter",     label = "Jitter" },
+    { key = "raid",       label = "Raid" },
 }
 
 -- Shape icons

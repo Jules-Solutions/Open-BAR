@@ -62,6 +62,7 @@ local DEFAULT_TOGGLES = {
     rangeWalk        = false,
     rangeKeep        = true,         -- proactive range-keeping: auto-retreat from enemy weapon range
     jitter           = true,         -- combat jitter: micro-movement to disrupt enemy aim prediction
+    raid             = false,        -- automated mex raiding patrol (select units first, then toggle ON)
 }
 
 -- Shape name lookup
