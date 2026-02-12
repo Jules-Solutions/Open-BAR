@@ -85,7 +85,7 @@ local CFG = {
     waypointCheckStep  = 100,    -- check estimated path every N elmos for danger
     -- Range-keeping
     rangeKeepFrequency = 8,      -- proactive retreat check every N frames
-    radarDefaultRange  = 350,    -- assumed weapon range for unidentified radar contacts
+    radarDefaultRange  = 450,    -- assumed weapon range for unidentified radar contacts (covers T2)
     comfortBuffer      = 60,     -- start retreating this far before enemy range edge
     rangeKeepScanPad   = 1200,   -- scan radius for range-keeping enemies
     retreatCooldown    = 20,     -- frames between retreat orders per unit
