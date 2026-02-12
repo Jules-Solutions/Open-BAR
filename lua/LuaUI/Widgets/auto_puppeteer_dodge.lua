@@ -38,13 +38,20 @@ local spGetProjectilePosition     = Spring.GetProjectilePosition
 local spGetProjectileVelocity     = Spring.GetProjectileVelocity
 local spGetProjectileDefID        = Spring.GetProjectileDefID
 local spTestMoveOrder             = Spring.TestMoveOrder
+local spGetUnitHeading            = Spring.GetUnitHeading
+local spGetUnitsInCylinder        = Spring.GetUnitsInCylinder
+local spIsUnitAllied              = Spring.IsUnitAllied
 
 local CMD_MOVE = CMD.MOVE
 
 local mathSqrt = math.sqrt
 local mathMax  = math.max
 local mathMin  = math.min
-local mathAbs  = math.abs
+local mathAbs   = math.abs
+local mathCos   = math.cos
+local mathSin   = math.sin
+local mathAtan2 = math.atan2
+local PI        = math.pi
 
 --------------------------------------------------------------------------------
 -- Core library reference
@@ -131,44 +138,108 @@ local function PredictImpact(px, py, pz, vx, vy, vz, ux, uy, uz)
     return closestDist, closestX, closestY, closestZ, t
 end
 
-local function GetDodgeDirection(ux, uz, px, pz, vx, vz, formationPos)
+local function GetDodgeDirection(ux, uz, px, pz, vx, vz, unitHeading, formationPos)
     -- Perpendicular to projectile velocity in XZ plane
-    -- Two options: left or right of trajectory
     local perpX = -vz
     local perpZ = vx
+    local perpLen = mathSqrt(perpX * perpX + perpZ * perpZ)
+    if perpLen < 0.001 then return 0, 0 end
+    perpX = perpX / perpLen
+    perpZ = perpZ / perpLen
 
-    local len = mathSqrt(perpX * perpX + perpZ * perpZ)
-    if len < 0.001 then return 0, 0 end
+    -- Get unit's forward direction from heading
+    -- Spring heading: 0 = south (+Z), rotates clockwise
+    local fwdX, fwdZ = 0, 1
+    if unitHeading then
+        local headingRad = unitHeading * (2 * PI / 65536)
+        fwdX = mathSin(headingRad)
+        fwdZ = mathCos(headingRad)
+    end
 
-    perpX = perpX / len
-    perpZ = perpZ / len
+    -- Choose the perpendicular direction closer to unit's current heading
+    -- This minimizes the turn angle needed to start dodging
+    local dot1 = fwdX * perpX + fwdZ * perpZ
+    if dot1 < 0 then
+        perpX = -perpX
+        perpZ = -perpZ
+    end
 
-    -- If unit has a formation position, choose the perpendicular direction
-    -- that's closer to the formation position
+    -- If formation position exists, use as tiebreaker when heading preference is weak
     if formationPos and formationPos[1] and formationPos[3] then
         local toFormX = formationPos[1] - ux
         local toFormZ = formationPos[3] - uz
-
         local dotForm = toFormX * perpX + toFormZ * perpZ
-
-        -- If perpendicular is away from formation, flip it
-        if dotForm < 0 then
-            perpX = -perpX
-            perpZ = -perpZ
-        end
-    else
-        -- Original heuristic: choose the direction that moves unit away from the projectile's path
-        local toUnitX = ux - px
-        local toUnitZ = uz - pz
-
-        local dot = toUnitX * perpX + toUnitZ * perpZ
-        if dot < 0 then
+        if mathAbs(dot1) < 0.2 and dotForm < 0 then
             perpX = -perpX
             perpZ = -perpZ
         end
     end
 
-    return perpX, perpZ
+    -- 45-degree dodge: bisector between unit's forward direction and the perpendicular
+    -- Unit only turns ~45° instead of up to 90°, starting movement faster
+    -- Natural path curvature provides additional displacement
+    local bisX = fwdX + perpX
+    local bisZ = fwdZ + perpZ
+    local bisLen = mathSqrt(bisX * bisX + bisZ * bisZ)
+    if bisLen < 0.001 then
+        return perpX, perpZ
+    end
+    bisX = bisX / bisLen
+    bisZ = bisZ / bisLen
+
+    return bisX, bisZ
+end
+
+--------------------------------------------------------------------------------
+-- Safe return position (outside enemy weapon range)
+--------------------------------------------------------------------------------
+
+local function FindSafeReturnPos(returnX, returnZ)
+    if not spGetUnitsInCylinder then return returnX, returnZ end
+
+    local enemies = spGetUnitsInCylinder(returnX, returnZ, 800)
+    if not enemies or #enemies == 0 then return returnX, returnZ end
+
+    local nearestDist = math.huge
+    local nearestX, nearestZ = 0, 0
+    local nearestRange = 0
+
+    for _, eid in ipairs(enemies) do
+        if not spIsUnitAllied(eid) then
+            local ex, _, ez = spGetUnitPosition(eid)
+            if ex then
+                local dx = ex - returnX
+                local dz = ez - returnZ
+                local dist = mathSqrt(dx * dx + dz * dz)
+                if dist < nearestDist then
+                    nearestDist = dist
+                    nearestX = ex
+                    nearestZ = ez
+                    local eDefID = spGetUnitDefID(eid)
+                    if eDefID and PUP and PUP.GetWeaponRange then
+                        nearestRange = PUP.GetWeaponRange(eDefID) or 0
+                    end
+                end
+            end
+        end
+    end
+
+    if nearestRange <= 0 or nearestDist > nearestRange + 50 then
+        return returnX, returnZ
+    end
+
+    -- Push return position to just outside enemy weapon range
+    local awayX = returnX - nearestX
+    local awayZ = returnZ - nearestZ
+    local awayLen = mathSqrt(awayX * awayX + awayZ * awayZ)
+    if awayLen < 1 then awayLen = 1 end
+
+    local safeX = nearestX + (awayX / awayLen) * (nearestRange + 50)
+    local safeZ = nearestZ + (awayZ / awayLen) * (nearestRange + 50)
+    safeX = mathMax(32, mathMin(safeX, mapSizeX - 32))
+    safeZ = mathMax(32, mathMin(safeZ, mapSizeZ - 32))
+
+    return safeX, safeZ
 end
 
 local function ProcessUnit(uid, data, frame)
@@ -184,6 +255,9 @@ local function ProcessUnit(uid, data, frame)
 
     local ux, uy, uz = spGetUnitPosition(uid)
     if not ux then return end
+
+    -- Get unit heading for dodge direction optimization (turn toward closer side)
+    local unitHeading = spGetUnitHeading and spGetUnitHeading(uid) or nil
 
     -- Search for projectiles near this unit
     local pad = CFG.searchPadding
@@ -211,7 +285,7 @@ local function ProcessUnit(uid, data, frame)
                 -- Skip projectiles arriving in < 3 frames (undodgeable)
                 if closestDist < (data.radius + CFG.hitRadius) and impactTime >= 3 and closestDist < bestThreatDist then
                     bestThreatDist = closestDist
-                    local dx, dz = GetDodgeDirection(ux, uz, px, pz, vx, vz, data.formationPos)
+                    local dx, dz = GetDodgeDirection(ux, uz, px, pz, vx, vz, unitHeading, data.formationPos)
                     bestDodgeX = dx
                     bestDodgeZ = dz
                     foundThreat = true
@@ -250,28 +324,29 @@ local function ProcessUnit(uid, data, frame)
         spGiveOrderToUnit(uid, CMD_MOVE, {targetX, targetY, targetZ}, {})
         dodgeCooldowns[uid] = frame
 
-        -- Track dodge event for formation return
-        if data.formationPos then
-            dodgedUnits[uid] = {
-                frame = frame,
-                formationPos = { data.formationPos[1], data.formationPos[2], data.formationPos[3] }
-            }
-        end
+        -- Track dodge event for return to position (all units, not just formation)
+        dodgedUnits[uid] = {
+            frame = frame,
+            savedPos = { ux, uy, uz },  -- pre-dodge position
+            formationPos = data.formationPos and { data.formationPos[1], data.formationPos[2], data.formationPos[3] } or nil,
+        }
     end
 end
 
 local function ProcessDodgedUnits(frame)
-    -- Return units to formation after dodge cooldown expires
+    -- Return units to their pre-dodge position after cooldown expires
     for uid, dodgeData in pairs(dodgedUnits) do
         local elapsed = frame - dodgeData.frame
 
         if elapsed >= CFG.returnCooldown then
-            -- Check if unit still exists and has formation position
             local unitData = PUP.units[uid]
-            if unitData and unitData.formationPos then
+            if not unitData then
+                dodgedUnits[uid] = nil
+            else
                 local ux, uy, uz = spGetUnitPosition(uid)
-
-                if ux then
+                if not ux then
+                    dodgedUnits[uid] = nil
+                else
                     -- Check if unit is under new threat
                     local pad = CFG.searchPadding
                     local projectiles = spGetProjectilesInRectangle(
@@ -281,13 +356,11 @@ local function ProcessDodgedUnits(frame)
 
                     local underThreat = false
                     if projectiles and #projectiles > 0 then
-                        -- Quick threat check
                         for _, pID in ipairs(projectiles) do
                             local pDefID = spGetProjectileDefID(pID)
                             if pDefID and not hitscanWeapons[pDefID] then
                                 local px, py, pz = spGetProjectilePosition(pID)
                                 local vx, vy, vz = spGetProjectileVelocity(pID)
-
                                 if px and vx then
                                     local closestDist = PredictImpact(px, py, pz, vx, vy, vz, ux, uy, uz)
                                     if closestDist < (unitData.radius + CFG.hitRadius) then
@@ -299,19 +372,22 @@ local function ProcessDodgedUnits(frame)
                         end
                     end
 
-                    -- If not under threat, return to formation
                     if not underThreat then
-                        local formPos = unitData.formationPos
-                        spGiveOrderToUnit(uid, CMD_MOVE, {formPos[1], formPos[2], formPos[3]}, {})
+                        -- Determine return position: formation pos > saved pre-dodge pos
+                        local returnPos = unitData.formationPos or dodgeData.formationPos or dodgeData.savedPos
+                        if returnPos then
+                            local retX, retZ = returnPos[1], returnPos[3]
+                            -- Adjust if return position is inside enemy weapon range
+                            retX, retZ = FindSafeReturnPos(retX, retZ)
+                            local retY = spGetGroundHeight(retX, retZ) or 0
+                            spGiveOrderToUnit(uid, CMD_MOVE, {retX, retY, retZ}, {})
+                        end
                         dodgedUnits[uid] = nil
                     else
                         -- Still under threat, extend cooldown
                         dodgedUnits[uid].frame = frame
                     end
                 end
-            else
-                -- Unit lost or no longer has formation position
-                dodgedUnits[uid] = nil
             end
         end
     end
@@ -336,12 +412,13 @@ function widget:Initialize()
         return
     end
 
-    -- Check if Puppeteer is active (this replaces old dodge widget)
-    if not WG.TotallyLegal.PuppeteerActive then
-        Spring.Echo("[Puppeteer Dodge] Puppeteer not active. Disabling.")
+    if not WG.TotallyLegal.Puppeteer then
+        Spring.Echo("[Puppeteer Dodge] ERROR: Puppeteer Core not loaded.")
         widgetHandler:RemoveWidget(self)
         return
     end
+
+    PUP = WG.TotallyLegal.Puppeteer
 
     mapSizeX = Game.mapSizeX or 8192
     mapSizeZ = Game.mapSizeZ or 8192

@@ -181,8 +181,12 @@ local function IsWidgetVisible(key)
         return false
     end
 
-    -- For master Puppeteer toggle
+    -- For master Puppeteer toggle: show panel visibility state
     if key == "Puppeteer" then
+        local panel = WG.TotallyLegal and WG.TotallyLegal.PuppeteerPanel
+        if panel and panel.IsVisible then
+            return panel.IsVisible()
+        end
         local pup = WG.TotallyLegal and WG.TotallyLegal.Puppeteer
         return pup and pup.active or false
     end
@@ -204,12 +208,18 @@ local function ToggleWidgetVisibility(key)
         return
     end
 
-    -- For master Puppeteer toggle
+    -- For master Puppeteer toggle: open/close the panel
     if key == "Puppeteer" then
-        local pup = WG.TotallyLegal and WG.TotallyLegal.Puppeteer
-        if pup then
-            pup.active = not pup.active
-            Spring.Echo("[Puppeteer] " .. (pup.active and "Enabled" or "Disabled"))
+        local panel = WG.TotallyLegal and WG.TotallyLegal.PuppeteerPanel
+        if panel and panel.Toggle then
+            panel.Toggle()
+        else
+            -- Fallback: toggle active state directly
+            local pup = WG.TotallyLegal and WG.TotallyLegal.Puppeteer
+            if pup then
+                pup.active = not pup.active
+                Spring.Echo("[Puppeteer] " .. (pup.active and "Enabled" or "Disabled"))
+            end
         end
         return
     end

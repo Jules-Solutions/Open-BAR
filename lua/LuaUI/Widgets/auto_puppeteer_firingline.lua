@@ -63,8 +63,8 @@ local CFG = {
     updateFrequency    = 5,        -- process firing lines every N frames
     unitSpacing        = 50,       -- elmos between firing slots
     optimalRangeFactor = 0.9,      -- fire at 90% of max weapon range
-    reloadPerpOffset   = 2.0,      -- perpendicular offset for reload positions (in spacing units)
-    reloadBackOffset   = 1.5,      -- backward offset for reload positions (in spacing units)
+    reloadPerpOffset   = 1.0,      -- perpendicular offset for reload positions (in spacing units)
+    reloadBackOffset   = 0.5,      -- backward offset for reload positions (in spacing units)
     healSeekRadius     = 300,      -- scan for constructors within this radius
     healApproachDist   = 100,      -- move within this distance of constructor
     healMaxDeviation   = 200,      -- max distance from reload position while seeking heal
@@ -303,8 +303,13 @@ local function CalculateReloadPosition(line, slotIdx)
     local backX = -line.enemyDir.x
     local backZ = -line.enemyDir.z
 
-    local reloadX = firingX + perpX * perpSide * spacing * CFG.reloadPerpOffset + backX * spacing * CFG.reloadBackOffset
-    local reloadZ = firingZ + perpZ * perpSide * spacing * CFG.reloadPerpOffset + backZ * spacing * CFG.reloadBackOffset
+    -- Scale loop depth with number of cycling units
+    -- More units cycling = slightly deeper loop to avoid congestion
+    local cycling = #line.reloading + #line.queue
+    local depthScale = 1.0 + mathMax(0, cycling - line.width) * 0.15
+
+    local reloadX = firingX + perpX * perpSide * spacing * CFG.reloadPerpOffset + backX * spacing * CFG.reloadBackOffset * depthScale
+    local reloadZ = firingZ + perpZ * perpSide * spacing * CFG.reloadPerpOffset + backZ * spacing * CFG.reloadBackOffset * depthScale
 
     reloadX, reloadZ = ClampToMap(reloadX, reloadZ)
 
