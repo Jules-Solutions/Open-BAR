@@ -537,11 +537,15 @@ local function CheckUnitsInDanger(frame)
     if not PUP or not PUP.toggles.smartMove then return end
 
     for uid, data in pairs(PUP.units) do
-        if not activeReroutes[uid] and data.state == "idle" then
+        if not activeReroutes[uid] then
             local ux, uy, uz = spGetUnitPosition(uid)
             if ux then
                 local cmds = spGetUnitCommands(uid, 1)
-                if not cmds or #cmds == 0 then
+                local isIdle = (not cmds or #cmds == 0)
+                local isMoving = (cmds and #cmds > 0 and cmds[1].id == CMD_MOVE)
+
+                if isIdle then
+                    -- Idle units sitting inside enemy range: push to edge
                     local pad = 800
                     local dangers = GetDangerousEnemiesInArea(
                         ux - pad, uz - pad, ux + pad, uz + pad
@@ -551,7 +555,6 @@ local function CheckUnitsInDanger(frame)
                         if PointInCircle(ux, uz, d.x, d.z, d.range) then
                             local edgeX, edgeZ = CircleEdgePoint(d.x, d.z, d.range, ux, uz)
 
-                            -- Validate escape point
                             local vx, vy, vz
                             if hasTestMove and data.defID then
                                 vx, vy, vz = ValidateWaypoint(edgeX, edgeZ, data.defID)
@@ -566,6 +569,38 @@ local function CheckUnitsInDanger(frame)
                                 spGiveOrderToUnit(uid, CMD_MOVE, { vx, vy, vz }, {})
                             end
                             break
+                        end
+                    end
+
+                elseif isMoving then
+                    -- Moving units: check if path now crosses newly revealed danger
+                    local destX = cmds[1].params[1]
+                    local destZ = cmds[1].params[3]
+                    if destX and destZ then
+                        local waypoints, stoppedAtEdge = CalcSmartPath(
+                            uid, ux, uz, destX, destZ, data.defID
+                        )
+
+                        if waypoints and #waypoints > 0 then
+                            -- Reroute around newly discovered danger
+                            local wp = waypoints[1]
+                            local wpx, wpz = ClampToMap(wp.x, wp.z)
+                            local wpy = spGetGroundHeight(wpx, wpz) or 0
+                            spGiveOrderToUnit(uid, CMD_MOVE, { wpx, wpy, wpz }, {})
+
+                            for i = 2, #waypoints do
+                                local w = waypoints[i]
+                                local wx, wz = ClampToMap(w.x, w.z)
+                                local wy = spGetGroundHeight(wx, wz) or 0
+                                spGiveOrderToUnit(uid, CMD_MOVE, { wx, wy, wz }, { "shift" })
+                            end
+
+                            activeReroutes[uid] = {
+                                destX = destX,
+                                destZ = destZ,
+                                frame = frame,
+                                stoppedAtEdge = stoppedAtEdge,
+                            }
                         end
                     end
                 end
