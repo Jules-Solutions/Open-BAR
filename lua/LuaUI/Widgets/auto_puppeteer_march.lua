@@ -80,11 +80,8 @@ local supportsMaxSpeedCmd = nil
 
 local function TestMaxSpeedSupport()
     if supportsMaxSpeedCmd ~= nil then return supportsMaxSpeedCmd end
-
-    -- Assume it's supported (will fail gracefully if not)
-    -- BAR engine supports this command
-    supportsMaxSpeedCmd = true
-    return true
+    supportsMaxSpeedCmd = false  -- CMD 70 removed from Recoil engine
+    return false
 end
 
 --------------------------------------------------------------------------------
@@ -465,8 +462,8 @@ function widget:Initialize()
     hasTestMove = (spTestMoveOrder ~= nil)
 
     TestMaxSpeedSupport()
-    spEcho("[Puppeteer March] Enabled. Speed match, scatter, range walk ready. TestMoveOrder: " ..
-           (hasTestMove and "yes" or "no"))
+    spEcho("[Puppeteer March] NOTE: Speed matching unavailable (requires gadget). Scatter and range walk active.")
+    spEcho("[Puppeteer March] Enabled. TestMoveOrder: " .. (hasTestMove and "yes" or "no"))
 end
 
 function widget:Shutdown()

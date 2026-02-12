@@ -266,9 +266,10 @@ function widget:Initialize()
 
     -- Initialize shared state
     local toggles = LoadToggles()
+    local activeState = spGetConfigInt("Puppeteer_active", 1)
 
     WG.TotallyLegal.Puppeteer = {
-        active    = true,
+        active    = (activeState == 1),
         toggles   = toggles,
         units     = {},          -- unitID -> unit data
         unitCount = 0,

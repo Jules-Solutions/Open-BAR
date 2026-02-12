@@ -130,6 +130,7 @@ local panelX, panelY = 200, 400    -- bottom-left corner of panel
 local panelH = 0                    -- calculated
 local panelVisible = true
 local panelCollapsed = false
+local positionRestored = false      -- flag to prevent overwriting restored position
 local isDragging = false
 local dragOffsetX, dragOffsetY = 0, 0
 local hoveredElement = nil          -- string key or nil
@@ -569,6 +570,7 @@ function widget:MousePress(mx, my, button)
     -- Master toggle
     if hitRects["master"] and PointInRect(mx, my, hitRects["master"]) then
         PUP.active = not PUP.active
+        Spring.SetConfigInt("Puppeteer_active", PUP.active and 1 or 0)
         spEcho("[Puppeteer] " .. (PUP.active and "Enabled" or "Disabled"))
         return true
     end
@@ -655,13 +657,16 @@ function widget:Initialize()
     PUP = TL.Puppeteer  -- may be nil at this point, that's OK
 
     -- Default position: left of sidebar if it exists, otherwise right side of screen
-    local sidebarInfo = TL.SidebarInfo
-    if sidebarInfo and sidebarInfo.dockRight then
-        panelX = sidebarInfo.x - PANEL.width - 8
-    else
-        panelX = vsx - PANEL.width - 50
+    -- Only set default if position wasn't restored from config
+    if not positionRestored then
+        local sidebarInfo = TL.SidebarInfo
+        if sidebarInfo and sidebarInfo.dockRight then
+            panelX = sidebarInfo.x - PANEL.width - 8
+        else
+            panelX = vsx - PANEL.width - 50
+        end
+        panelY = vsy / 2 - 100
     end
-    panelY = vsy / 2 - 100
 
     -- Expose panel visibility toggle for sidebar integration
     WG.TotallyLegal.PuppeteerPanel = {
@@ -701,8 +706,11 @@ function widget:GetConfigData()
 end
 
 function widget:SetConfigData(data)
-    if data.panelX then panelX = data.panelX end
-    if data.panelY then panelY = data.panelY end
-    if data.collapsed ~= nil then panelCollapsed = data.collapsed end
-    if data.visible ~= nil then panelVisible = data.visible end
+    if data and data.panelX then
+        panelX = data.panelX
+        panelY = data.panelY or panelY
+        panelVisible = data.visible ~= false
+        panelCollapsed = data.collapsed or false
+        positionRestored = true
+    end
 end

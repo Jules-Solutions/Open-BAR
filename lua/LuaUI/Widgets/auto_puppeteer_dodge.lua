@@ -243,8 +243,8 @@ local function FindSafeReturnPos(returnX, returnZ)
 end
 
 local function ProcessUnit(uid, data, frame)
-    -- Check if unit is firing - suppress dodge to allow firing
-    if data.state == "firing" then
+    -- Skip dodge for units in firing line states (managed by firing line widget)
+    if data.state == "firing" or data.state == "advancing" or data.state == "cycling" or data.state == "reloading" then
         return
     end
 
@@ -441,7 +441,7 @@ function widget:GameFrame(frame)
     if not PUP then return end
 
     -- Check if dodge is enabled
-    if not PUP.toggles.dodge then return end
+    if not PUP.toggles or not PUP.toggles.dodge then return end
 
     if frame % CFG.updateFrequency ~= 0 then return end
 

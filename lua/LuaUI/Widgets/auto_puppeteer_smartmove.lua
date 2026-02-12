@@ -495,6 +495,16 @@ function widget:CommandNotify(cmdID, cmdParams, cmdOpts)
         end
     end
 
+    -- Issue original move to non-managed units so they aren't left standing
+    if rerouted then
+        for _, uid in ipairs(selectedUnits) do
+            if not PUP.units[uid] then
+                local y = spGetGroundHeight(destX, destZ) or 0
+                spGiveOrderToUnit(uid, CMD_MOVE, { destX, y, destZ }, {})
+            end
+        end
+    end
+
     return rerouted
 end
 
@@ -615,4 +625,10 @@ function widget:GameFrame(frame)
     if not ok then
         Spring.Echo("[Puppeteer SmartMove] GameFrame error: " .. tostring(err))
     end
+end
+
+function widget:Shutdown()
+    activeReroutes = {}
+    PUP = nil
+    TL = nil
 end

@@ -81,6 +81,7 @@ local CFG = {
 --------------------------------------------------------------------------------
 
 local firingLines = {}      -- lineID -> line state
+local firingLineCount = 0   -- count of active lines (hash table # is unreliable)
 local unitToLine = {}       -- unitID -> lineID (reverse lookup)
 local nextLineID = 1
 
@@ -377,6 +378,7 @@ local function ProcessUnitStateMachine(line, slotIdx, frame)
             TransitionUnit(line, uid, "reloading", frame)
             table.remove(line.slots, slotIdx)
             table.insert(line.reloading, uid)
+            line.reloadStartFrame[uid] = frame
         else
             -- Move to reload position
             local targetY = spGetGroundHeight(reloadX, reloadZ) or 0
@@ -467,7 +469,7 @@ local function CalculateLineGeometry(groupUnits, groupDefID)
 end
 
 local function CreateFiringLine(groupUnits, groupDefID, frame)
-    if #firingLines >= CFG.maxFiringLines then return nil end
+    if firingLineCount >= CFG.maxFiringLines then return nil end
     if #groupUnits < CFG.minUnitsForLine then return nil end
     if #groupUnits > CFG.maxUnitsPerLine then
         -- Truncate to max
@@ -500,6 +502,7 @@ local function CreateFiringLine(groupUnits, groupDefID, frame)
         slots        = {},
         queue        = {},
         reloading    = {},
+        reloadStartFrame = {},  -- uid -> frame when reloading began
         frame        = frame,
         lastEnemyFrame = frame,
     }
@@ -520,6 +523,7 @@ local function CreateFiringLine(groupUnits, groupDefID, frame)
     end
 
     firingLines[lineID] = line
+    firingLineCount = firingLineCount + 1
     return lineID
 end
 
@@ -567,6 +571,7 @@ local function CleanupFiringLine(lineID)
     end
 
     firingLines[lineID] = nil
+    firingLineCount = firingLineCount - 1
 end
 
 local function ProcessFiringLine(lineID, frame)
@@ -594,8 +599,22 @@ local function ProcessFiringLine(lineID, frame)
         ProcessUnitStateMachine(line, i, frame)
     end
 
-    -- Process reloading units (in case they need to transition back to queue)
-    -- Already handled in ProcessUnitStateMachine
+    -- Process reloading units - check if reload time elapsed, promote back to queue
+    for i = #line.reloading, 1, -1 do
+        local uid = line.reloading[i]
+        local health = spGetUnitHealth(uid)
+        if not health or health <= 0 then
+            table.remove(line.reloading, i)
+            line.reloadStartFrame[uid] = nil
+        else
+            local startFrame = line.reloadStartFrame[uid] or 0
+            if (frame - startFrame) >= line.reloadTime then
+                table.remove(line.reloading, i)
+                line.reloadStartFrame[uid] = nil
+                table.insert(line.queue, uid)
+            end
+        end
+    end
 
     -- Verify all units still exist
     for i = #line.slots, 1, -1 do
@@ -646,7 +665,7 @@ local function DetectAndFormLines(frame)
 
     -- Try to form lines for groups with enough units
     for defID, groupUnits in pairs(groups) do
-        if #groupUnits >= CFG.minUnitsForLine and #firingLines < CFG.maxFiringLines then
+        if #groupUnits >= CFG.minUnitsForLine and firingLineCount < CFG.maxFiringLines then
             -- Check if group is near enemies
             local geometry = CalculateLineGeometry(groupUnits, defID)
             if geometry then
@@ -728,8 +747,12 @@ end
 
 function widget:Shutdown()
     if PUP then
-        -- Cleanup all firing lines
+        -- Cleanup all firing lines (collect IDs first to avoid pairs() mutation)
+        local lineIDs = {}
         for lineID in pairs(firingLines) do
+            lineIDs[#lineIDs + 1] = lineID
+        end
+        for _, lineID in ipairs(lineIDs) do
             CleanupFiringLine(lineID)
         end
         PUP.firingLines = nil
@@ -747,8 +770,12 @@ function widget:GameFrame(frame)
         -- Auto-detect and form new lines
         DetectAndFormLines(frame)
 
-        -- Process existing firing lines
+        -- Process existing firing lines (collect IDs first to avoid pairs() mutation)
+        local lineIDs = {}
         for lineID in pairs(firingLines) do
+            lineIDs[#lineIDs + 1] = lineID
+        end
+        for _, lineID in ipairs(lineIDs) do
             ProcessFiringLine(lineID, frame)
         end
     end)

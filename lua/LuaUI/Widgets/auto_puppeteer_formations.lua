@@ -782,9 +782,9 @@ local function ProcessFormationCommand(cmdParams, cmdOpts)
             if x then
                 spGiveOrderToUnit(uid, CMD_MOVE, { x, y, z }, {})
 
-                -- Store formation position
+                -- Store formation position (numeric indices for compatibility with dodge)
                 if PUP.units[uid] then
-                    PUP.units[uid].formationPos = { x = x, z = z }
+                    PUP.units[uid].formationPos = { x, 0, z }
                 end
 
                 groupUnits[#groupUnits + 1] = uid
