@@ -41,6 +41,7 @@ local spGiveOrderToUnit        = Spring.GiveOrderToUnit
 local spGetUnitsInRectangle    = Spring.GetUnitsInRectangle
 local spIsUnitAllied           = Spring.IsUnitAllied
 local spGetMyTeamID            = Spring.GetMyTeamID
+local spGetUnitVelocity        = Spring.GetUnitVelocity
 
 -- Path API (may not exist in all engine versions, checked at init)
 local spGetUnitEstimatedPath   = Spring.GetUnitEstimatedPath     -- unitID -> waypoints, indices
@@ -89,6 +90,14 @@ local CFG = {
     comfortBuffer      = 60,     -- start retreating this far before enemy range edge
     rangeKeepScanPad   = 1200,   -- scan radius for range-keeping enemies
     retreatCooldown    = 20,     -- frames between retreat orders per unit
+    -- Predictive retreat
+    predictiveFrames   = 45,     -- lookahead window (~1.5s at 30fps)
+    -- Combat jitter (velocity noise to break enemy aim prediction)
+    jitterAmplitude    = 35,     -- base lateral displacement (elmos)
+    jitterFrequency    = 10,     -- frames between jitter moves per unit
+    jitterCombatRadius = 1200,   -- only jitter when enemies within this range
+    -- Threat escalation
+    threatEscalationCap = 3.0,   -- max multiplier on comfort buffer
 }
 
 local mapSizeX = 0
@@ -104,6 +113,8 @@ local enemyRangeCache = {}   -- enemyDefID -> maxWeaponRange
 local hasPathAPI = false     -- set at init: can we use Path.RequestPath?
 local hasTestMove = false    -- set at init: can we use TestMoveOrder?
 local hasEstimatedPath = false -- set at init: can we use GetUnitEstimatedPath?
+local jitterCooldowns = {}   -- unitID -> frame
+local jitterDirections = {}  -- unitID -> 1 or -1 (alternating lateral direction)
 
 --------------------------------------------------------------------------------
 -- Enemy weapon range lookup
@@ -759,6 +770,7 @@ local function ProactiveRangeKeep(frame)
         if not enemies then goto continue_unit end
 
         -- Find threats: enemies whose weapon range (+ buffer) covers our position
+        -- OR enemies closing fast enough to reach range within prediction window
         local retreatX, retreatZ = 0, 0
         local threatCount = 0
         local ourRange = data.range or 0
@@ -769,18 +781,27 @@ local function ProactiveRangeKeep(frame)
                 if ex then
                     local enemyRange = GetEnemyWeaponRange(eid)
                     if enemyRange > 50 then
-                        local dangerRadius = enemyRange + CFG.safetyMargin + CFG.comfortBuffer
-                        local dist = Dist2D(ux, uz, ex, ez)
+                        local dx = ux - ex
+                        local dz = uz - ez
+                        local dist = mathSqrt(dx * dx + dz * dz)
+                        if dist < 0.001 then
+                            dx, dz, dist = 1, 0, 1
+                        end
+                        local nx, nz = dx / dist, dz / dist
+
+                        -- Effective comfort buffer scales with threat count
+                        local effectiveBuffer = CFG.comfortBuffer * mathMin(
+                            CFG.threatEscalationCap,
+                            1.0 + threatCount * 0.3
+                        )
+                        local dangerRadius = enemyRange + CFG.safetyMargin + effectiveBuffer
+
+                        local isThreat = false
+                        local moveDist = 0
 
                         if dist < dangerRadius then
-                            -- We're too close. Compute retreat direction.
-                            local dx = ux - ex
-                            local dz = uz - ez
-                            local len = mathSqrt(dx * dx + dz * dz)
-                            if len < 0.001 then
-                                dx, dz, len = 1, 0, 1
-                            end
-                            local nx, nz = dx / len, dz / len
+                            -- Already inside danger zone - immediate threat
+                            isThreat = true
 
                             -- Kite distance: where should we stand?
                             local targetDist
@@ -789,18 +810,42 @@ local function ProactiveRangeKeep(frame)
                                 targetDist = ourRange * 0.95
                             else
                                 -- They outrange or match us: stand just outside their range
-                                targetDist = enemyRange + CFG.safetyMargin + CFG.comfortBuffer
+                                targetDist = dangerRadius
                             end
 
-                            -- How much to move
-                            local moveDist = targetDist - dist
-                            if moveDist > 10 then
-                                -- Weight by urgency (deeper inside = stronger push)
-                                local urgency = mathMax(0.1, 1.0 - dist / dangerRadius)
-                                retreatX = retreatX + nx * moveDist * urgency
-                                retreatZ = retreatZ + nz * moveDist * urgency
-                                threatCount = threatCount + 1
+                            moveDist = targetDist - dist
+
+                        elseif spGetUnitVelocity then
+                            -- Predictive retreat: check if enemy is closing fast
+                            local evx, evy, evz = spGetUnitVelocity(eid)
+                            if evx and evz then
+                                -- Closing speed: how fast enemy approaches us
+                                -- nx points from enemy to us, so dot(enemyVel, nx) > 0 = approaching
+                                local closingSpeed = evx * nx + evz * nz
+
+                                if closingSpeed > 0.5 then
+                                    -- Enemy is approaching us
+                                    local distToRange = dist - dangerRadius
+                                    if distToRange > 0 then
+                                        local framesToRange = distToRange / closingSpeed
+                                        if framesToRange < CFG.predictiveFrames then
+                                            -- They'll be in range within our prediction window
+                                            -- Start retreating NOW
+                                            isThreat = true
+                                            -- Move enough to maintain current safe distance
+                                            moveDist = effectiveBuffer + closingSpeed * 5
+                                        end
+                                    end
+                                end
                             end
+                        end
+
+                        if isThreat and moveDist > 10 then
+                            -- Weight by urgency (deeper inside or faster approach = stronger push)
+                            local urgency = mathMax(0.1, 1.0 - dist / (dangerRadius + 200))
+                            retreatX = retreatX + nx * moveDist * urgency
+                            retreatZ = retreatZ + nz * moveDist * urgency
+                            threatCount = threatCount + 1
                         end
                     end
                 end
@@ -830,14 +875,125 @@ local function ProactiveRangeKeep(frame)
             end
 
             -- Only retreat if displacement is meaningful (avoid micro-stuttering)
-            local moveDist = Dist2D(ux, uz, targetX, targetZ)
-            if moveDist > 15 then
+            local finalMoveDist = Dist2D(ux, uz, targetX, targetZ)
+            if finalMoveDist > 15 then
                 spGiveOrderToUnit(uid, CMD_MOVE, { targetX, targetY, targetZ }, {})
                 retreatCooldowns[uid] = frame
             end
         end
 
         ::continue_unit::
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Combat jitter: micro-movement to disrupt enemy weapon aim prediction
+-- Spring weapons lead targets based on current velocity. Constant small
+-- velocity changes make the prediction consistently wrong.
+-- Only applies to idle units in combat zones.
+--------------------------------------------------------------------------------
+
+local function ApplyCombatJitter(frame)
+    if not PUP or not PUP.toggles.jitter then return end
+
+    for uid, data in pairs(PUP.units) do
+        -- Only jitter idle units (no commands)
+        local cmds = spGetUnitCommands(uid, 1)
+        if cmds and #cmds > 0 then goto continue_jitter end
+
+        -- Skip firing line units
+        if data.state == "firing" or data.state == "advancing"
+        or data.state == "cycling" or data.state == "reloading" then
+            goto continue_jitter
+        end
+
+        -- Skip units that just retreated (don't undo retreat with jitter)
+        if retreatCooldowns[uid] and (frame - retreatCooldowns[uid]) < CFG.retreatCooldown * 2 then
+            goto continue_jitter
+        end
+
+        -- On jitter cooldown?
+        if jitterCooldowns[uid] and (frame - jitterCooldowns[uid]) < CFG.jitterFrequency then
+            goto continue_jitter
+        end
+
+        -- Speed check
+        if data.speed < 20 then goto continue_jitter end
+
+        local ux, uy, uz = spGetUnitPosition(uid)
+        if not ux then goto continue_jitter end
+
+        -- Only jitter if enemies are nearby (combat zone)
+        local combatPad = CFG.jitterCombatRadius
+        local enemies = spGetUnitsInRectangle(
+            mathMax(0, ux - combatPad), mathMax(0, uz - combatPad),
+            mathMin(mapSizeX, ux + combatPad), mathMin(mapSizeZ, uz + combatPad)
+        )
+        if not enemies then goto continue_jitter end
+
+        -- Find nearest enemy for lateral direction calculation
+        local nearX, nearZ = 0, 0
+        local nearDist = math.huge
+        local hasEnemy = false
+        for _, eid in ipairs(enemies) do
+            if not spIsUnitAllied(eid) then
+                local ex, _, ez = spGetUnitPosition(eid)
+                if ex then
+                    local d = Dist2D(ux, uz, ex, ez)
+                    if d < nearDist then
+                        nearDist = d
+                        nearX = ex
+                        nearZ = ez
+                        hasEnemy = true
+                    end
+                end
+            end
+        end
+        if not hasEnemy then goto continue_jitter end
+
+        -- Compute lateral direction (perpendicular to enemy direction)
+        local dx = ux - nearX
+        local dz = uz - nearZ
+        local len = mathSqrt(dx * dx + dz * dz)
+        if len < 1 then dx, dz, len = 1, 0, 1 end
+        local nx, nz = dx / len, dz / len
+
+        -- Perpendicular: (-nz, nx) or (nz, -nx)
+        -- Alternate direction each jitter cycle per unit
+        local dir = jitterDirections[uid] or 1
+        jitterDirections[uid] = -dir  -- flip for next time
+        local perpX = -nz * dir
+        local perpZ = nx * dir
+
+        -- Add slight bias away from enemy (10% retreat + 90% lateral)
+        local jitterX = perpX * 0.9 + nx * 0.1
+        local jitterZ = perpZ * 0.9 + nz * 0.1
+        local jLen = mathSqrt(jitterX * jitterX + jitterZ * jitterZ)
+        if jLen > 0.001 then
+            jitterX = jitterX / jLen
+            jitterZ = jitterZ / jLen
+        end
+
+        -- Randomize amplitude (60-140% of base)
+        local amplitude = CFG.jitterAmplitude * (0.6 + math.random() * 0.8)
+
+        local jx = ux + jitterX * amplitude
+        local jz = uz + jitterZ * amplitude
+        jx, jz = ClampToMap(jx, jz)
+
+        local jy = spGetGroundHeight(jx, jz) or 0
+
+        -- Validate position is reachable
+        if hasTestMove and data.defID then
+            local vx, vy, vz = ValidateWaypoint(jx, jz, data.defID)
+            if not vx then goto continue_jitter end
+            jx, jy, jz = vx, vy, vz
+        end
+
+        spGiveOrderToUnit(uid, CMD_MOVE, { jx, jy, jz }, {})
+        jitterCooldowns[uid] = frame
+
+        ::continue_jitter::
     end
 end
 
@@ -908,6 +1064,11 @@ function widget:GameFrame(frame)
             ProactiveRangeKeep(frame)
         end
 
+        -- Combat jitter (micro-movement for idle units in combat zones)
+        if frame % CFG.jitterFrequency == 0 then
+            ApplyCombatJitter(frame)
+        end
+
         -- Cleanup stale reroutes
         for uid, rr in pairs(activeReroutes) do
             local unitData = PUP.units[uid]
@@ -930,6 +1091,16 @@ function widget:GameFrame(frame)
                 end
             end
         end
+
+        -- Cleanup stale jitter state
+        if frame % 600 == 0 then
+            for uid, _ in pairs(jitterCooldowns) do
+                if not PUP.units[uid] then
+                    jitterCooldowns[uid] = nil
+                    jitterDirections[uid] = nil
+                end
+            end
+        end
     end)
     if not ok then
         Spring.Echo("[Puppeteer SmartMove] GameFrame error: " .. tostring(err))
@@ -939,6 +1110,8 @@ end
 function widget:Shutdown()
     activeReroutes = {}
     retreatCooldowns = {}
+    jitterCooldowns = {}
+    jitterDirections = {}
     PUP = nil
     TL = nil
 end

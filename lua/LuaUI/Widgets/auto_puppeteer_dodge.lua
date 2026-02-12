@@ -409,6 +409,12 @@ local function ProcessDodgedUnits(frame)
                         local returnPos = unitData.formationPos or dodgeData.formationPos or dodgeData.savedPos
                         if returnPos then
                             local retX, retZ = returnPos[1], returnPos[3]
+                            -- Randomize return position (+-20 elmos) so enemies can't predict snap-back
+                            retX = retX + (math.random() - 0.5) * 40
+                            retZ = retZ + (math.random() - 0.5) * 40
+                            -- Clamp to map
+                            retX = mathMax(32, mathMin(retX, mapSizeX - 32))
+                            retZ = mathMax(32, mathMin(retZ, mapSizeZ - 32))
                             -- Adjust if return position is inside enemy weapon range
                             retX, retZ = FindSafeReturnPos(retX, retZ)
                             local retY = spGetGroundHeight(retX, retZ) or 0

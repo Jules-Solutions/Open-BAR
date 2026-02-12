@@ -109,6 +109,7 @@ local BOOL_TOGGLES = {
     { key = "march",      label = "March" },
     { key = "rangeWalk",  label = "Range Walk" },
     { key = "rangeKeep",  label = "Range Keep" },
+    { key = "jitter",     label = "Jitter" },
 }
 
 -- Shape icons

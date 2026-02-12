@@ -61,6 +61,7 @@ local DEFAULT_TOGGLES = {
     march            = false,
     rangeWalk        = false,
     rangeKeep        = true,         -- proactive range-keeping: auto-retreat from enemy weapon range
+    jitter           = true,         -- combat jitter: micro-movement to disrupt enemy aim prediction
 }
 
 -- Shape name lookup
