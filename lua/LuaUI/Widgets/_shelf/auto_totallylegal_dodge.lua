@@ -11,7 +11,7 @@ function widget:GetInfo()
         date      = "2026",
         license   = "GNU GPL, v2 or later",
         layer     = 102,
-        enabled   = true,
+        enabled   = false,
     }
 end
 
@@ -245,6 +245,13 @@ function widget:Initialize()
 
     if not TL.IsAutomationAllowed() then
         Spring.Echo("[TotallyLegal Dodge] Automation not allowed in this game mode. Disabling.")
+        widgetHandler:RemoveWidget(self)
+        return
+    end
+
+    -- Yield to Puppeteer if active (Puppeteer Dodge replaces this widget)
+    if WG.TotallyLegal.PuppeteerActive then
+        Spring.Echo("[TotallyLegal Dodge] Puppeteer active, yielding to Puppeteer Dodge.")
         widgetHandler:RemoveWidget(self)
         return
     end

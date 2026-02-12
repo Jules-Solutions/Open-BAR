@@ -11,7 +11,7 @@ function widget:GetInfo()
         date      = "2026",
         license   = "GNU GPL, v2 or later",
         layer     = 100,
-        enabled   = true,
+        enabled   = false,
     }
 end
 
@@ -257,6 +257,13 @@ function widget:Initialize()
 
     if not TL.IsAutomationAllowed() then
         Spring.Echo("[TotallyLegal Skirmish] Automation not allowed in this game mode. Disabling.")
+        widgetHandler:RemoveWidget(self)
+        return
+    end
+
+    -- Yield to Puppeteer if active (Smart Move replaces skirmish behavior)
+    if WG.TotallyLegal.PuppeteerActive then
+        Spring.Echo("[TotallyLegal Skirmish] Puppeteer active, yielding to Puppeteer Smart Move.")
         widgetHandler:RemoveWidget(self)
         return
     end

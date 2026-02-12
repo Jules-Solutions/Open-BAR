@@ -46,24 +46,30 @@ local TL = nil
 -- Widget registry
 --------------------------------------------------------------------------------
 
--- Categories: "info" = always available, "micro" = Level 1+, "macro" = Level 1+
+-- Categories: "info" = always available, "micro" = Level 1+
 local WIDGET_REGISTRY = {
     { key = "Overlay",   icon = "OV", name = "Resource Overlay",    category = "info" },
-    { key = "Goals",     icon = "GL", name = "Goal Queue",          category = "info" },
     { key = "Timeline",  icon = "TL", name = "Economy Timeline",    category = "info" },
-    { key = "Threat",    icon = "TH", name = "Threat Display",      category = "info" },
-    { key = "Priority",  icon = "PR", name = "Priority Highlights", category = "info" },
     -- separator
-    { key = "Dodge",     icon = "DG", name = "Auto-Dodge",          category = "micro" },
-    { key = "Skirmish",  icon = "SK", name = "Skirmish",            category = "micro" },
-    { key = "Rezbot",    icon = "RZ", name = "Rezbot",              category = "micro" },
-    -- separator
-    { key = "Config",    icon = "CF", name = "Config Panel",        category = "macro" },
-    { key = "MapZones",  icon = "MZ", name = "Map Zones",           category = "macro" },
+    { key = "Puppeteer", icon = "UP", name = "Unit Puppeteer (master toggle)", category = "micro" },
+    { key = "SmartMove", icon = "SM", name = "Smart Move (range-aware pathing)", category = "micro" },
+    { key = "PupDodge",  icon = "PD", name = "Auto-Dodge (projectile evasion)", category = "micro" },
+    { key = "Formation", icon = "FM", name = "Formations (line/circle/wedge)", category = "micro" },
+    { key = "FiringLn",  icon = "FL", name = "Firing Line (attack positioning)", category = "micro" },
+    { key = "March",     icon = "MR", name = "March & Scatter (speed match + spacing)", category = "micro" },
 }
 
 -- Which categories have separator lines before them
-local CATEGORY_SEPARATORS = { micro = true, macro = true }
+local CATEGORY_SEPARATORS = { micro = true }
+
+-- Puppeteer toggle mapping: sidebar key -> Puppeteer toggle key
+local PUPPETEER_TOGGLES = {
+    SmartMove  = "smartMove",
+    PupDodge   = "dodge",
+    Formation  = "formations",
+    FiringLn   = "firingLine",
+    March      = "march",
+}
 
 --------------------------------------------------------------------------------
 -- Configuration
@@ -75,8 +81,8 @@ local CFG = {
     edgePadding  = 4,
     cornerRadius = 0,
     fontSize     = 10,
-    tooltipFontSize = 11,
-    tooltipPadding  = 6,
+    tooltipFontSize = 13,
+    tooltipPadding  = 8,
     separatorHeight = 6,
     levelIndicatorHeight = 28,  -- bigger automation button
     levelFontSize = 14,
@@ -94,8 +100,9 @@ local COL = {
     iconLit       = { 0.85, 0.95, 1.00, 1.00 },
     iconDisabled  = { 0.25, 0.25, 0.28, 0.50 },
     separator     = { 0.30, 0.30, 0.40, 0.40 },
-    tooltipBg     = { 0.08, 0.08, 0.12, 0.95 },
-    tooltipText   = { 0.90, 0.90, 0.95, 1.00 },
+    tooltipBg     = { 0.06, 0.06, 0.10, 0.97 },
+    tooltipBorder = { 0.35, 0.45, 0.65, 0.80 },
+    tooltipText   = { 0.95, 0.95, 1.00, 1.00 },
     logoBg        = { 0.10, 0.15, 0.25, 0.95 },
     logoText      = { 0.50, 0.80, 1.00, 1.00 },
     dragHandle    = { 0.30, 0.30, 0.40, 0.60 },
@@ -164,6 +171,22 @@ local function EnsureVisibilityTable()
 end
 
 local function IsWidgetVisible(key)
+    -- For Puppeteer sub-toggles, read from Puppeteer state
+    local pupToggle = PUPPETEER_TOGGLES[key]
+    if pupToggle then
+        local pup = WG.TotallyLegal and WG.TotallyLegal.Puppeteer
+        if pup and pup.toggles then
+            return pup.toggles[pupToggle] or false
+        end
+        return false
+    end
+
+    -- For master Puppeteer toggle
+    if key == "Puppeteer" then
+        local pup = WG.TotallyLegal and WG.TotallyLegal.Puppeteer
+        return pup and pup.active or false
+    end
+
     if not WG.TotallyLegal or not WG.TotallyLegal.WidgetVisibility then return true end
     local v = WG.TotallyLegal.WidgetVisibility[key]
     if v == nil then return true end
@@ -171,6 +194,26 @@ local function IsWidgetVisible(key)
 end
 
 local function ToggleWidgetVisibility(key)
+    -- For Puppeteer sub-toggles, use Puppeteer's toggle API
+    local pupToggle = PUPPETEER_TOGGLES[key]
+    if pupToggle then
+        local pup = WG.TotallyLegal and WG.TotallyLegal.Puppeteer
+        if pup and pup.ToggleBool then
+            pup.ToggleBool(pupToggle)
+        end
+        return
+    end
+
+    -- For master Puppeteer toggle
+    if key == "Puppeteer" then
+        local pup = WG.TotallyLegal and WG.TotallyLegal.Puppeteer
+        if pup then
+            pup.active = not pup.active
+            Spring.Echo("[Puppeteer] " .. (pup.active and "Enabled" or "Disabled"))
+        end
+        return
+    end
+
     EnsureVisibilityTable()
     if not WG.TotallyLegal or not WG.TotallyLegal.WidgetVisibility then return end
     local cur = WG.TotallyLegal.WidgetVisibility[key]
@@ -183,7 +226,15 @@ local function IsWidgetAvailable(entry)
     if entry.category == "info" then return true end
     -- Micro/macro require automation level >= 1
     local level = TL and TL.GetAutomationLevel and TL.GetAutomationLevel() or 0
-    return level >= 1
+    if level < 1 then return false end
+
+    -- Puppeteer sub-toggles require Puppeteer Core loaded
+    if PUPPETEER_TOGGLES[entry.key] or entry.key == "Puppeteer" then
+        local pup = WG.TotallyLegal and WG.TotallyLegal.Puppeteer
+        return pup ~= nil
+    end
+
+    return true
 end
 
 --------------------------------------------------------------------------------
@@ -450,6 +501,11 @@ local function DrawTooltip()
     tipX = mathMax(0, mathMin(tipX, vsx - tipW))
     tipY = mathMax(0, mathMin(tipY, vsy - tipH))
 
+    -- Tooltip border (slightly larger rect behind)
+    SetColor(COL.tooltipBorder)
+    FillRect(tipX - 1, tipY - 1, tipX + tipW + 1, tipY + tipH + 1)
+
+    -- Tooltip background
     SetColor(COL.tooltipBg)
     FillRect(tipX, tipY, tipX + tipW, tipY + tipH)
 
