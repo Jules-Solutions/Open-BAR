@@ -1,0 +1,178 @@
+namespace RoleTech {
+    // ==================== TECH MANUAL BUILD ORDER (MAP-DRIVEN) ====================
+    // Master toggle for map-specific manual queue support.
+    bool TECH_ENABLE_MAP_MANUAL_BUILD_ORDER = true;
+    // If true, TECH suppresses normal constructor branching while a manual queue step is pending.
+    bool TECH_MANUAL_BUILD_ORDER_STRICT = true;
+    // If true, TECH keeps holding builders after the queue is fully completed.
+    bool TECH_MANUAL_BUILD_ORDER_HOLD_AFTER_COMPLETE = false;
+
+    bool Tech_IsManualBuildOrderActive()
+    {
+        if (!TECH_ENABLE_MAP_MANUAL_BUILD_ORDER) return false;
+
+        if (Global::Map::MapName.findFirst("Supreme Isthmus") == 0) {
+            return SupremeIsthmus::IsTechManualBuildOrderEnabled();
+        }
+
+        return false;
+    }
+
+    int Tech_GetManualBuildOrderLength()
+    {
+        if (Global::Map::MapName.findFirst("Supreme Isthmus") == 0) {
+            return SupremeIsthmus::GetTechBuildOrderLength();
+        }
+        return 0;
+    }
+
+    string Tech_GetManualBuildOrderStepKey(int idx)
+    {
+        if (Global::Map::MapName.findFirst("Supreme Isthmus") == 0) {
+            return SupremeIsthmus::GetTechBuildOrderStepKey(idx);
+        }
+        return "";
+    }
+
+    int Tech_GetManualBuildOrderTargetCount(int idx)
+    {
+        if (Global::Map::MapName.findFirst("Supreme Isthmus") == 0) {
+            return SupremeIsthmus::GetTechBuildOrderTargetCount(idx);
+        }
+        return 0;
+    }
+
+    float Tech_GetManualBuildOrderMinMetalIncome(int idx)
+    {
+        if (Global::Map::MapName.findFirst("Supreme Isthmus") == 0) {
+            return SupremeIsthmus::GetTechBuildOrderMinMetalIncome(idx);
+        }
+        return 0.0f;
+    }
+
+    AIFloat3 Tech_GetManualBuildAnchor(const string &in stepKey, int currentCount, const AIFloat3& in fallback)
+    {
+        if (Global::Map::MapName.findFirst("Supreme Isthmus") == 0) {
+            return SupremeIsthmus::GetTechBuildOrderAnchor(stepKey, currentCount, Global::Map::StartPos, fallback);
+        }
+        return fallback;
+    }
+
+    string Tech_GetT1WindNameForSide(const string &in side)
+    {
+        if (side == "armada") return "armwin";
+        if (side == "cortex") return "corwin";
+        if (side == "legion") return "legwin";
+        return "armwin";
+    }
+
+    int Tech_GetManualStepCurrentCount(const string &in stepKey)
+    {
+        if (stepKey == "T1_MEX") return UnitDefHelpers::SumUnitDefCounts({ "armmex", "cormex", "legmex" });
+        if (stepKey == "T1_WIND") return UnitDefHelpers::SumUnitDefCounts({ "armwin", "corwin", "legwin" });
+        if (stepKey == "T2_BOT_LAB") return UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetAllT2BotLabs());
+        if (stepKey == "T1_NANO") return UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetT1NanoUnitNames());
+        if (stepKey == "FUS") return UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetAllFusionReactors());
+        if (stepKey == "NUKE") return UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetAllNukeSilos());
+        if (stepKey == "AFUS") return UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetAllAdvancedFusionReactors());
+        if (stepKey == "GANTRY") {
+            int land = UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetAllLandGantries());
+            int water = UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetAllWaterGantries());
+            return land + water;
+        }
+        if (stepKey == "T2_SHIPYARD") return UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetAllT2Shipyards());
+        if (stepKey == "T1_BOT_LAB") return UnitDefHelpers::SumUnitDefCounts(UnitHelpers::GetAllT1BotLabs());
+        return 0;
+    }
+
+    IUnitTask@ Tech_EnqueueManualStep(const string &in stepKey, const string &in unitSide, const AIFloat3& in anchor)
+    {
+        if (stepKey == "T1_MEX") return Builder::EnqueueMex(unitSide, anchor, SQUARE_SIZE * 12, SECOND * 60, Task::Priority::HIGH);
+        if (stepKey == "T1_WIND") {
+            const string windName = Tech_GetT1WindNameForSide(unitSide);
+            CCircuitDef@ windDef = ai.GetCircuitDef(windName);
+            if (windDef is null || !windDef.IsAvailable(ai.frame)) return null;
+            return aiBuilderMgr.Enqueue(
+                TaskB::Factory(Task::Priority::HIGH, windDef, anchor, windDef, SQUARE_SIZE * 12, false, true, SECOND * 60)
+            );
+        }
+        if (stepKey == "T2_BOT_LAB") return Builder::EnqueueT2LabIfNeeded(unitSide, anchor, SQUARE_SIZE * 20, SECOND * 300);
+        if (stepKey == "T1_NANO") return Builder::EnqueueT1Nano(unitSide, anchor, SQUARE_SIZE * 24, SECOND * 30, Task::Priority::HIGH);
+        if (stepKey == "FUS") return Builder::EnqueueFUS(unitSide, anchor, SQUARE_SIZE * 32, SECOND * 300, Task::Priority::HIGH);
+        if (stepKey == "NUKE") return Builder::EnqueueNukeSilo(unitSide, anchor, SQUARE_SIZE * 32, SECOND * 300);
+        if (stepKey == "AFUS") return Builder::EnqueueAFUS(unitSide, anchor, SQUARE_SIZE * 32, SECOND * 300);
+        if (stepKey == "GANTRY") return Builder::EnqueueLandGantry(unitSide);
+        if (stepKey == "T2_SHIPYARD") return Builder::EnqueueT2Shipyard(unitSide, anchor, SQUARE_SIZE * 24, SECOND * 300);
+        if (stepKey == "T1_BOT_LAB") return Builder::EnqueueT1BotLab(unitSide, anchor, SQUARE_SIZE * 20, SECOND * 60, Task::Priority::HIGH);
+        return null;
+    }
+
+    IUnitTask@ Tech_GetManualHoldTask(CCircuitUnit@ u)
+    {
+        if (u is null) return null;
+
+        if (Builder::primaryT2BotConstructor !is null && Builder::primaryT2BotConstructor.id != u.id) {
+            IUnitTask@ guardTask = GuardHelpers::AssignWorkerGuard(u, Builder::primaryT2BotConstructor, Task::Priority::HIGH, true, 60 * SECOND);
+            if (guardTask !is null) return guardTask;
+        }
+        if (Builder::primaryT1BotConstructor !is null && Builder::primaryT1BotConstructor.id != u.id) {
+            IUnitTask@ guardTask = GuardHelpers::AssignWorkerGuard(u, Builder::primaryT1BotConstructor, Task::Priority::HIGH, true, 60 * SECOND);
+            if (guardTask !is null) return guardTask;
+        }
+        CCircuitUnit@ commander = Builder::GetCommander();
+        if (commander !is null && commander.id != u.id) {
+            IUnitTask@ guardTask = GuardHelpers::AssignWorkerGuard(u, commander, Task::Priority::HIGH, true, 60 * SECOND);
+            if (guardTask !is null) return guardTask;
+        }
+
+        return Builder::MakeDefaultTaskWithLog(u.id, "TECH");
+    }
+
+    IUnitTask@ Tech_TryManualBuildOrder(CCircuitUnit@ u, float metalIncome, bool &out strictBlock)
+    {
+        strictBlock = false;
+        if (u is null) return null;
+        if (!Tech_IsManualBuildOrderActive()) return null;
+
+        const int n = Tech_GetManualBuildOrderLength();
+        if (n <= 0) return null;
+
+        const string side = UnitHelpers::GetSideForUnitName(u.circuitDef.GetName());
+        const AIFloat3 fallbackAnchor = u.GetPos(ai.frame);
+        bool hasPendingStep = false;
+
+        for (int i = 0; i < n; ++i) {
+            const string stepKey = Tech_GetManualBuildOrderStepKey(i);
+            if (stepKey == "") continue;
+
+            const int targetCount = Tech_GetManualBuildOrderTargetCount(i);
+            if (targetCount <= 0) continue;
+
+            const int currentCount = Tech_GetManualStepCurrentCount(stepKey);
+            if (currentCount >= targetCount) continue;
+
+            hasPendingStep = true;
+            strictBlock = TECH_MANUAL_BUILD_ORDER_STRICT;
+
+            const float minMetalIncome = Tech_GetManualBuildOrderMinMetalIncome(i);
+            if (metalIncome < minMetalIncome) {
+                GenericHelpers::LogUtil("[TECH][ManualBO] Waiting step='" + stepKey + "' current=" + currentCount + "/" + targetCount + " metalIncome=" + metalIncome + " required=" + minMetalIncome, 3);
+                return null;
+            }
+
+            const AIFloat3 anchor = Tech_GetManualBuildAnchor(stepKey, currentCount, fallbackAnchor);
+            IUnitTask@ manualTask = Tech_EnqueueManualStep(stepKey, side, anchor);
+            if (manualTask !is null) {
+                GenericHelpers::LogUtil("[TECH][ManualBO] Enqueued step='" + stepKey + "' current=" + currentCount + "/" + targetCount + " metalIncome=" + metalIncome, 2);
+                return manualTask;
+            }
+
+            GenericHelpers::LogUtil("[TECH][ManualBO] Step blocked by availability/cooldown: '" + stepKey + "'", 3);
+            return null;
+        }
+
+        if (!hasPendingStep && TECH_MANUAL_BUILD_ORDER_HOLD_AFTER_COMPLETE) {
+            strictBlock = TECH_MANUAL_BUILD_ORDER_STRICT;
+        }
+        return null;
+    }
