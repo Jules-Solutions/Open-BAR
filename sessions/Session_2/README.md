@@ -36,9 +36,11 @@ Implement block-based building placement for the BARB AI to replace scattered/sp
 | [README.md](README.md) | This file — quest overview |
 | [TODO.md](TODO.md) | Phased project todolist |
 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Tracked unknowns |
-| [Brainstorm.md](Brainstorm.md) | Jules's raw quest brainstorm |
+| [Brainstorm.md](Projects/TheLab/Experiments/BAR/sessions/Session_2/Brainstorm.md) | Jules's raw quest brainstorm |
 | [Build Module Quest.md](Build%20Module%20Quest.md) | Technical spec for modular building |
 | [Guide ideas.md](Guide%20ideas.md) | Outline for beginner guides |
+| [Strategic_AI_Design.md](Strategic_AI_Design.md) | Vision doc for BARB AI enhancements (scoring, cells, map analysis) |
+| [SETUP.md](SETUP.md) | Development environment setup guide |
 
 ### Summaries/
 | File | Description |
@@ -58,6 +60,18 @@ Implement block-based building placement for the BARB AI to replace scattered/sp
 | [07_Building_Placement_Logic.md](Research/07_Building_Placement_Logic.md) | Cross-AI placement comparison |
 | [08_Modular_Build_Design.md](Research/08_Modular_Build_Design.md) | Proposed block-based building design |
 
+### Guides/
+| File | Description |
+|------|-------------|
+| [00_Barb3_Walkthrough_Index.md](Guides/00_Barb3_Walkthrough_Index.md) | Chronological TECH role walkthrough — index |
+| [01_Minutes_00-05](Guides/01_Minutes_00-05_Spawn_and_Opening.md) | Spawn, role selection, opener, early economy |
+| [02_Minutes_05-10](Guides/02_Minutes_05-10_T2_Transition.md) | T2 lab, first T2 constructor, fusion, recycling |
+| [03_Minutes_10-20](Guides/03_Minutes_10-20_Scaling_and_Military.md) | Gantry, air plants, nukes, economy scaling |
+| [04_Minutes_20-30](Guides/04_Minutes_20-30_Late_Game.md) | AFUS, multi-gantry, experimentals, full military |
+| [05_Minutes_30+](Guides/05_Minutes_30_Plus_Endgame.md) | Endgame loop, nuclear policy, systems overview |
+| [06_Map_Configurations](Guides/06_Map_Configurations.md) | All 18 configured maps, roles, unit bans |
+| [07_Building_Decision_Files](Guides/07_Building_Decision_Files.md) | Every file in the building pipeline |
+
 ### Context/
 | File | Description |
 |------|-------------|
@@ -76,4 +90,6 @@ Implement block-based building placement for the BARB AI to replace scattered/sp
 - [BAR GitHub](https://github.com/beyond-all-reason/Beyond-All-Reason) — Game source
 
 ## Status
-**Phase: Research & Documentation (initializing)**
+**Phase: 2 — Block Placement MVP (VALIDATED)**
+
+Phase 0 (Research), Phase 1 (Dev Environment), and Phase 2 (MVP) are complete. Block planner confirmed working in-game 2026-02-17: wind turbines form visible clusters near the base, tighter than stock BARb placement. Barb3 outperformed stock BARb (medium) on economy in 10-minute test. Next: threshold tuning, early feedback from Felenious, then Phase 3 (template library).
