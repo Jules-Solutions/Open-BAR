@@ -332,16 +332,16 @@ The `setup.as` file is the **orchestration hub** -- it includes all role handler
 
 ### v3 Systems Not Present in v2
 
-| System | Files | Purpose |
-|--------|-------|---------|
-| Role system | `roles/*.as`, `types/ai_role.as`, `types/role_config.as` | Per-role behavior handlers, factory selection, economy tuning |
-| Map configs | `maps/*.as`, `types/map_config.as`, `types/start_spot.as` | Per-map start spots, unit limits, factory weights |
-| Opener system | `types/opener.as` | Probabilistic build queues per factory type |
-| Strategic objectives | `types/strategic_objectives.as`, `types/building_type.as` | Per-map build objectives with eco/role gates |
-| Profile controller | `types/profile_controller.as` | Runtime role dispatch, per-tick role updates |
-| Strategy system | `types/strategy.as` | Bitmask strategies (T2_RUSH, T3_RUSH, NUKE_RUSH) |
-| Global state | `global.as` | Centralized state: map info, economy tracking, role settings |
-| 17 helper modules | `helpers/*.as` | Builder, defense, economy, factory, guard, limits, map, objective, role, task, terrain, unit helpers |
+| System               | Files                                                     | Purpose                                                                                              |
+| -------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Role system          | `roles/*.as`, `types/ai_role.as`, `types/role_config.as`  | Per-role behavior handlers, factory selection, economy tuning                                        |
+| Map configs          | `maps/*.as`, `types/map_config.as`, `types/start_spot.as` | Per-map start spots, unit limits, factory weights                                                    |
+| Opener system        | `types/opener.as`                                         | Probabilistic build queues per factory type                                                          |
+| Strategic objectives | `types/strategic_objectives.as`, `types/building_type.as` | Per-map build objectives with eco/role gates                                                         |
+| Profile controller   | `types/profile_controller.as`                             | Runtime role dispatch, per-tick role updates                                                         |
+| Strategy system      | `types/strategy.as`                                       | Bitmask strategies (T2_RUSH, T3_RUSH, NUKE_RUSH)                                                     |
+| Global state         | `global.as`                                               | Centralized state: map info, economy tracking, role settings                                         |
+| 17 helper modules    | `helpers/*.as`                                            | Builder, defense, economy, factory, guard, limits, map, objective, role, task, terrain, unit helpers |
 
 ---
 
@@ -429,15 +429,15 @@ The Armada economy file in v3 contains only Armada entries:
 
 **Config files and what they control:**
 
-| Config File | Purpose |
-|-------------|---------|
-| `block_map.json` | Spatial blocking rules: how buildings claim space around themselves (shape, type, yard size, ignore lists). Controls factory spacing, energy cluster density, defense placement exclusion zones |
+| Config File        | Purpose                                                                                                                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `block_map.json`   | Spatial blocking rules: how buildings claim space around themselves (shape, type, yard size, ignore lists). Controls factory spacing, energy cluster density, defense placement exclusion zones          |
 | `*BuildChain.json` | Build chain triggers: what to build when a structure finishes (e.g., build a pylon near a completed solar, place defenses near a mex). The "hub" system allows chained multi-step construction sequences |
-| `*Economy.json` | Energy generation limits, income factors over time, cluster ranges, mex/geo definitions, build-speed modifiers |
-| `*Factory.json` | Factory production weights, unit role assignments, unit priorities per factory type |
-| `*Behaviour.json` | Unit behavior tuning: retreat thresholds, engagement rules, role assignments for specific unit definitions |
-| `commander.json` | Commander build sequences and behavior |
-| `response.json` | Threat response configuration |
+| `*Economy.json`    | Energy generation limits, income factors over time, cluster ranges, mex/geo definitions, build-speed modifiers                                                                                           |
+| `*Factory.json`    | Factory production weights, unit role assignments, unit priorities per factory type                                                                                                                      |
+| `*Behaviour.json`  | Unit behavior tuning: retreat thresholds, engagement rules, role assignments for specific unit definitions                                                                                               |
+| `commander.json`   | Commander build sequences and behavior                                                                                                                                                                   |
+| `response.json`    | Threat response configuration                                                                                                                                                                            |
 
 ---
 
@@ -943,28 +943,30 @@ The strategic objectives system in v3 is a step toward this -- it already places
 
 ## 10. Summary Table
 
-| Feature | BARb v2 | Barb3 |
-|---------|---------|-------|
-| **Architecture** | Flat per-difficulty duplication (4x copies of all scripts) | Shared `src/` with thin profile wrappers |
-| **Config layout** | Per-difficulty folders (`easy/`, `hard/`, etc.) with merged faction configs | Per-profile folders (`experimental_balanced/`, etc.) with per-faction configs |
-| **Faction support** | Armada + Cortex merged; Legion bolted on via `_leg` suffix files | Armada, Cortex, Legion as first-class separate configs |
-| **Role system** | None -- all AI instances behave identically | 6 roles (FRONT, AIR, TECH, SEA, FRONT_TECH, HOVER_SEA) with delegate-based behavior |
-| **Map awareness** | None -- all maps treated identically | 17+ individual map configs with start spots, factory weights, unit limits |
-| **Strategic objectives** | None | Per-map objectives with eco gates, role filters, builder group assignment |
-| **Opener system** | Static factory sequence from config | Probabilistic weighted queues per factory type with `AiDice` selection |
-| **Builder script complexity** | ~160 lines, 2 constructor slots, delegates all decisions to C++ | 1000+ lines, 20+ constructor slots, task tracking, guard management, cooldown system |
-| **Building placement** | Entirely C++ driven via `DefaultMakeTask()` | Still C++ driven at the core, but with script-side gating, queuing, and strategic objective overrides |
-| **block_map.json** | Generic classes (fac_veh, fac_bot, fusion, def_low) | Tier-aware classes (fac_land_t1, fac_land_t2, def_mid, def_hvy, advsolar) with larger yard values |
-| **build_chain.json** | Single merged file for both factions | Per-faction files (ArmadaBuildChain, CortexBuildChain, LegionBuildChain) |
-| **Strategy system** | None | Bitmask strategies (T2_RUSH, T3_RUSH, NUKE_RUSH) with weighted probability selection |
-| **Global state** | None -- each manager is self-contained | `global.as` with namespaces for Map, Economy, AISettings, RoleSettings, Statistics |
-| **Profile controller** | None | `ProfileController` class with role-based `MainUpdate()` dispatch |
-| **Helper modules** | 0 | 17 specialized helper files (builder, defense, economy, factory, guard, limits, map, objective, role, task, terrain, unit) |
-| **Constructor hierarchy** | 2 "energizer" slots (cheap + expensive) | Commander, primary, secondary, tactical, freelance per category (Bot, Veh, Air, Sea, Hover) x T1/T2 |
-| **Task tracking** | None | `BuilderTaskTrack` with grace periods, timeouts, likely-started heuristics |
-| **Build cooldowns** | None | Per-structure-type cooldowns (T2 factory: 120s, gantry: 120s, nano: 2s, etc.) |
-| **Profiles shipped** | 4 (easy, medium, hard, hard_aggressive) | 6 (balanced, ThirtyBonus, FiftyBonus, EightyBonus, HundredBonus, Suicidal) |
+| Feature                       | BARb v2                                                                     | Barb3                                                                                                                      |
+| ----------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Architecture**              | Flat per-difficulty duplication (4x copies of all scripts)                  | Shared `src/` with thin profile wrappers                                                                                   |
+| **Config layout**             | Per-difficulty folders (`easy/`, `hard/`, etc.) with merged faction configs | Per-profile folders (`experimental_balanced/`, etc.) with per-faction configs                                              |
+| **Faction support**           | Armada + Cortex merged; Legion bolted on via `_leg` suffix files            | Armada, Cortex, Legion as first-class separate configs                                                                     |
+| **Role system**               | None -- all AI instances behave identically                                 | 6 roles (FRONT, AIR, TECH, SEA, FRONT_TECH, HOVER_SEA) with delegate-based behavior                                        |
+| **Map awareness**             | None -- all maps treated identically                                        | 17+ individual map configs with start spots, factory weights, unit limits                                                  |
+| **Strategic objectives**      | None                                                                        | Per-map objectives with eco gates, role filters, builder group assignment                                                  |
+| **Opener system**             | Static factory sequence from config                                         | Probabilistic weighted queues per factory type with `AiDice` selection                                                     |
+| **Builder script complexity** | ~160 lines, 2 constructor slots, delegates all decisions to C++             | 1000+ lines, 20+ constructor slots, task tracking, guard management, cooldown system                                       |
+| **Building placement**        | Entirely C++ driven via `DefaultMakeTask()`                                 | Still C++ driven at the core, but with script-side gating, queuing, and strategic objective overrides                      |
+| **block_map.json**            | Generic classes (fac_veh, fac_bot, fusion, def_low)                         | Tier-aware classes (fac_land_t1, fac_land_t2, def_mid, def_hvy, advsolar) with larger yard values                          |
+| **build_chain.json**          | Single merged file for both factions                                        | Per-faction files (ArmadaBuildChain, CortexBuildChain, LegionBuildChain)                                                   |
+| **Strategy system**           | None                                                                        | Bitmask strategies (T2_RUSH, T3_RUSH, NUKE_RUSH) with weighted probability selection                                       |
+| **Global state**              | None -- each manager is self-contained                                      | `global.as` with namespaces for Map, Economy, AISettings, RoleSettings, Statistics                                         |
+| **Profile controller**        | None                                                                        | `ProfileController` class with role-based `MainUpdate()` dispatch                                                          |
+| **Helper modules**            | 0                                                                           | 17 specialized helper files (builder, defense, economy, factory, guard, limits, map, objective, role, task, terrain, unit) |
+| **Constructor hierarchy**     | 2 "energizer" slots (cheap + expensive)                                     | Commander, primary, secondary, tactical, freelance per category (Bot, Veh, Air, Sea, Hover) x T1/T2                        |
+| **Task tracking**             | None                                                                        | `BuilderTaskTrack` with grace periods, timeouts, likely-started heuristics                                                 |
+| **Build cooldowns**           | None                                                                        | Per-structure-type cooldowns (T2 factory: 120s, gantry: 120s, nano: 2s, etc.)                                              |
+| **Profiles shipped**          | 4 (easy, medium, hard, hard_aggressive)                                     | 6 (balanced, ThirtyBonus, FiftyBonus, EightyBonus, HundredBonus, Suicidal)                                                 |
 
 ---
 
 *End of Report 04. This comparison forms the foundation for understanding what building placement improvements are possible within Barb3's architecture and where the C++ engine boundary limits script-side control.*
+
+

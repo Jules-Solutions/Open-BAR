@@ -33,29 +33,29 @@ Crucially, **blueprints are NOT currently used by any AI for building placement*
 
 There are **21 blueprint definition files**, each containing multiple blueprint functions:
 
-| File | Blueprint Count | Description |
-|------|----------------|-------------|
-| `Damgam_factory_centers.lua` | 1 | Factory clusters with nanos and defences |
-| `damgam_factory_centers_2.lua` | ? | Additional factory layouts |
-| `damgam_bases.lua` | 4 | Full base layouts (red/blue factions) |
-| `damgam_T2_Eco.lua` | 12 | T2 economy clusters (fusion reactors + metal makers) |
-| `damgam_LLT_defences.lua` | 14 | T1 defensive outposts (LLT corners, crosses) |
-| `damgam_small_outposts.lua` | 17 | Mixed outposts (firebases, wind farms, gantries, etc.) |
-| `damgam_HLT_defences.lua` | ? | T2 defensive positions |
-| `damgam_epic_defences.lua` | ? | T3 major defensive installations |
-| `damgam_ecoStuff.lua` | ? | Economy buildings |
-| `damgam_rectors.lua` | ? | Constructor-focused layouts |
-| `damgam_Jammers.lua` | ? | Radar jamming outposts |
-| `damgam_tacnukes.lua` | ? | Tactical nuke installations |
-| `damgam_shielded_LRPCs.lua` | ? | Shielded long-range plasma cannons |
-| `IronFist_Defences.lua` | ? | Community-contributed defences |
-| `KrashKourse_land.lua` | ? | Community land blueprints |
-| `KrashKourse_sea.lua` | ? | Community sea blueprints |
-| `Nikuksis_land.lua` | ? | Community land blueprints |
-| `hermano_T2_Eco.lua` | ? | T2 eco variants |
-| `Damgam_Basic_Sea.lua` | ? | Sea-based blueprints |
-| `link_sea.lua` | ? | Sea blueprints |
-| `damgam_tiny_defences_T1.lua` | ? | Small T1 defence clusters |
+| File                           | Blueprint Count | Description                                            |
+| ------------------------------ | --------------- | ------------------------------------------------------ |
+| `Damgam_factory_centers.lua`   | 1               | Factory clusters with nanos and defences               |
+| `damgam_factory_centers_2.lua` | ?               | Additional factory layouts                             |
+| `damgam_bases.lua`             | 4               | Full base layouts (red/blue factions)                  |
+| `damgam_T2_Eco.lua`            | 12              | T2 economy clusters (fusion reactors + metal makers)   |
+| `damgam_LLT_defences.lua`      | 14              | T1 defensive outposts (LLT corners, crosses)           |
+| `damgam_small_outposts.lua`    | 17              | Mixed outposts (firebases, wind farms, gantries, etc.) |
+| `damgam_HLT_defences.lua`      | ?               | T2 defensive positions                                 |
+| `damgam_epic_defences.lua`     | ?               | T3 major defensive installations                       |
+| `damgam_ecoStuff.lua`          | ?               | Economy buildings                                      |
+| `damgam_rectors.lua`           | ?               | Constructor-focused layouts                            |
+| `damgam_Jammers.lua`           | ?               | Radar jamming outposts                                 |
+| `damgam_tacnukes.lua`          | ?               | Tactical nuke installations                            |
+| `damgam_shielded_LRPCs.lua`    | ?               | Shielded long-range plasma cannons                     |
+| `IronFist_Defences.lua`        | ?               | Community-contributed defences                         |
+| `KrashKourse_land.lua`         | ?               | Community land blueprints                              |
+| `KrashKourse_sea.lua`          | ?               | Community sea blueprints                               |
+| `Nikuksis_land.lua`            | ?               | Community land blueprints                              |
+| `hermano_T2_Eco.lua`           | ?               | T2 eco variants                                        |
+| `Damgam_Basic_Sea.lua`         | ?               | Sea-based blueprints                                   |
+| `link_sea.lua`                 | ?               | Sea blueprints                                         |
+| `damgam_tiny_defences_T1.lua`  | ?               | Small T1 defence clusters                              |
 
 In the 5 files analyzed in detail, there are **48+ distinct blueprint functions**, many with internal randomization that yields additional variant layouts.
 
@@ -468,13 +468,14 @@ local tiers = {
 
 ### Tier Definitions and Progression Mapping
 
-| Tier | Label | Game Phase | Typical Buildings | Blueprint Types |
-|------|-------|------------|-------------------|-----------------|
-| T0 | Early Start | First 3 min | Wind farms, minefields, single turrets | Tiny outposts, wind farms |
-| T1 | Early Game | 3-10 min | LLTs, bot labs, solar, metal extractors | Defence corners/crosses, basic bases |
-| T2 | Mid Game | 10-20 min | Fusion reactors, T2 factories, HLTs | Economy clusters, full bases, firebases |
-| T3 | Late Game | 20-35 min | Advanced fusions, T3 gantries, long-range guns | Epic defences, gantries, heavy firebases |
-| T4 | Endgame | 35+ min | Superweapons, experimental factories | Largest/most fortified layouts |
+| Tier | Label       | Game Phase  | Typical Buildings                              | Blueprint Types                          |
+| ---- | ----------- | ----------- | ---------------------------------------------- | ---------------------------------------- |
+| T0   | Early Start | First 3 min | Wind farms, minefields, single turrets         | Tiny outposts, wind farms                |
+| T1   | Early Game  | 3-10 min    | LLTs, bot labs, solar, metal extractors        | Defence corners/crosses, basic bases     |
+| T2   | Mid Game    | 10-20 min   | Fusion reactors, T2 factories, HLTs            | Economy clusters, full bases, firebases  |
+| T3   | Late Game   | 20-35 min   | Advanced fusions, T3 gantries, long-range guns | Epic defences, gantries, heavy firebases |
+| T4   | Endgame     | 35+ min     | Superweapons, experimental factories           | Largest/most fortified layouts           |
+|      |             |             |                                                |                                          |
 
 ### Multi-Tier Assignments
 

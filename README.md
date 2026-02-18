@@ -1,6 +1,6 @@
-# TotallyLegal - Beyond All Reason Widget Suite & Strategy Engine
+# TotallyLegal - Beyond All Reason Widget Suite, Micro AI & Strategy Engine
 
-A modular automation and strategy system for [Beyond All Reason](https://www.beyondallreason.info/), built as a Lua widget suite with a Python simulation engine.
+A modular automation and strategy system for [Beyond All Reason](https://www.beyondallreason.info/), built as a Lua widget suite with a Python simulation engine — plus contributions to the BARB Skirmish AI.
 
 ## What Is This?
 
@@ -18,28 +18,66 @@ The same underlying systems (perception, simulation, decision, execution, presen
 ## Project Structure
 
 ```
-TotallyLegal/
-├── lua/LuaUI/Widgets/     # Lua widget suite (19 widgets)
-├── sim/                    # Python simulation engine
-│   ├── bar_sim/            # Core simulation package
-│   ├── data/               # Unit data, build orders, maps
-│   └── cli.py              # CLI entry point
-├── docs/                   # Architecture, strategy guides
-└── archive/                # Legacy files
+BAR/
+├── lua/LuaUI/Widgets/         # Lua widget suite (12 active widgets)
+│   ├── 01_totallylegal_core   # Core perception library
+│   ├── auto_puppeteer_*       # Micro automation (dodge, kite, raid, march)
+│   ├── gui_*                  # Presentation overlays and panels
+│   └── _shelf/                # Shelved macro widgets (Phase 6+)
+├── sim/                       # Python simulation engine
+│   ├── bar_sim/               # Core simulation package (20+ modules)
+│   ├── data/                  # Unit DB, build orders, map cache
+│   ├── tests/                 # pytest suite (36+ tests)
+│   └── cli.py                 # CLI entry point
+├── Prod/                      # Reference code (gitignored)
+│   ├── Beyond-All-Reason/     # BAR game source (reference)
+│   └── Skirmish/              # Skirmish AI source (BARb, Barb3)
+├── docs/                      # Architecture, strategy, status, roadmap
+├── sessions/                  # Work sessions and research
+│   └── Session_2/             # BARB Quest (active)
+└── Discord_Chats/             # Communication logs with BAR devs
 ```
 
-## Installation
+## Active Workstreams
 
-### Lua Widgets (In-Game)
+### 1. Puppeteer Micro Suite (Complete)
 
-1. Run the install script to symlink widgets into your BAR data directory:
-   ```
-   lua\LuaUI\install.bat
-   ```
-2. Launch BAR. Widgets appear in the widget list under "TotallyLegal".
-3. Use the config panel (Ctrl+F3) to set your automation level and strategy.
+Formation-aware micro automation for unit control:
 
-### Python Simulation Engine
+| Widget | Function |
+|--------|----------|
+| `auto_puppeteer_core` | Shared state, unit tracking, formation detection |
+| `auto_puppeteer_dodge` | Projectile dodging with formation awareness |
+| `auto_puppeteer_firingline` | Optimal range kiting |
+| `auto_puppeteer_formations` | Unit formation management |
+| `auto_puppeteer_march` | Group movement coordination |
+| `auto_puppeteer_raid` | Automated mex raiding patrol |
+| `auto_puppeteer_smartmove` | Reactive rerouting around enemies |
+| `gui_puppeteer_panel` | Puppeteer control panel |
+
+### 2. BARB Quest (Active)
+
+Improving building placement for the [BARB Skirmish AI](https://github.com/Felnious/Skirmish). Quest given by Felenious, the BARB lead developer.
+
+**Problem:** BARB places buildings independently with 256-elmo randomization, causing scattered bases that waste space.
+
+**Solution:** Block-based placement system that organizes buildings into compact grids (starting with 4x4 wind turbine blocks).
+
+**Status:** MVP code written, dev environment set up, pending in-game testing.
+
+See [sessions/Session_2/](sessions/Session_2/) for full research, design docs, and setup guide.
+
+### 3. Presentation Widgets (Complete)
+
+| Widget | Function |
+|--------|----------|
+| `gui_totallylegal_overlay` | Resource breakdown, unit census |
+| `gui_totallylegal_sidebar` | KSP-style widget toggle bar |
+| `gui_totallylegal_timeline` | Economy timeline graph |
+
+### 4. Simulation Engine (Complete)
+
+Python-based build order simulation and optimization:
 
 ```bash
 cd sim
@@ -47,53 +85,77 @@ pip install -e .
 python cli.py simulate data/build_orders/wind_opening.yaml
 ```
 
+## Installation
+
+### Lua Widgets (In-Game)
+
+Widgets are symlinked into the BAR data directory:
+```
+%LOCALAPPDATA%\Programs\Beyond-All-Reason\data\LuaUI\Widgets\TotallyLegal\
+```
+
+1. Run `lua\LuaUI\install.bat` to create the symlink
+2. Launch BAR — widgets appear in the widget list
+3. Toggle widgets via the sidebar panel
+
+### Barb3 AI (Development)
+
+Barb3 is deployed as a separate Skirmish AI alongside the stock BARb:
+
+```powershell
+# One-time setup: create directory junction
+New-Item -ItemType Junction `
+  -Path "<BAR-data>\engine\<version>\AI\Skirmish\Barb3" `
+  -Target "<repo>\Prod\Skirmish\Barb3"
+```
+
+See [sessions/Session_2/SETUP.md](sessions/Session_2/SETUP.md) for full setup guide.
+
+### Python Simulation Engine
+
+```bash
+cd sim
+pip install -e .
+pytest                    # Run test suite
+python cli.py --help      # CLI commands
+```
+
 ## The Five Systems
 
 | System | Purpose | Components |
 |--------|---------|------------|
-| **Perception** | Read game state: units, resources, map, enemy intel | `lib_core`, `engine_mapzones` |
+| **Perception** | Read game state: units, resources, map, enemy intel | `01_totallylegal_core`, `auto_puppeteer_core` |
 | **Simulation** | Model the game forward: predictions, optimization | Python `bar_sim` engine |
-| **Decision** | Choose strategy: human, advisory, or autonomous | `engine_config`, future sim bridge |
-| **Execution** | Carry out decisions: build, produce, move, fight | `engine_*`, `auto_*` widgets |
+| **Decision** | Choose strategy: human, advisory, or autonomous | Future sim bridge |
+| **Execution** | Carry out decisions: build, produce, move, fight | `auto_puppeteer_*` widgets |
 | **Presentation** | Show information: overlays, panels, recommendations | `gui_*` widgets |
-
-## Widget Inventory
-
-### Perception
-- `lib_totallylegal_core.lua` - Shared state, unit classification, resource tracking
-- `engine_totallylegal_mapzones.lua` - Map sector analysis
-
-### Presentation (PvP Safe - Level 0+)
-- `gui_totallylegal_overlay.lua` - Resource breakdown, unit census, build power
-- `gui_totallylegal_goals.lua` - Goal queue display
-- `gui_totallylegal_timeline.lua` - Economy timeline graph
-- `gui_totallylegal_threat.lua` - Threat estimation display
-- `gui_totallylegal_priority.lua` - Priority highlighting
-
-### Execution: Micro (Level 1+)
-- `auto_totallylegal_dodge.lua` - Projectile dodging
-- `auto_totallylegal_skirmish.lua` - Optimal range kiting
-- `auto_totallylegal_rezbot.lua` - Resurrection/reclaim automation
-
-### Execution: Macro (Level 1+)
-- `engine_totallylegal_config.lua` - Strategy configuration panel
-- `engine_totallylegal_build.lua` - Opening build order executor
-- `engine_totallylegal_econ.lua` - Economy management
-- `engine_totallylegal_prod.lua` - Factory production queuing
-- `engine_totallylegal_zone.lua` - Zone and frontline management
-- `engine_totallylegal_goals.lua` - Goal queue orchestration
-- `engine_totallylegal_strategy.lua` - Attack strategy execution
 
 ## Automation & Fair Play
 
 TotallyLegal respects BAR's automation rules:
 
-- **Level 0 (Overlay):** Zero `GiveOrder` calls. Read-only info display. Safe for ranked and PvP.
-- **Level 1+ (Execution):** Uses `GiveOrder` for automation. Automatically disabled when the game's `noautomation` rule is active. PvE and unranked only.
+- **Level 0 (Overlay):** Zero `GiveOrderToUnit` calls. Read-only info display. Safe for ranked and PvP.
+- **Level 1+ (Execution):** Uses `GiveOrderToUnit` for automation. Automatically disabled when the game's `noautomation` rule is active.
 
-## Status
+## Tech Stack
 
-**Work in progress.** Currently functional: overlays, auto-dodge. Macro systems (economy, production, zones, goals, strategy) are under active development.
+| Layer | Language | Details |
+|-------|----------|---------|
+| In-game widgets | Lua | Spring RTS widget API, `WG.*` shared state |
+| Simulation engine | Python 3.11+ | pyyaml, fastapi, pytest |
+| Skirmish AI (BARB) | AngelScript | CircuitAI C++ framework, `.as` scripts |
+| Game engine | C++ | Spring/Recoil engine (reference only) |
+
+## Roadmap
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 1-3 | Done | Perception, execution, presentation stabilized |
+| 4 | Done | Puppeteer micro suite (dodge, kite, raid, march, formations) |
+| 5 | Done | Simulation engine (build orders, optimization) |
+| BARB Quest | Active | Block-based building placement for BARB AI |
+| 6 | Planned | Sim bridge (connect Python sim to Lua execution) |
+| 7 | Planned | AI agent (autonomous strategy via RL) |
 
 ## License
 
