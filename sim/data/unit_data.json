@@ -1,0 +1,401 @@
+{
+  "_meta": {
+    "source": "sim/data/unitlist.csv",
+    "exportDate": "2026-02-18",
+    "description": "Unit stats for BARB AI and Python sim. Single source of truth — update when game patches change unit data.",
+    "notes": [
+      "energymake=0 for wind/solar/tidal means output is engine-dynamic (wind-dependent or hardcoded in engine, not in unit stats)",
+      "Solar tooltip says 20 E/s but CSV shows 0 — solar output is set by engine config, not unitDef",
+      "Wind output depends on map windMin/windMax — always 0 in unitDef",
+      "Tidal output depends on map tidal strength — always 0 in unitDef",
+      "For these units, see _knownOutputs below for the actual E/s values used by the AI"
+    ]
+  },
+  "_knownOutputs": {
+    "_description": "Engine-provided energy outputs not in unitDef. Verified in-game.",
+    "armsolar": { "energymake": 20, "note": "Fixed 20 E/s" },
+    "corsolar": { "energymake": 20, "note": "Fixed 20 E/s" },
+    "armwin":   { "energymake": 0,  "note": "Variable: map windMin to windMax E/s" },
+    "corwin":   { "energymake": 0,  "note": "Variable: map windMin to windMax E/s" },
+    "armtide":  { "energymake": 0,  "note": "Variable: map tidal strength" },
+    "cortide":  { "energymake": 0,  "note": "Variable: map tidal strength" }
+  },
+  "units": {
+    "armcom": {
+      "id": "armcom", "faction": "armada", "techlevel": 1,
+      "name": "Armada Commander", "tooltip": "Commander",
+      "metalcost": 2700, "energycost": 26000, "buildtime": 75000,
+      "metalmake": 2, "energymake": 30,
+      "buildpower": 300, "speed": 38, "health": 3700
+    },
+    "corcom": {
+      "id": "corcom", "faction": "cortex", "techlevel": 1,
+      "name": "Cortex Commander", "tooltip": "Commander",
+      "metalcost": 2700, "energycost": 26000, "buildtime": 75000,
+      "metalmake": 2, "energymake": 30,
+      "buildpower": 300, "speed": 38, "health": 3700
+    },
+
+    "armck": {
+      "id": "armck", "faction": "armada", "techlevel": 1,
+      "name": "Construction Bot", "tooltip": "Tech 1 Constructor",
+      "metalcost": 110, "energycost": 1600, "buildtime": 3450,
+      "metalmake": 0, "energymake": 7,
+      "buildpower": 80, "speed": 36, "health": 690
+    },
+    "corck": {
+      "id": "corck", "faction": "cortex", "techlevel": 1,
+      "name": "Construction Bot", "tooltip": "Tech 1 Constructor",
+      "metalcost": 120, "energycost": 1750, "buildtime": 3550,
+      "metalmake": 0, "energymake": 7,
+      "buildpower": 85, "speed": 35, "health": 750
+    },
+    "armcv": {
+      "id": "armcv", "faction": "armada", "techlevel": 1,
+      "name": "Construction Vehicle", "tooltip": "Tech 1 Constructor",
+      "metalcost": 135, "energycost": 1950, "buildtime": 4050,
+      "metalmake": 0, "energymake": 10,
+      "buildpower": 90, "speed": 54, "health": 1380
+    },
+    "corcv": {
+      "id": "corcv", "faction": "cortex", "techlevel": 1,
+      "name": "Construction Vehicle", "tooltip": "Tech 1 Constructor",
+      "metalcost": 145, "energycost": 2100, "buildtime": 4160,
+      "metalmake": 0, "energymake": 10,
+      "buildpower": 95, "speed": 51, "health": 1430
+    },
+
+    "armack": {
+      "id": "armack", "faction": "armada", "techlevel": 2,
+      "name": "Advanced Construction Bot", "tooltip": "Tech 2 Constructor",
+      "metalcost": 430, "energycost": 6900, "buildtime": 12500,
+      "metalmake": 0, "energymake": 14,
+      "buildpower": 210, "speed": 33, "health": 930
+    },
+    "corack": {
+      "id": "corack", "faction": "cortex", "techlevel": 2,
+      "name": "Advanced Construction Bot", "tooltip": "Tech 2 Constructor",
+      "metalcost": 470, "energycost": 6900, "buildtime": 12500,
+      "metalmake": 0, "energymake": 14,
+      "buildpower": 220, "speed": 33, "health": 1000
+    },
+    "armacv": {
+      "id": "armacv", "faction": "armada", "techlevel": 2,
+      "name": "Advanced Construction Vehicle", "tooltip": "Tech 2 Constructor",
+      "metalcost": 550, "energycost": 6800, "buildtime": 16000,
+      "metalmake": 0, "energymake": 20,
+      "buildpower": 290, "speed": 53, "health": 2050
+    },
+    "coracv": {
+      "id": "coracv", "faction": "cortex", "techlevel": 2,
+      "name": "Advanced Construction Vehicle", "tooltip": "Tech 2 Constructor",
+      "metalcost": 580, "energycost": 7000, "buildtime": 17000,
+      "metalmake": 0, "energymake": 20,
+      "buildpower": 310, "speed": 50, "health": 2150
+    },
+
+    "armnanotc": {
+      "id": "armnanotc", "faction": "armada", "techlevel": 1,
+      "name": "Construction Turret", "tooltip": "Assist & Repair in large radius",
+      "metalcost": 230, "energycost": 3200, "buildtime": 5300,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 200, "speed": 0, "health": 560
+    },
+    "armnanotcplat": {
+      "id": "armnanotcplat", "faction": "armada", "techlevel": 1,
+      "name": "Naval Construction Turret", "tooltip": "Assist & Repair in large radius",
+      "metalcost": 230, "energycost": 3200, "buildtime": 5300,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 200, "speed": 0, "health": 560
+    },
+    "cornanotc": {
+      "id": "cornanotc", "faction": "cortex", "techlevel": 1,
+      "name": "Construction Turret", "tooltip": "Assist & Repair in large radius",
+      "metalcost": 230, "energycost": 3200, "buildtime": 5300,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 200, "speed": 0, "health": 560
+    },
+    "cornanotcplat": {
+      "id": "cornanotcplat", "faction": "cortex", "techlevel": 1,
+      "name": "Naval Construction Turret", "tooltip": "Assist & Repair in large radius",
+      "metalcost": 230, "energycost": 3200, "buildtime": 5300,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 200, "speed": 0, "health": 560
+    },
+
+    "armwin": {
+      "id": "armwin", "faction": "armada", "techlevel": 1,
+      "name": "Wind Turbine", "tooltip": "Produces Energy (wind-dependent)",
+      "metalcost": 40, "energycost": 175, "buildtime": 1600,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 196
+    },
+    "corwin": {
+      "id": "corwin", "faction": "cortex", "techlevel": 1,
+      "name": "Wind Turbine", "tooltip": "Produces Energy (wind-dependent)",
+      "metalcost": 43, "energycost": 175, "buildtime": 1680,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 220
+    },
+    "armsolar": {
+      "id": "armsolar", "faction": "armada", "techlevel": 1,
+      "name": "Solar Collector", "tooltip": "Produces 20 Energy",
+      "metalcost": 155, "energycost": 0, "buildtime": 2600,
+      "metalmake": 0, "energymake": 20,
+      "buildpower": 0, "speed": 0, "health": 340,
+      "_note": "energymake=0 in CSV; 20 E/s confirmed from tooltip and in-game"
+    },
+    "corsolar": {
+      "id": "corsolar", "faction": "cortex", "techlevel": 1,
+      "name": "Solar Collector", "tooltip": "Produces 20 Energy",
+      "metalcost": 150, "energycost": 0, "buildtime": 2800,
+      "metalmake": 0, "energymake": 20,
+      "buildpower": 0, "speed": 0, "health": 355,
+      "_note": "energymake=0 in CSV; 20 E/s confirmed from tooltip and in-game"
+    },
+    "armadvsol": {
+      "id": "armadvsol", "faction": "armada", "techlevel": 1,
+      "name": "Advanced Solar Collector", "tooltip": "Produces 80 Energy",
+      "metalcost": 350, "energycost": 5000, "buildtime": 7950,
+      "metalmake": 0, "energymake": 80,
+      "buildpower": 0, "speed": 0, "health": 1130
+    },
+    "coradvsol": {
+      "id": "coradvsol", "faction": "cortex", "techlevel": 1,
+      "name": "Advanced Solar Collector", "tooltip": "Produces 80 Energy",
+      "metalcost": 370, "energycost": 4000, "buildtime": 8150,
+      "metalmake": 0, "energymake": 80,
+      "buildpower": 0, "speed": 0, "health": 1200
+    },
+
+    "armgeo": {
+      "id": "armgeo", "faction": "armada", "techlevel": 1,
+      "name": "Geothermal Powerplant", "tooltip": "Produces 300 Energy",
+      "metalcost": 560, "energycost": 13000, "buildtime": 13100,
+      "metalmake": 0, "energymake": 300,
+      "buildpower": 0, "speed": 0, "health": 1940
+    },
+    "corgeo": {
+      "id": "corgeo", "faction": "cortex", "techlevel": 1,
+      "name": "Geothermal Powerplant", "tooltip": "Produces 300 Energy",
+      "metalcost": 540, "energycost": 13000, "buildtime": 12900,
+      "metalmake": 0, "energymake": 300,
+      "buildpower": 0, "speed": 0, "health": 2050
+    },
+    "armfus": {
+      "id": "armfus", "faction": "armada", "techlevel": 2,
+      "name": "Fusion Reactor", "tooltip": "Produces 750 Energy",
+      "metalcost": 3350, "energycost": 18000, "buildtime": 54000,
+      "metalmake": 0, "energymake": 750,
+      "buildpower": 0, "speed": 0, "health": 3800
+    },
+    "corfus": {
+      "id": "corfus", "faction": "cortex", "techlevel": 2,
+      "name": "Fusion Reactor", "tooltip": "Produces 850 Energy",
+      "metalcost": 3600, "energycost": 22000, "buildtime": 59000,
+      "metalmake": 0, "energymake": 850,
+      "buildpower": 0, "speed": 0, "health": 4300
+    },
+    "armafus": {
+      "id": "armafus", "faction": "armada", "techlevel": 2,
+      "name": "Advanced Fusion Reactor", "tooltip": "Produces 3000 Energy (Hazardous)",
+      "metalcost": 9700, "energycost": 69000, "buildtime": 312500,
+      "metalmake": 0, "energymake": 3000,
+      "buildpower": 0, "speed": 0, "health": 7900
+    },
+    "corafus": {
+      "id": "corafus", "faction": "cortex", "techlevel": 2,
+      "name": "Advanced Fusion Reactor", "tooltip": "Produces 3000 Energy (Hazardous)",
+      "metalcost": 9700, "energycost": 48000, "buildtime": 329200,
+      "metalmake": 0, "energymake": 3000,
+      "buildpower": 0, "speed": 0, "health": 9400
+    },
+    "armageo": {
+      "id": "armageo", "faction": "armada", "techlevel": 2,
+      "name": "Advanced Geothermal Powerplant", "tooltip": "Produces 1250 Energy (Hazardous)",
+      "metalcost": 1600, "energycost": 27000, "buildtime": 50000,
+      "metalmake": 0, "energymake": 1250,
+      "buildpower": 0, "speed": 0, "health": 3600
+    },
+    "corageo": {
+      "id": "corageo", "faction": "cortex", "techlevel": 2,
+      "name": "Advanced Geothermal Powerplant", "tooltip": "Produces 1250 Energy (Hazardous)",
+      "metalcost": 1500, "energycost": 27000, "buildtime": 48000,
+      "metalmake": 0, "energymake": 1250,
+      "buildpower": 0, "speed": 0, "health": 4150
+    },
+
+    "armtide": {
+      "id": "armtide", "faction": "armada", "techlevel": 1,
+      "name": "Tidal Generator", "tooltip": "Produces Energy (depends on map)",
+      "metalcost": 90, "energycost": 200, "buildtime": 2190,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 400
+    },
+    "cortide": {
+      "id": "cortide", "faction": "cortex", "techlevel": 1,
+      "name": "Tidal Generator", "tooltip": "Produces Energy (depends on map)",
+      "metalcost": 85, "energycost": 250, "buildtime": 2100,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 395
+    },
+
+    "armmex": {
+      "id": "armmex", "faction": "armada", "techlevel": 1,
+      "name": "Metal Extractor", "tooltip": "Extracts Metal from Metalspots",
+      "metalcost": 50, "energycost": 500, "buildtime": 1800,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 270
+    },
+    "cormex": {
+      "id": "cormex", "faction": "cortex", "techlevel": 1,
+      "name": "Metal Extractor", "tooltip": "Extracts Metal from Metalspots",
+      "metalcost": 50, "energycost": 500, "buildtime": 1870,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 275
+    },
+    "armmoho": {
+      "id": "armmoho", "faction": "armada", "techlevel": 2,
+      "name": "Advanced Metal Extractor", "tooltip": "Advanced Metal Extractor / Storage",
+      "metalcost": 620, "energycost": 7700, "buildtime": 14900,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 2800
+    },
+    "cormoho": {
+      "id": "cormoho", "faction": "cortex", "techlevel": 2,
+      "name": "Advanced Metal Extractor", "tooltip": "Advanced Metal Extractor / Storage",
+      "metalcost": 640, "energycost": 8100, "buildtime": 14100,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 3900
+    },
+
+    "armmakr": {
+      "id": "armmakr", "faction": "armada", "techlevel": 1,
+      "name": "Energy Converter", "tooltip": "Converts 70 energy into 1 metal per sec",
+      "metalcost": 1, "energycost": 1150, "buildtime": 2600,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 167
+    },
+    "cormakr": {
+      "id": "cormakr", "faction": "cortex", "techlevel": 1,
+      "name": "Energy Converter", "tooltip": "Converts 70 energy into 1 metal per sec",
+      "metalcost": 1, "energycost": 1250, "buildtime": 2680,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 167
+    },
+    "armmmkr": {
+      "id": "armmmkr", "faction": "armada", "techlevel": 2,
+      "name": "Advanced Energy Converter", "tooltip": "Converts 600 energy into 10.3 metal per sec",
+      "metalcost": 380, "energycost": 21000, "buildtime": 35000,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 445
+    },
+    "cormmkr": {
+      "id": "cormmkr", "faction": "cortex", "techlevel": 2,
+      "name": "Advanced Energy Converter", "tooltip": "Converts 600 energy into 10.3 metal per sec",
+      "metalcost": 370, "energycost": 21000, "buildtime": 31300,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 560
+    },
+
+    "armmstor": {
+      "id": "armmstor", "faction": "armada", "techlevel": 1,
+      "name": "Metal Storage", "tooltip": "Increases Metal Storage (3000)",
+      "metalcost": 330, "energycost": 570, "buildtime": 2920,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 2100
+    },
+    "cormstor": {
+      "id": "cormstor", "faction": "cortex", "techlevel": 1,
+      "name": "Metal Storage", "tooltip": "Increases Metal Storage (3000)",
+      "metalcost": 340, "energycost": 590, "buildtime": 2920,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 2100
+    },
+    "armestor": {
+      "id": "armestor", "faction": "armada", "techlevel": 1,
+      "name": "Energy Storage", "tooltip": "Increases Energy Storage (6000)",
+      "metalcost": 170, "energycost": 1700, "buildtime": 4110,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 1890
+    },
+    "corestor": {
+      "id": "corestor", "faction": "cortex", "techlevel": 1,
+      "name": "Energy Storage", "tooltip": "Increases Energy Storage (6000)",
+      "metalcost": 175, "energycost": 1800, "buildtime": 4260,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 0, "speed": 0, "health": 2000
+    },
+
+    "armlab": {
+      "id": "armlab", "faction": "armada", "techlevel": 1,
+      "name": "Bot Lab", "tooltip": "Produces Tech 1 Bots",
+      "metalcost": 500, "energycost": 950, "buildtime": 5000,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 150, "speed": 0, "health": 2900
+    },
+    "corlab": {
+      "id": "corlab", "faction": "cortex", "techlevel": 1,
+      "name": "Bot Lab", "tooltip": "Produces Tech 1 Bots",
+      "metalcost": 470, "energycost": 1050, "buildtime": 5000,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 150, "speed": 0, "health": 2900
+    },
+    "armvp": {
+      "id": "armvp", "faction": "armada", "techlevel": 1,
+      "name": "Vehicle Plant", "tooltip": "Produces Tech 1 Vehicles",
+      "metalcost": 590, "energycost": 1550, "buildtime": 5700,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 150, "speed": 0, "health": 3000
+    },
+    "corvp": {
+      "id": "corvp", "faction": "cortex", "techlevel": 1,
+      "name": "Vehicle Plant", "tooltip": "Produces Tech 1 Vehicles",
+      "metalcost": 570, "energycost": 1550, "buildtime": 5650,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 150, "speed": 0, "health": 3000
+    },
+    "armap": {
+      "id": "armap", "faction": "armada", "techlevel": 1,
+      "name": "Aircraft Plant", "tooltip": "Produces Tech 1 Aircraft",
+      "metalcost": 650, "energycost": 1100, "buildtime": 5450,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 150, "speed": 0, "health": 2050
+    },
+    "corap": {
+      "id": "corap", "faction": "cortex", "techlevel": 1,
+      "name": "Aircraft Plant", "tooltip": "Produces Tech 1 Aircraft",
+      "metalcost": 630, "energycost": 1100, "buildtime": 5380,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 150, "speed": 0, "health": 2150
+    },
+    "armalab": {
+      "id": "armalab", "faction": "armada", "techlevel": 2,
+      "name": "Advanced Bot Lab", "tooltip": "Produces Tech 2 Bots",
+      "metalcost": 2600, "energycost": 15000, "buildtime": 25000,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 600, "speed": 0, "health": 4250
+    },
+    "coralab": {
+      "id": "coralab", "faction": "cortex", "techlevel": 2,
+      "name": "Advanced Bot Lab", "tooltip": "Produces Tech 2 Bots",
+      "metalcost": 2600, "energycost": 16000, "buildtime": 26000,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 600, "speed": 0, "health": 4500
+    },
+    "armavp": {
+      "id": "armavp", "faction": "armada", "techlevel": 2,
+      "name": "Advanced Vehicle Plant", "tooltip": "Produces Tech 2 Vehicles",
+      "metalcost": 2600, "energycost": 14000, "buildtime": 27000,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 600, "speed": 0, "health": 4750
+    },
+    "coravp": {
+      "id": "coravp", "faction": "cortex", "techlevel": 2,
+      "name": "Advanced Vehicle Plant", "tooltip": "Produces Tech 2 Vehicles",
+      "metalcost": 2600, "energycost": 16000, "buildtime": 28000,
+      "metalmake": 0, "energymake": 0,
+      "buildpower": 600, "speed": 0, "health": 5100
+    }
+  }
+}
