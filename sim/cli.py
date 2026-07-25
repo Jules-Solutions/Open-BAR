@@ -383,6 +383,12 @@ def main():
     p_web.add_argument("--port", type=int, default=8080,
                        help="Port to serve on (default: 8080)")
 
+    # dashboard
+    p_dash = sub.add_parser("dashboard", aliases=["dash"],
+                            help="Launch interactive unit economics dashboard")
+    p_dash.add_argument("--port", type=int, default=8050,
+                        help="Port for dashboard (default: 8050)")
+
     args = parser.parse_args()
 
     # Apply faction selection before running any command
@@ -403,6 +409,9 @@ def main():
     elif args.command in ("web", "serve"):
         from bar_sim.web import start_server
         start_server(port=args.port)
+    elif args.command in ("dashboard", "dash"):
+        from bar_sim.dashboard import main as dash_main
+        dash_main(port=args.port)
     else:
         parser.print_help()
 
